@@ -1,0 +1,21 @@
+# Part 1: Hello World. Both frameworks in one environment.
+#
+# google-adk caps opentelemetry-api at 1.42.1 while strands-agents allows <2.0.0.
+# Install both unpinned and pip resolves google-adk down to 1.x without an error,
+# so the OpenTelemetry pins below are load bearing.
+strands-agents==1.55.1
+google-adk==2.9.0
+opentelemetry-api==1.42.1
+opentelemetry-sdk==1.42.1
+
+# Section 07 only. Note the name: you install strands-agents-evals and you import
+# strands_evals. `pip install strands-evals` is an unrelated package.
+strands-agents-evals==1.3.0
+
+# Section 07 only. `pip install "google-adk[test]"` pulls these too.
+pytest==9.1.1
+pytest-asyncio==1.3.0
+
+# Section 08 only.
+fastapi==0.141.1
+uvicorn==0.53.0
