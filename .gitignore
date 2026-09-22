@@ -15,3 +15,11 @@ wheels/
 # adk run writes a session store next to the agent
 .adk/
 *.db
+
+# macOS
+.DS_Store
+
+# Drafts and working notes. The articles live here while they are being written
+# and are published on Dev.to, so they are deliberately not part of the repo.
+blog-series/
+SESSION-TODO.md
