@@ -1,0 +1,97 @@
+import math, os
+from PIL import Image, ImageDraw, ImageFont
+
+W, H = 900, 400
+BG    = (13, 17, 23)
+DIM   = (70, 80, 94)
+LINE  = (38, 45, 57)
+WHITE = (226, 233, 242)
+MUTED = (128, 140, 158)
+STRANDS = (255, 153, 0)
+ADK     = (66, 133, 244)
+
+def font(sz, bold=False):
+    return ImageFont.truetype("/System/Library/Fonts/Menlo.ttc", sz, index=1 if bold else 0)
+
+F_TITLE, F_NODE = font(22, True), font(13, True)
+F_LABEL, F_SUB, F_TAG = font(14, True), font(12), font(11, True)
+F_BIG = font(30, True)
+
+def mix(c1, c2, a):
+    return tuple(int(c1[i] + (c2[i] - c1[i]) * a) for i in range(3))
+
+LEFT  = {"cx": 230, "cy": 208, "r": 96, "color": STRANDS,
+         "nodes": ["Agent", "Model", "Tool"],
+         "name": "STRANDS", "sub": "the Agent owns the loop"}
+RIGHT = {"cx": 670, "cy": 208, "r": 96, "color": ADK,
+         "nodes": ["Runner", "Agent", "Model", "Tool", "Event"],
+         "name": "ADK", "sub": "the Runner coordinates events"}
+
+TRACK = 54  # dot orbits inside the node ring, so they never collide
+
+def pt(cx, cy, r, t):
+    a = -math.pi / 2 + 2 * math.pi * t
+    return (cx + r * math.cos(a), cy + r * math.sin(a))
+
+def text_c(d, xy, s, f, fill):
+    x, y = xy
+    b = d.textbbox((0, 0), s, font=f)
+    d.text((x - (b[2]-b[0])/2 - b[0], y - (b[3]-b[1])/2 - b[1]), s, font=f, fill=fill)
+
+def pill(d, cx, cy, label, f, fg, border, bgfill):
+    b = d.textbbox((0, 0), label, font=f)
+    w, h = b[2]-b[0], b[3]-b[1]
+    d.rounded_rectangle([cx-w/2-12, cy-h/2-8, cx+w/2+12, cy+h/2+8],
+                        radius=7, fill=bgfill, outline=border, width=2)
+    text_c(d, (cx, cy), label, f, fg)
+
+def draw_panel(d, p, t):
+    n = len(p["nodes"])
+    cx, cy, col = p["cx"], p["cy"], p["color"]
+    d.ellipse([cx-TRACK, cy-TRACK, cx+TRACK, cy+TRACK], outline=LINE, width=2)
+    text_c(d, (cx, cy-10), str(n), F_BIG, col)
+    text_c(d, (cx, cy+14), "hops", F_TAG, MUTED)
+
+    # the node the pulse is currently on
+    active = int((t * n + 0.5) % n)
+    for i, name in enumerate(p["nodes"]):
+        x, y = pt(cx, cy, p["r"], i / n)
+        hot = (i == active)
+        pill(d, x, y, name, F_NODE,
+             fg=BG if hot else WHITE,
+             border=col if hot else DIM,
+             bgfill=col if hot else BG)
+        # spoke from ring to node, lit when active
+        sx, sy = pt(cx, cy, TRACK, i / n)
+        gx, gy = pt(cx, cy, p["r"] - 26, i / n)
+        d.line([sx, sy, gx, gy], fill=col if hot else LINE, width=2 if hot else 1)
+
+    # fading trail behind the pulse
+    for j in range(10, 0, -1):
+        tx, ty = pt(cx, cy, TRACK, t - j * 0.012)
+        a = (1 - j / 10) ** 2
+        r = 2 + 3.5 * a
+        d.ellipse([tx-r, ty-r, tx+r, ty+r], fill=mix(BG, col, a * 0.85))
+    px, py = pt(cx, cy, TRACK, t)
+    d.ellipse([px-11, py-11, px+11, py+11], outline=mix(BG, col, 0.45), width=2)
+    d.ellipse([px-6, py-6, px+6, py+6], fill=col)
+
+    text_c(d, (cx, 342), p["name"], F_LABEL, col)
+    text_c(d, (cx, 364), p["sub"], F_SUB, MUTED)
+
+FRAMES = 60
+frames = []
+for k in range(FRAMES):
+    t = k / FRAMES
+    img = Image.new("RGB", (W, H), BG)
+    d = ImageDraw.Draw(img)
+    text_c(d, (W//2, 38), "Same agent. Same tool call.", F_TITLE, WHITE)
+    d.line([(W//2, 78), (W//2, 318)], fill=LINE, width=1)
+    draw_panel(d, LEFT, t)
+    draw_panel(d, RIGHT, t)
+    frames.append(img.convert("P", palette=Image.ADAPTIVE, colors=96))
+
+out = os.path.join(os.path.dirname(__file__), "agent-loop-vs-runner.gif")
+frames[0].save(out, save_all=True, append_images=frames[1:],
+               duration=65, loop=0, optimize=True, disposal=2)
+print(out, os.path.getsize(out)//1024, "KB")
