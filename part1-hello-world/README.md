@@ -34,10 +34,18 @@ That parses every file, resolves every import against what you installed, and co
 every agent, graph and app for real. It does not call a model, so it needs no credentials
 and costs nothing. All 20 files should come back `ok`.
 
-The Strands examples have been run against live Bedrock (Claude Sonnet 4, `us-east-1`):
-hello world, the `@tool` path, hooks with `limits=`, `agent.messages`, and the metrics on
-`AgentResult`. The ADK examples have been run as far as the Gemini API and stop at the key,
-so their structure is verified and their output is not.
+Every example in here has been run against a live model. Strands against Bedrock
+(Claude Sonnet 4, `us-east-1`) and ADK against Gemini (`gemini-flash-latest`).
+
+A few things worth knowing that only showed up by running them:
+
+- `01-hello-world` and `02-tools` get different answers to the same question. The first has
+  no tool so it asks what you mean, the second calls `get_course_topic` and answers.
+- The control points fire in the same order on both sides,
+  `model -> tool -> model`, even though Strands attaches hooks to an agent you already hold
+  and ADK takes callbacks at construction.
+- `06-multi-agent` replies as `[curriculum_builder]`, not as `[course_agent]`. The parent
+  hands the turn to the child and the child owns it from there.
 
 ## Credentials
 
@@ -62,13 +70,24 @@ does not, so `aws sts get-caller-identity` succeeds while the same profile fails
 Python with `MissingDependencyException`. The error names botocore, and it arrives before
 Strands is involved at all.
 
-**ADK** reads `GOOGLE_API_KEY`. Put it in a `.env` next to the agent:
+**ADK** reads `GOOGLE_API_KEY`, which you can get free from
+[Google AI Studio](https://aistudio.google.com/apikey). One file at the root of this folder
+covers every section:
 
 ```bash
-cp .env.example 04-state/course_agent/.env   # and edit it
+cp .env.example .env     # then put your key in it
 ```
 
-`adk run` loads that file. `python main.py` does not, so export the variable for those.
+`adk run` walks up from the agent folder looking for a `.env`, so it finds that one from any
+section. It is gitignored.
+
+`python main.py` does not read it. ADK only loads `.env` through its CLI, so export the
+variable for those:
+
+```bash
+export GOOGLE_API_KEY="..."
+cd 03-agent-loop && python main.py
+```
 
 ## The sections
 

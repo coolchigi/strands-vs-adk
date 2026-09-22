@@ -15,10 +15,16 @@ def before_tool_callback(tool, args, tool_context):
     print(f"Calling: {tool.name}")
 
 
+def get_course_topic() -> str:
+    """Get the topic for the course."""
+    return "Building AI agents"
+
+
 root_agent = Agent(
     name="course_agent",
     model="gemini-flash-latest",
     instruction="You help create learning materials.",
+    tools=[get_course_topic],
     before_model_callback=before_model_callback,
     before_tool_callback=before_tool_callback,
 )
