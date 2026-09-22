@@ -33,6 +33,7 @@ CALLS_A_MODEL = {
     "04-state/conversation.py",
     "04-state/main.py",
     "05-control-points/hooks.py",
+    "07-evaluation/observe_strands.py",
 }
 
 # Files needing a package beyond the base two. Reported, not failed, when absent.

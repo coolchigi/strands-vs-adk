@@ -32,7 +32,12 @@ uv run smoke_test.py      # or: python smoke_test.py
 
 That parses every file, resolves every import against what you installed, and constructs
 every agent, graph and app for real. It does not call a model, so it needs no credentials
-and costs nothing. All 19 files should come back `ok`.
+and costs nothing. All 20 files should come back `ok`.
+
+The Strands examples have been run against live Bedrock (Claude Sonnet 4, `us-east-1`):
+hello world, the `@tool` path, hooks with `limits=`, `agent.messages`, and the metrics on
+`AgentResult`. The ADK examples have been run as far as the Gemini API and stop at the key,
+so their structure is verified and their output is not.
 
 ## Credentials
 
@@ -45,6 +50,17 @@ credential chain and needs Bedrock model access in your region.
 export AWS_REGION=us-east-1
 # plus your usual AWS credentials, or a configured profile
 ```
+
+If you authenticate with `aws login`, add one more thing:
+
+```bash
+uv sync --extra aws-login        # or: pip install "botocore[crt]"
+```
+
+That credential provider needs the CRT bindings. The AWS CLI ships them and a virtualenv
+does not, so `aws sts get-caller-identity` succeeds while the same profile fails inside
+Python with `MissingDependencyException`. The error names botocore, and it arrives before
+Strands is involved at all.
 
 **ADK** reads `GOOGLE_API_KEY`. Put it in a `.env` next to the agent:
 
@@ -64,7 +80,7 @@ cp .env.example 04-state/course_agent/.env   # and edit it
 | `04-state` | Where does state live? | `conversation.py`, `agent_state.py` | `main.py` |
 | `05-control-points` | What control points do we have? | `hooks.py` | `course_agent/` |
 | `06-multi-agent` | What if one agent isn't enough? | `graph.py` | `course_agent/`, `workflow.py` |
-| `07-evaluation` | Evaluation and observability | `evaluate_strands.py` | `test_researcher.py` |
+| `07-evaluation` | Evaluation and observability | `evaluate_strands.py`, `observe_strands.py` | `test_researcher.py` |
 | `08-deployment` | How can I deploy what I've built? | `app.py` | see notes below |
 
 ## Running them

@@ -30,6 +30,12 @@ serve = [
     "fastapi==0.141.1",
     "uvicorn==0.53.0",
 ]
+# Only if you authenticate with `aws login`. That credential provider needs the
+# CRT bindings, which the AWS CLI bundles and a plain virtualenv does not, so
+# boto3 raises MissingDependencyException before Strands gets a look in.
+aws-login = [
+    "botocore[crt]",
+]
 
 [tool.pytest.ini_options]
 asyncio_mode = "strict"

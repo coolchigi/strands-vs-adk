@@ -16,6 +16,10 @@ strands-agents-evals==1.3.0
 pytest==9.1.1
 pytest-asyncio==1.3.0
 
+# Only if you authenticate with `aws login`. Its credential provider needs the CRT
+# bindings, which the AWS CLI bundles and a plain virtualenv does not.
+# botocore[crt]
+
 # Section 08 only.
 fastapi==0.141.1
 uvicorn==0.53.0
