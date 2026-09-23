@@ -2,16 +2,16 @@ import math, os
 from PIL import Image, ImageDraw, ImageFont
 
 W, H = 900, 400
-BG    = (13, 17, 23)
-DIM   = (70, 80, 94)
-LINE  = (38, 45, 57)
-WHITE = (226, 233, 242)
-MUTED = (128, 140, 158)
-STRANDS = (255, 153, 0)
-ADK     = (66, 133, 244)
+BG = (58, 24, 58)
+DIM = (140, 100, 136)
+LINE = (104, 54, 104)
+WHITE = (250, 238, 248)
+MUTED = (200, 168, 196)
+STRANDS = (255, 168, 38)
+ADK = (96, 158, 255)
 
 def font(sz, bold=False):
-    return ImageFont.truetype("/System/Library/Fonts/Menlo.ttc", sz, index=1 if bold else 0)
+    return ImageFont.truetype("/System/Library/Fonts/SFNSMono.ttf", sz)
 
 F_TITLE, F_NODE = font(22, True), font(13, True)
 F_LABEL, F_SUB, F_TAG = font(14, True), font(12), font(11, True)
