@@ -9,7 +9,7 @@ The rule this time: check claimed **values**, not just that names exist. The
 ## A. Environment
 - [x] A1 installed versions match the pins in every file that states one
 - [x] A2 newer releases: what exists, what changed
-- [ ] A3 both venvs healthy, examples venv rebuilds from lockfile
+- [x] A3 both venvs healthy, examples venv rebuilds from lockfile
 
 ## B. Part 1 article, claim by claim
 - [x] B1 every stated default, model id, region, version, limit checked against runtime values
@@ -38,6 +38,33 @@ The rule this time: check claimed **values**, not just that names exist. The
 - [x] D7 quoted errors byte-exact, numbers, code blocks parse
 
 ## E. Cross-cutting
-- [ ] E1 version strings consistent across every doc
-- [ ] E2 cross-references (finding numbers, file paths, test names) resolve
-- [ ] E3 Dev.to draft matches the final article
+- [x] E1 version strings consistent across every doc
+- [x] E2 cross-references (finding numbers, file paths, test names) resolve
+- [x] E3 Dev.to draft matches the final article
+
+---
+
+## Result
+
+All 22 items checked. Three errors found, all fixed.
+
+**Part 1 said `LoopAgent` warns on import.** It does not. The import is silent and the
+warning fires when you construct one. Verified both ways in a subprocess. This is the same
+error I corrected in Part 2's FINDINGS weeks ago and never carried back to Part 1.
+
+**The repo's FastAPI example diverged from the article.** `str(result.message)` instead of
+`result.message`, so the endpoint returned a Python repr rather than JSON. Exercised with
+TestClient against live Bedrock to confirm the fix.
+
+**The README stated the ADK sub-agent handoff as unconditional.** It is prompt dependent.
+"Outline a curriculum" delegates to `curriculum_builder`, "what should I teach" is answered
+by the parent. Both verified live.
+
+Verified and correct: every stated default and limit (`turns`, `output_tokens`,
+`total_tokens`, `max_llm_calls` 500, the `temp:` prefix never persisting, ADK reading
+default values into the tool schema), every quoted error triggered rather than grepped,
+all five Agents CLI metric names and three deployment targets checked against their docs,
+38/38 URLs, 235 part2 tests, all 20 examples run live on Bedrock and Gemini.
+
+Newer releases exist and were deliberately not taken: strands-agents 1.57.0,
+google-adk 2.9.2, strands-agents-evals 1.4.0, mcp 2.2.0.
