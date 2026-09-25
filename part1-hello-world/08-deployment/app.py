@@ -18,4 +18,4 @@ agent = Agent(system_prompt="You are a helpful certification teacher.")
 @app.post("/ask")
 def ask(question: str):
     result = agent(question)
-    return {"response": str(result.message)}
+    return {"response": result.message}

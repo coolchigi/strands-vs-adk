@@ -44,8 +44,10 @@ A few things worth knowing that only showed up by running them:
 - The control points fire in the same order on both sides,
   `model -> tool -> model`, even though Strands attaches hooks to an agent you already hold
   and ADK takes callbacks at construction.
-- `06-multi-agent` replies as `[curriculum_builder]`, not as `[course_agent]`. The parent
-  hands the turn to the child and the child owns it from there.
+- `06-multi-agent` sometimes replies as `[curriculum_builder]` rather than `[course_agent]`.
+  The parent hands the turn over when the request suits the child, and the speaker label is
+  where you see it happen. Ask it to outline a curriculum and it delegates. Ask it what to
+  teach and the parent answers itself.
 
 ## Credentials
 
