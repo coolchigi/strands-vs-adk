@@ -35,7 +35,7 @@ every agent, graph and app for real. It does not call a model, so it needs no cr
 and costs nothing. All 20 files should come back `ok`.
 
 Every example in here has been run against a live model. Strands against Bedrock
-(Claude Sonnet 4, `us-east-1`) and ADK against Gemini (`gemini-flash-latest`).
+(Claude Sonnet 4.6, `us-east-1`) and ADK against Gemini (`gemini-flash-latest`).
 
 A few things worth knowing that only showed up by running them:
 
@@ -51,7 +51,7 @@ A few things worth knowing that only showed up by running them:
 
 The two frameworks want different things, and neither is set up for you.
 
-**Strands** defaults to Amazon Bedrock with Claude Sonnet 4, so it uses your normal AWS
+**Strands** defaults to Amazon Bedrock with Claude Sonnet 4.6, so it uses your normal AWS
 credential chain and needs Bedrock model access in your region.
 
 ```bash

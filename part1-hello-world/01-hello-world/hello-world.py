@@ -1,7 +1,7 @@
 """Part 1, Hello World: the smallest Strands agent.
 
 Run:  python hello-world.py
-Needs AWS credentials with Bedrock access. Strands defaults to Claude Sonnet 4
+Needs AWS credentials with Bedrock access. Strands defaults to Claude Sonnet 4.6
 on Amazon Bedrock.
 """
 from strands import Agent

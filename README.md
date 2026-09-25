@@ -27,7 +27,7 @@ costs nothing. Run it before you go looking for API keys.
 
 The two frameworks want different things.
 
-**Strands** defaults to Amazon Bedrock with Claude Sonnet 4 and uses your normal AWS credential
+**Strands** defaults to Amazon Bedrock with Claude Sonnet 4.6 and uses your normal AWS credential
 chain, so it needs Bedrock model access in your region.
 
 **ADK** reads `GOOGLE_API_KEY`, either from your shell or from a `.env` next to the agent.
