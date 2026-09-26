@@ -88,6 +88,27 @@ so Curriculum, Teacher, Feedback and the refresh path have never executed either
 Pinned at `strands-agents 1.55.1`, `google-adk 2.9.0`, and verified against those. Newer exist
 (1.57.0, 2.9.2) and I've deliberately not taken them. Don't bump without asking.
 
+## Push Part 2 to the finish line
+
+This is the job, not a stretch goal. The system runs end to end and produces a real course on a
+real subject. The article gets written from that run. Both parts go out.
+
+If the current design cannot get there, change the design. I would rather ship a system that
+works than defend the one that is written.
+
+## On tests
+
+The 235 tests in Part 2 are all green and the system cannot make a single model call. Every one
+of them drives `ScriptedModel` or `ScriptedLlm`, fakes that hand back exactly what the code
+expects, so the suite confirms the code agrees with itself and proves nothing else. That is how
+a broken Researcher sat there for weeks looking finished.
+
+So don't write tests that pass. Write tests that would fail if the thing were broken, and check
+that they do by breaking it on purpose. If a test cannot fail, it is decoration.
+
+Anything that talks to a model needs at least one test that actually talks to a model. Slow and
+real beats fast and fictional.
+
 ## What I want by the end
 
 Part 2's system actually produces a course end to end, Part 2's article written from what
