@@ -4,34 +4,37 @@ Paste everything below the line into a fresh session started in this repo.
 
 ---
 
-Two part blog series comparing AWS Strands Agents and Google ADK. Part 1 is written and
-verified. Part 2's system is built but has never produced a course. I want both published by
-tomorrow, Sunday 27 September 2026.
+Two part blog series comparing AWS Strands Agents and Google ADK. Part 1 is written, Part 2's
+system is built but has never produced a course. I want both published by tomorrow, Sunday
+27 September 2026.
 
-Read `PROGRESS.md` first. It has the current state, the Part 2 blocker already isolated, and
-the credentials that work.
+Read `PROGRESS.md` first. Current state, the Part 2 blocker already isolated, and the
+credentials that work, including my Dev.to API key at `~/.devto` and draft id `4725533`.
 
 The job:
 
-1. **Get Part 2 running end to end.** It dies on the first model call. Redesign it if that is
-   what it takes, I would rather ship something that works.
+1. **Get Part 2 running end to end** and produce a real artifact: a learn by doing course on
+   Terraform. It dies on the first model call today. Redesign it if that is what it takes.
 2. **Write the Part 2 article** from that run, not from what the code claims.
-3. **Make sure nothing is stale.** We shipped "Claude Sonnet 4" when the default is 4.6. Check
-   every version, default, model id and limit against the installed packages. Check the links.
+3. **Polish Part 1 to publish-ready.** It is close, so Part 2 is the focus, but do not assume
+   it is clean.
 4. **Publish both.**
 
-Three things I care about:
+The bar: **neither part carries outdated information, and every code sample is runnable.** If a
+reader copies a block, it works.
 
-**The code has to run.** If someone copies a block out of the article, it works.
+The standard I want on finding problems: you find them, not me. I have had to poke at this
+series to surface a broken hello world, a squatted package, a graph that burned ten minutes on
+retries, and a model version that was a whole point release out of date. Every one was
+findable. Check claimed values against the installed packages rather than confirming a name
+exists. Run the code rather than reading it. When you fix a claim, grep for it everywhere
+before calling it done.
 
-**My voice.** Read `~/.claude/voice-dna.md` and use the `writing` skill for prose. Part 1 is
-the reference.
+**My voice**: read `~/.claude/voice-dna.md`, use the `writing` skill for prose, Part 1 is the
+reference.
 
-**Real tests.** Part 2 has 235 green tests and cannot make a single model call, because they
+**Real tests**: Part 2 has 235 green tests and cannot make a single model call, because they
 all drive fakes that return what the code expects. Write tests that fail when the thing is
-broken, and prove it by breaking it. Anything that talks to a model needs a test that talks to
-a model.
+broken, and prove it by breaking it.
 
-Use in-session todos. Keep `PROGRESS.md` as the only tracking doc, no new ones. Run the code
-rather than reading it, every real bug here was found by running. When you fix a claim, grep
-for it everywhere before calling it done.
+Use in-session todos. Keep `PROGRESS.md` as the only tracking doc.

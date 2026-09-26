@@ -96,6 +96,16 @@ Curriculum, Teacher, Feedback and refresh have never run either.
 
 ## Open
 
+**Part 2 must produce a real artifact.** A learn by doing course on Terraform, built from
+sources that say what the lessons claim. That is the thing the article is about, so it has to
+exist before the article is written. Terraform is the subject I want because it is the one I
+used when we first tested how each framework would handle "I'd like to deeply understand
+Terraform and build projects along the way."
+
+**Part 1 is close but not assumed clean.** Every issue in it so far was found by me pushing
+back rather than by a check catching it. Treat it as needing a pass, not a glance.
+
+
 - Write the Part 2 article.
 - Run the Part 2 system live. Needs a Tavily key.
 - Publish Part 1 when you are ready. Tags are still a guess.
