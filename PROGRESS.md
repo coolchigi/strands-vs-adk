@@ -58,6 +58,42 @@ half can run.
 against the installed packages. That file, plus `ARCHITECTURE.md`, `DEPLOY.md` and
 `TESTING.md`, is raw material for the article and should fold into it once written.
 
+## The Part 2 blocker
+
+The 235 tests all drive `ScriptedModel` / `ScriptedLlm` fakes, so none has ever hit a real
+API. The first live run dies on the first model call:
+
+```
+400 INVALID_ARGUMENT: Please enable tool_config.include_server_side_tool_invocations
+to use Built-in tools with Function calling.
+```
+
+`impl/adk/researcher.py` puts `output_schema` and `google_search` on one agent. Isolated:
+
+| config | result |
+|---|---|
+| `output_schema` alone | works |
+| `output_schema` + a plain function tool | works |
+| `google_search` alone | works |
+| `output_schema` + `google_search` | 400 |
+
+`GoogleSearchTool(bypass_multi_tools_limit=True)` does not fix it.
+
+This makes `FINDINGS.md` finding 1 wrong. ADK's docstring says `output_schema` and `tools`
+work together, which holds for function tools and fails for built-in ones.
+
+Ways out: split into two agents (one searches, one structures), drop `output_schema` and
+parse the text, or give ADK the same Tavily path as Strands. Researcher is stage one, so
+Curriculum, Teacher, Feedback and refresh have never run either.
+
+## Credentials
+
+- Gemini: `GOOGLE_API_KEY` in `part1-hello-world/.env`, billing topped up
+- Bedrock: AWS profile `aws-agent`, `us-east-1`. Always name the profile, there is no
+  default on purpose. `aws login` auth also needs `botocore[crt]`
+- Tavily: no key yet, the Strands researcher needs one
+- Dev.to: `~/.devto`, draft id `4725533`
+
 ## Open
 
 - Write the Part 2 article.
