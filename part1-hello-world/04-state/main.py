@@ -1,6 +1,6 @@
 """Part 1, Where does state live: ADK keeps it in a Session.
 
-Run:  python main.py            (from the 04_state folder)
+Run:  export GOOGLE_API_KEY=...  then  python main.py   (from the 04-state folder)
 
 Session state is seeded at creation and read back off the session. The agent's
 instruction templates {course_topic} straight out of it.

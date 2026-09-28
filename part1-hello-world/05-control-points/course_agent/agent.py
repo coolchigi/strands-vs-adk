@@ -1,6 +1,6 @@
 """Part 1, What control points do we have: ADK callbacks.
 
-Run:  adk run course_agent      (from the 05_control_points folder)
+Run:  adk run course_agent      (from the 05-control-points folder)
 
 Callbacks are constructor arguments. There is no add_callback after the fact.
 """

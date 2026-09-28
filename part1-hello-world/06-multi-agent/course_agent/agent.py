@@ -1,6 +1,6 @@
 """Part 1, What if one agent isn't enough: ADK sub-agents.
 
-Run:  adk run course_agent      (from the 06_multi_agent folder)
+Run:  adk run course_agent      (from the 06-multi-agent folder)
 
 ADK gives you a parent and child relationship. The parent decides when to hand
 off, and the child owns the turn once it does.

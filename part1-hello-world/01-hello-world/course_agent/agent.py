@@ -1,6 +1,6 @@
 """Part 1, Hello World: the smallest ADK agent.
 
-Run:  adk run course_agent      (from the 01_hello_world folder)
+Run:  adk run course_agent      (from the 01-hello-world folder)
 Needs GOOGLE_API_KEY in course_agent/.env
 """
 from google.adk.agents import Agent

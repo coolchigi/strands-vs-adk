@@ -12,7 +12,8 @@ opentelemetry-sdk==1.42.1
 # strands_evals. `pip install strands-evals` is an unrelated package.
 strands-agents-evals==1.3.0
 
-# Section 07 only. `pip install "google-adk[test]"` pulls these too.
+# Section 07 only. adk eval and AgentEvaluator both need the eval extra.
+google-adk[eval]==2.9.0
 pytest==9.1.1
 pytest-asyncio==1.3.0
 

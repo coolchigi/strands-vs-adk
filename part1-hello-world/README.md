@@ -132,10 +132,11 @@ touches `agent.state`, so it is the fastest way to confirm your environment work
 
 ## Things that will bite you
 
-**Install both frameworks without the OpenTelemetry pins and pip silently downgrades
-`google-adk` to 1.x.** ADK caps `opentelemetry-api` at 1.42.1, Strands allows anything
-below 2.0.0, and pip resolves the conflict by walking ADK back a major version instead of
-failing. That is why `requirements.txt` pins it.
+**Install both frameworks unpinned and pip silently downgrades `google-adk` to 1.x.**
+`pip install strands-agents google-adk` gave `google-adk 1.14.1` on 27 September 2026. ADK
+caps `opentelemetry-api` at 1.42.1, Strands allows anything below 2.0.0, and pip resolves
+the conflict by walking ADK back a major version instead of failing. That is why
+`requirements.txt` pins both frameworks and OpenTelemetry.
 
 **The evals package is not called what you would guess.** You install
 `strands-agents-evals` and you import `strands_evals`. `pip install strands-evals` gets

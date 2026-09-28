@@ -57,8 +57,8 @@ def dashed_box(d,box,col,dash=7*SS,gap=6*SS,w=2*SS,r=16*SS):
     run(x0+r,x1-r,y0,True); run(x0+r,x1-r,y1,True)
     run(y0+r,y1-r,x0,False); run(y0+r,y1-r,x1,False)
 
-def panel(d,y,col,name,t,outside):
-    ds = 1.0 if outside else 0.72
+def panel(d,y,col,name,t,cap):
+    ds = 0.86
     ty=y+TRACK
     which=int(t*len(TARGETS))%len(TARGETS)
     local=(t*len(TARGETS))%1.0
@@ -66,9 +66,8 @@ def panel(d,y,col,name,t,outside):
     for i in range(3):
         d.line([XS[i]+56*SS,y,XS[i+1]-56*SS,y],fill=LINE,width=2*SS)
         d.polygon([(XS[i+1]-56*SS,y),(XS[i+1]-64*SS,y-4*SS),(XS[i+1]-64*SS,y+4*SS)],fill=LINE)
-    if outside:
-        dashed_box(d,(XS[0]-84*SS,y-28*SS,XS[3]+84*SS,ty+12*SS),mix(BG,col,0.45))
-        text_c(d,(XS[0]-12*SS,y-41*SS),"Workflow graph",F_TAG,mix(BG,col,0.7))
+    # the back edges are part of the graph on both sides now, so the box holds them too
+    dashed_box(d,(XS[0]-84*SS,y-28*SS,XS[3]+84*SS,ty+DEPTH[0]*ds+10*SS),mix(BG,col,0.45))
     # all three return paths, the active one lit
     for k,tgt in enumerate(TARGETS):
         ap=arc(XS[3],XS[tgt],ty,DEPTH[k]*ds)
@@ -88,18 +87,17 @@ def panel(d,y,col,name,t,outside):
         tx,tyy=walk(path,local-j*0.012); a=(1-j/9)**2; r=(2+3.2*a)*SS
         d.ellipse([tx-r,tyy-r,tx+r,tyy+r],fill=mix(BG,col,a*0.85))
     d.ellipse([px-6*SS,py-6*SS,px+6*SS,py+6*SS],fill=col)
-    cap = "every edge lives in the graph" if not outside else "every edge lives outside it"
-    text_c(d,(W//2, ty+DEPTH[0]*ds+22*SS), cap, F_TAG, col)
+    text_c(d,(W//2, ty+DEPTH[0]*ds+28*SS), cap, F_TAG, col)
 
 FR=45; frames=[]
 for k in range(FR):
     t=k/FR
     img=Image.new("RGB",(W,H),BG); d=ImageDraw.Draw(img)
-    text_c(d,(W//2,30*SS),"Feedback reviews all three. Where do the",F_T,WHITE)
-    text_c(d,(W//2,56*SS),"revision paths live?",F_T,WHITE)
-    panel(d,160*SS,STRANDS,"STRANDS",t,False)
+    text_c(d,(W//2,30*SS),"Feedback reviews all three. Both graphs",F_T,WHITE)
+    text_c(d,(W//2,56*SS),"loop. Who stops them?",F_T,WHITE)
+    panel(d,160*SS,STRANDS,"STRANDS",t,"the graph does: set_max_node_executions")
     d.line([(90*SS,322*SS),(810*SS,322*SS)],fill=LINE,width=1*SS)
-    panel(d,410*SS,ADK,"ADK",t,True)
+    panel(d,410*SS,ADK,"ADK",t,"your router does: nothing bounds a cycle")
     img=img.resize((int(900*OUT),int(592*OUT)),Image.LANCZOS)
     frames.append(img.convert("P",palette=Image.ADAPTIVE,colors=64))
 out=os.path.join(os.path.dirname(__file__),"revision-loop.gif")

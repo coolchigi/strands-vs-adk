@@ -22,6 +22,9 @@ dependencies = [
 # Section 07. You install strands-agents-evals and you import strands_evals.
 evals = [
     "strands-agents-evals==1.3.0",
+    # adk eval and AgentEvaluator both need this extra. Without it the CLI says
+    # "Eval module is not installed" and pytest fails on a missing pandas.
+    "google-adk[eval]==2.9.0",
     "pytest==9.1.1",
     "pytest-asyncio==1.3.0",
 ]

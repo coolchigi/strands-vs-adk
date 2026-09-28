@@ -1,7 +1,8 @@
 """Part 1, What runs the agent loop: ADK's Runner.
 
-Run:  python main.py            (from the 03_agent_loop folder)
-Needs GOOGLE_API_KEY in course_agent/.env, or exported in your shell.
+Run:  export GOOGLE_API_KEY=...  then  python main.py   (from the 03-agent-loop folder)
+ADK only reads course_agent/.env when its CLI loads the agent, so python main.py needs
+the key exported in your shell.
 
 Strands runs the loop when you call the agent. ADK gives you a Runner, a session
 service and a stream of events, which is the whole point of this file.

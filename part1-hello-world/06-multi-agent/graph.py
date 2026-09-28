@@ -2,18 +2,18 @@
 
 Run:  python graph.py
 
-The revision path is a conditional edge, declared up front and bounded by
-set_max_node_executions. ADK graph workflows branch but do not loop.
+The revision path is a conditional edge, added before build() and bounded by
+set_max_node_executions. build() snapshots the edges, so an edge added after it never
+reaches the graph. Hit the execution cap and the graph ends FAILED.
 
-Note what these agents do NOT have: each other in `tools`. Agents as tools and
-a graph are two ways to connect agents, not two layers of the same one. Wire
-both at once and the same Agent object gets invoked while it is already inside
-a call, which Strands refuses:
+Note what these agents do NOT have: each other in `tools`. Agents as tools and a
+graph are two ways to connect agents, not two layers of the same one. Wire both and
+every node can rerun the whole chain below it through its tools, and a second call to
+an agent that is already running is refused:
 
-    tool_name=<researcher> | agent is already processing a request
+    tool_name=<researcher>, tool_use_id=<...> | agent is already processing a request
 
-The graph does not fail on that. It retries, burns tokens, and keeps going until
-the execution limit stops it.
+That goes back to the calling model as a tool error, and it asks again.
 """
 from strands import Agent
 from strands.multiagent import GraphBuilder
@@ -61,6 +61,7 @@ builder.add_edge("feedback", "teacher", condition=lesson_needs_work)
 
 builder.set_entry_point("researcher")
 builder.set_max_node_executions(10)
+builder.reset_on_revisit(True)
 
 graph = builder.build()
 

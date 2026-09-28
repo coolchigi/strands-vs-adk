@@ -1,6 +1,6 @@
 """Part 1, Giving our agent a tool: ADK reads a plain function.
 
-Run:  adk run course_agent      (from the 02_tools folder)
+Run:  adk run course_agent      (from the 02-tools folder)
 """
 from google.adk.agents import Agent
 
