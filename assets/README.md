@@ -10,3 +10,5 @@ editing the script and re-running it rather than by hand.
 | `part1/agent-loop-vs-runner.gif` | Part 1, What runs the agent loop? |
 | `part1/where-state-lands.gif` | Part 1, Where does state live? |
 | `part1/revision-loop.gif` | Part 1, What if one agent isn't enough? |
+| `part2/same-question.gif` | Part 2, How does the researcher reach the docs? |
+| `part2/review-routing.gif` | Part 2, What the real system does with it |
