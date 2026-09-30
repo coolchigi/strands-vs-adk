@@ -1,0 +1,14 @@
+[
+  {
+    "answer": 3,
+    "explanation": "`aws_subnet.public[*].id` is the correct splat expression for a count-based resource, which Terraform represents as a list of objects. `aws_subnet.public.id` fails because the resource is a list, not a single object. `aws_subnet.public[each.key].id` is for_each syntax, not count. `values(aws_subnet.public)[*].id` is needed only for for_each resources, which are maps."
+  },
+  {
+    "answer": 0,
+    "explanation": "When `for_each` iterates over a map, `each.value` holds the map value for the current entry \u2014 here the CIDR string. `each.key` holds the name (\"web\", \"app\", \"db\"), not the CIDR. `count.index` is not available inside a `for_each` block. Referencing `aws_subnet.public[each.key]` from inside the same resource would be a self-reference."
+  },
+  {
+    "answer": 2,
+    "explanation": "for_each with stable string keys is the right choice here. Removing \"dev\" from the map destroys only that bucket, leaving the others untouched. With count, removing the middle element renumbers the remaining instances, causing Terraform to plan destructive replacements of the surviving buckets. The speed of creation is not a relevant factor, and using a set of integers defeats the purpose of stable naming."
+  }
+]

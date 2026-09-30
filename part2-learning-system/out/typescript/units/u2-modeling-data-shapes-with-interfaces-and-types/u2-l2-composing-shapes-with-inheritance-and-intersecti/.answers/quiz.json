@@ -1,0 +1,14 @@
+[
+  {
+    "answer": 3,
+    "explanation": "`interface Person extends Named, Aged {}` is correct because an interface can extend multiple types simultaneously using comma separation. `implements` is used by classes to adhere to an interface, not by interfaces extending other interfaces. `interface Person = Named & Aged;` is invalid syntax because `interface` cannot use `=` assignment."
+  },
+  {
+    "answer": 2,
+    "explanation": "When intersecting types have conflicting property types, the conflicting properties are merged into an intersection `string & number`. Because no value can be both a string and a number simultaneously, TypeScript collapses the property type to `never`. It does not create a union `string | number` nor does it let one override the other."
+  },
+  {
+    "answer": 0,
+    "explanation": "Using interfaces with `extends` can often be more performant for the compiler than type aliases with intersections. Intersections can combine object types with different property names, and interfaces extend types or interfaces, not just classes."
+  }
+]

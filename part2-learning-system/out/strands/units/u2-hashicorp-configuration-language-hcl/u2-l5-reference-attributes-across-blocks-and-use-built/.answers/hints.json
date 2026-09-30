@@ -1,0 +1,5 @@
+[
+  "The `aws_subnet` resource needs two arguments you haven't filled in yet: `vpc_id` and `cidr_block`. Both come from other values already in the configuration \u2014 one from a resource attribute, one from a function call.",
+  "For `vpc_id`, use dot-notation to reach into the `aws_vpc.main` resource: `<TYPE>.<NAME>.<ATTRIBUTE>`. For `cidr_block`, call `cidrsubnet` with `var.vpc_cidr` as the prefix, then choose newbits and netnum.",
+  "The `cidrsubnet` call is `cidrsubnet(var.vpc_cidr, 8, 1)`. For `locals.tf`, add `subnet_count = length(var.availability_zones)`. For `outputs.tf`, add an `output \"subnet_id\"` block with `value = aws_subnet.public.id`."
+]

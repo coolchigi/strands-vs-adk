@@ -1,0 +1,5 @@
+[
+  "The `bucket_ids` output needs to iterate over the `for_each` map \u2014 look at how the previous lesson's outputs.tf built a list from a map resource.",
+  "A for expression over a map resource looks like `[for b in aws_s3_bucket.env : b.id]` \u2014 the loop variable `b` is one bucket instance.",
+  "The `null` placeholder on the `bucket_ids` output value is what the first check catches; replace it with the for expression that collects every bucket's `id`."
+]

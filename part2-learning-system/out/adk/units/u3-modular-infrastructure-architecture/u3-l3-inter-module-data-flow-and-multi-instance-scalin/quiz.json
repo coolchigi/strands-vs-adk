@@ -1,0 +1,32 @@
+[
+  {
+    "stem": "You are organizing infrastructure into sibling modules in a root module. You have `module \"vpc\"` that outputs `public_subnet_id`. You need to pass this ID to `module \"app\"` as an input argument named `subnet_id`. How should `module \"app\"` be configured in the root module?",
+    "options": [
+      "Inside `modules/vpc/outputs.tf`, set `target = module.app.subnet_id`.",
+      "Inside `modules/app/main.tf`, reference `module.vpc.public_subnet_id` directly.",
+      "Inside `module \"app\"`, define `subnet_id = var.vpc.public_subnet_id`.",
+      "Inside `module \"app\"`, define `subnet_id = module.vpc.public_subnet_id`."
+    ],
+    "objective": "Pass input values into child modules and consume child module outputs in parent and sibling modules (apply, proved by exercise)"
+  },
+  {
+    "stem": "An engineer needs to deploy compute modules for three distinct environments (`dev`, `staging`, `prod`), where each environment requires a different instance size and unique tags. Which meta-argument on the `module` block should they use, and why?",
+    "options": [
+      "Use `source` because passing a list of file paths causes Terraform to provision multiple distinct modules.",
+      "Use `count` because it automatically creates instances with varied configurations based on its numeric index.",
+      "Use `for_each` because it loops over a map or set of keys, allowing each module instance to receive distinct configuration arguments.",
+      "Use `moved` because it replicates module instances into new addresses without changing the existing state."
+    ],
+    "objective": "Scale child module deployments using count and for_each meta-arguments (apply, proved by exercise)"
+  },
+  {
+    "stem": "A root module provisions instances using `for_each = var.instance_types` on `module \"compute\"`. The compute child module exports `instance_id`. How should the root module output a map of all environment names to their respective instance IDs?",
+    "options": [
+      "`value = { for env, mod in module.compute : env => mod.instance_id }`",
+      "`value = module.compute[*].instance_id`",
+      "`value = module.compute[each.key].instance_id`",
+      "`value = module.compute.all.instance_id`"
+    ],
+    "objective": "Pass input values into child modules and consume child module outputs in parent and sibling modules (apply, proved by exercise)"
+  }
+]

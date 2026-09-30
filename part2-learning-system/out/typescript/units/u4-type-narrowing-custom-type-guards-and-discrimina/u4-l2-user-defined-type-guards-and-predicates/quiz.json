@@ -1,0 +1,32 @@
+[
+  {
+    "stem": "You are writing a function to validate API responses of unknown structure before passing them to a renderer: `function isValidUser(data: unknown)`. What return type annotation must you provide so that TypeScript narrows `data` to `User` inside an `if (isValidUser(data))` block?",
+    "options": [
+      "boolean",
+      "data: User",
+      "data is User",
+      "User"
+    ],
+    "objective": "Write user-defined type guard functions returning type predicates (parameterName is Type) to validate unknown API inputs"
+  },
+  {
+    "stem": "A developer writes the following type guard function, but TypeScript reports a compile error on the return type predicate:\n\n```ts\nfunction isPost(response: unknown): item is Post {\n  return typeof response === \"object\" && response !== null && \"title\" in response;\n}\n```\n\nWhat causes this compile error?",
+    "options": [
+      "The keyword `is` can only be used with classes, not interfaces like `Post`.",
+      "The predicate parameter name `item` does not match the function parameter name `response`.",
+      "Type predicates cannot use `unknown` as the parameter type.",
+      "The function must return an explicit `Post` instance rather than a boolean expression."
+    ],
+    "objective": "Write user-defined type guard functions returning type predicates (parameterName is Type) to validate unknown API inputs"
+  },
+  {
+    "stem": "You have a union type `type Content = TextContent | ImageContent` and a type guard `function isText(content: Content): content is TextContent`. How does TypeScript treat `content` inside the `else` branch of `if (isText(content)) { ... } else { ... }`?",
+    "options": [
+      "TypeScript treats `content` as `never` because guards only evaluate true branches.",
+      "TypeScript narrows `content` to `ImageContent` by eliminating `TextContent`.",
+      "TypeScript widens `content` to `unknown` because the guard returned false.",
+      "TypeScript keeps `content` typed as the full `TextContent | ImageContent` union."
+    ],
+    "objective": "Write user-defined type guard functions returning type predicates (parameterName is Type) to validate unknown API inputs"
+  }
+]

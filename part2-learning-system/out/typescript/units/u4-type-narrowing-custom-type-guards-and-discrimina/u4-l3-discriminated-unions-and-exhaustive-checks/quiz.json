@@ -1,0 +1,32 @@
+[
+  {
+    "stem": "A developer defines an action union as follows:\n\n```typescript\ninterface LoginAction {\n  type: string;\n  userId: string;\n}\ninterface LogoutAction {\n  type: string;\n}\ntype Action = LoginAction | LogoutAction;\n```\n\nWhen checking `if (action.type === \"login\")`, TypeScript fails to narrow `action` to `LoginAction` and reports that `userId` does not exist. What is the cause?",
+    "options": [
+      "TypeScript only recognizes discriminated unions if the common property is named `kind` rather than `type`.",
+      "The discriminant property `type` was given the broad type `string` rather than a literal type like `\"login\"`, preventing TypeScript from identifying it as a discriminated union.",
+      "Interfaces cannot form discriminated unions; only type aliases declared with `type` can have discriminant properties.",
+      "The union members must be converted into runtime classes before narrowing can take effect."
+    ],
+    "objective": "Construct discriminated unions with common literal discriminant properties"
+  },
+  {
+    "stem": "You have a switch statement with an exhaustive check over a discriminated union `type Notification = EmailNotification | SmsNotification;`:\n\n```typescript\nswitch (notification.type) {\n  case \"email\":\n    sendEmail(notification);\n    break;\n  case \"sms\":\n    sendSms(notification);\n    break;\n  default: {\n    const _exhaustiveCheck: never = notification;\n    break;\n  }\n}\n```\n\nA coworker adds `PushNotification` (`type: \"push\"`) to `Notification` but forgets to add a `case \"push\":` branch. What happens during compilation?",
+    "options": [
+      "TypeScript silently compiles and skips the `default` case at runtime whenever a `PushNotification` is encountered.",
+      "TypeScript raises an error at the `switch` header because switch statements over unions cannot have a `default` case.",
+      "TypeScript converts `PushNotification` to `any` in the default branch, deferring any error until runtime.",
+      "TypeScript raises a compile error in the `default` branch because `notification` has narrowed to `PushNotification`, which is not assignable to `never`."
+    ],
+    "objective": "Enforce compile-time exhaustive switch checking over discriminated unions using the never type in the default case"
+  },
+  {
+    "stem": "Why does assigning the switch subject to a variable of type `never` in the default case guarantee exhaustive checking at compile time?",
+    "options": [
+      "The `never` type instructs the TypeScript compiler to automatically generate code for unhandled variants during compilation.",
+      "Narrowing removes each handled variant until no possibilities remain, producing `never`; if any variant is unhandled, it retains that variant's type, which cannot be assigned to `never`.",
+      "All types in TypeScript can be assigned to `never`, allowing the compiler to perform a runtime assertion.",
+      "Assigning to `never` causes JavaScript to throw a runtime SyntaxError when an unhandled case is encountered."
+    ],
+    "objective": "Enforce compile-time exhaustive switch checking over discriminated unions using the never type in the default case"
+  }
+]

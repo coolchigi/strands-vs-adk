@@ -1,0 +1,32 @@
+[
+  {
+    "stem": "You have an interface with a string index signature: `interface Dictionary { [key: string]: number; id: string; }`. Why does the TypeScript compiler reject this definition?",
+    "options": [
+      "String index signatures cannot be used on interfaces that have named properties.",
+      "A string index signature requires all explicitly defined properties to match its return type, but 'id' is a string instead of a number.",
+      "Index signatures can only return object or union types, not primitive numbers.",
+      "The index property key type must be number when named properties exist."
+    ],
+    "objective": "Define index signatures for dictionary structures with consistent return types"
+  },
+  {
+    "stem": "Given the function `function configure(opts: { timeout: number }): void {}`, why does `configure({ timeout: 1000, extra: true })` produce a compiler error, while `const conf = { timeout: 1000, extra: true }; configure(conf);` succeeds?",
+    "options": [
+      "Intermediate variables automatically discard any properties that do not match the function parameter type at runtime.",
+      "Object literals undergo excess property checking when passed directly, whereas assigning the literal to an intermediate variable bypasses excess property checks.",
+      "Functions only check parameter types when called with object literals and completely disable type checking for variables.",
+      "The compiler implicitly asserts intermediate variables as `any` when they are passed as function arguments."
+    ],
+    "objective": "Debug excess property check errors on object literal assignments using index signatures and intermediate variables"
+  },
+  {
+    "stem": "Which of the following property types is permitted for an index signature key in TypeScript?",
+    "options": [
+      "boolean",
+      "Function",
+      "symbol",
+      "object"
+    ],
+    "objective": "Define index signatures for dictionary structures with consistent return types"
+  }
+]

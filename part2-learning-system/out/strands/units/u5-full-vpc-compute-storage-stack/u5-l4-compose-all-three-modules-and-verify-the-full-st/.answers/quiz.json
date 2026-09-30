@@ -1,0 +1,14 @@
+[
+  {
+    "answer": 2,
+    "explanation": "Cross-module dependencies are expressed by referencing one module's outputs directly in another module's input arguments using `module.<name>.<output>` syntax. The correct place is the root `main.tf` compute module block, where you write `subnet_ids = module.networking.subnet_ids`. Using `data \"terraform_remote_state\"` is a separate remote-state pattern, not module composition. `depends_on` in an outputs file does not wire values between modules. A root variable would require the caller to supply the value manually rather than deriving it from the networking module."
+  },
+  {
+    "answer": 1,
+    "explanation": "Terraform does not display module outputs by default. They must be explicitly re-exported in the root module's `outputs.tf` to be displayed. The root outputs the teammate sees are exactly those re-exports. Running `terraform output` inside a child module directory is not how Terraform surfaces module outputs \u2014 the root is the entry point. The networking module does have its own `outputs.tf`; the issue is about display, not existence."
+  },
+  {
+    "answer": 3,
+    "explanation": "After `terraform destroy` completes, the state file still exists but its `\"resources\"` key is set to an empty array, confirming all managed resources were removed. Terraform does not delete the state file itself. Resources are not kept with a `\"destroyed\"` status \u2014 they are removed from state entirely. The state file is not a backup of last-known attributes for recreation; it tracks current managed infrastructure."
+  }
+]

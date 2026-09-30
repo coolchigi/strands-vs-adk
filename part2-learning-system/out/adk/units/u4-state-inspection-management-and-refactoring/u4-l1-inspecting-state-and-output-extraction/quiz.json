@@ -1,0 +1,32 @@
+[
+  {
+    "stem": "An engineer needs to inspect infrastructure state containing sensitive database master credentials in an automated CI pipeline by executing `terraform show -json`. How does Terraform handle sensitive values in this output format?",
+    "options": [
+      "Terraform masks sensitive values with the placeholder string `<sensitive>` in the JSON tree.",
+      "Terraform requires a decryption passphrase flag before generating JSON from state files.",
+      "Terraform completely omits any resources that contain sensitive attributes from the JSON output.",
+      "Terraform prints sensitive values in plain text within the state JSON output."
+    ],
+    "objective": "Inspect current state snapshots and plan files in human-readable and JSON formats using terraform show"
+  },
+  {
+    "stem": "You have declared a root module output named `api_token` marked with `sensitive = true`. You need to pass its raw value directly into a shell environment variable without surrounding quotation marks or JSON formatting. Which command should you run?",
+    "options": [
+      "terraform output -raw api_token",
+      "terraform output api_token",
+      "terraform output -json api_token",
+      "terraform output --unmask api_token"
+    ],
+    "objective": "Extract specific root module output values in plain text and JSON formats using terraform output"
+  },
+  {
+    "stem": "A child module named `vpc` defines an output named `vpc_cidr`. After successfully applying the configuration, a team member runs `terraform output vpc_cidr` from the root directory, but Terraform reports that no such output exists. What explains this result?",
+    "options": [
+      "Terraform only displays child module outputs when the `-json` flag is supplied.",
+      "The `terraform output` command only displays outputs defined in the root module, so child module outputs must be explicitly exposed by a root module output block.",
+      "Outputs from child modules can only be read if the command is invoked with `terraform output -module=vpc vpc_cidr`.",
+      "Child module outputs are considered ephemeral values and are dropped from state as soon as the module finishes execution."
+    ],
+    "objective": "Extract specific root module output values in plain text and JSON formats using terraform output"
+  }
+]

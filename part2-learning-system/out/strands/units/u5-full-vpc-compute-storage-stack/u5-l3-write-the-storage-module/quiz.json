@@ -1,0 +1,32 @@
+[
+  {
+    "stem": "You are writing modules/storage/variables.tf. You want bucket_name to be mandatory and tags to be optional. Which pair of declarations achieves this?",
+    "options": [
+      "bucket_name with no default, tags with default = {}",
+      "Both with default = \"\", relying on validation to reject empty values",
+      "bucket_name with default = \"\", tags with no default",
+      "Both with no default, relying on the caller to always pass both"
+    ],
+    "objective": "Write a storage module that provisions an S3 bucket, accepting bucket_name and tags as inputs and exposing bucket ARN, id, and domain as outputs"
+  },
+  {
+    "stem": "Your storage module has three outputs: bucket_id, bucket_arn, and bucket_domain. A teammate asks how the root module will access the bucket ARN for the 'my-project-assets' instance. What is the correct reference?",
+    "options": [
+      "var.bucket_arn",
+      "aws_s3_bucket.main.arn",
+      "modules/storage/outputs.tf.bucket_arn",
+      "module.storage[\"my-project-assets\"].bucket_arn"
+    ],
+    "objective": "Write a storage module that provisions an S3 bucket, accepting bucket_name and tags as inputs and exposing bucket ARN, id, and domain as outputs"
+  },
+  {
+    "stem": "You add a precondition inside the bucket_id output block that checks var.bucket_name != \"\". When exactly does Terraform evaluate this check?",
+    "options": [
+      "Before the resource block is planned, at variable parsing time",
+      "Only when terraform validate is run explicitly",
+      "Only during terraform import, not plan or apply",
+      "When the output value is read, after the resource is applied"
+    ],
+    "objective": "Write a storage module that provisions an S3 bucket, accepting bucket_name and tags as inputs and exposing bucket ARN, id, and domain as outputs"
+  }
+]

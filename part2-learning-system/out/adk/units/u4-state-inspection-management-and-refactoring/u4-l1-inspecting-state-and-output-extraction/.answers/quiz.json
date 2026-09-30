@@ -1,0 +1,14 @@
+[
+  {
+    "answer": 3,
+    "explanation": "When using the `-json` flag with `terraform show`, any sensitive values in Terraform state are displayed in plain text [c:e11d8b1ab93c]. Terraform does not replace sensitive values with `<sensitive>` in `-json` mode, nor does it omit the resources or require a decryption flag."
+  },
+  {
+    "answer": 0,
+    "explanation": "The `-raw` flag converts a specified output value to a string and prints it directly without special formatting, while also unmasking sensitive values in plain text [c:8cb6093a4f89, c:6b86826aefaf]. Running `terraform output api_token` without flags displays quotes around string values, and `--unmask` is not a valid Terraform option."
+  },
+  {
+    "answer": 1,
+    "explanation": "The `terraform output` command only displays outputs defined in the root module [c:29bc017133fe]. To view outputs from child modules via `terraform output`, you must expose them through an output block defined in your root module [c:1e19b307e8cb]. Child module outputs are stored in state and are not ephemeral, and `terraform output` does not take a `-module` flag."
+  }
+]

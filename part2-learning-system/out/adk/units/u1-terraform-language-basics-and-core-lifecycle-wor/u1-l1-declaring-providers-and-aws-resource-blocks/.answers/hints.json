@@ -1,0 +1,5 @@
+[
+  "Use the `resource` keyword followed by the resource type string, then the resource label, such as `resource \"aws_vpc\" \"main\" { ... }`.",
+  "Inside each resource block, set arguments using key-value assignments, such as `cidr_block = \"10.0.0.0/16\"`.",
+  "For the S3 bucket resource, define `resource \"aws_s3_bucket\" \"data\"` with `bucket = \"my-learning-bucket-2024\"`."
+]

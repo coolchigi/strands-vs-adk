@@ -1,0 +1,14 @@
+[
+  {
+    "answer": 1,
+    "explanation": "TypeScript recognizes a discriminated union when every member contains a shared property with literal types. When `type` is annotated as `string`, it is a general string rather than a literal type, so narrowing does not occur. Interfaces work seamlessly in unions, and any shared property name can serve as the discriminant."
+  },
+  {
+    "answer": 3,
+    "explanation": "Because `PushNotification` is not handled in any preceding `case`, `notification` retains the type `PushNotification` when control reaches `default`. Because no type other than `never` is assignable to `never`, attempting to assign `notification` to `_exhaustiveCheck: never` triggers a compile-time error."
+  },
+  {
+    "answer": 1,
+    "explanation": "When narrowing eliminates every variant in a union, TypeScript uses `never` to represent the remaining unreachable state. Since no type except `never` itself can be assigned to `never`, any unhandled variant will fail type-checking if assigned to a `never`-typed constant. It does not generate code or alter runtime behavior."
+  }
+]

@@ -1,0 +1,32 @@
+[
+  {
+    "stem": "Your root `main.tf` calls a `networking` module and a `compute` module. The compute module needs a list of subnet IDs that the networking module creates. Where do you write the cross-module dependency, and what syntax do you use?",
+    "options": [
+      "In the networking module's `outputs.tf`, by adding a `depends_on` pointing to the compute module.",
+      "In the root `variables.tf`, by declaring a variable that passes subnet IDs between modules.",
+      "In the root `main.tf` compute module block, as an argument: `subnet_ids = module.networking.subnet_ids`.",
+      "Inside the compute module's own `main.tf`, using `data \"terraform_remote_state\"` to read the networking state."
+    ],
+    "objective": "Wire all three modules in the root module, threading networking outputs into compute and storage inputs, and expose final outputs for subnet IDs and instance IPs in root outputs.tf"
+  },
+  {
+    "stem": "After adding four outputs to the root `outputs.tf` \u2014 `networking_subnet_ids`, `compute_instance_ids`, `assets_bucket_id`, and `logs_bucket_id` \u2014 a teammate notices that `terraform apply` prints all four values but running `terraform output` inside the `modules/networking` directory shows nothing. Why?",
+    "options": [
+      "The networking module's `outputs.tf` is missing; module outputs only work when the root defines them.",
+      "Module outputs must be explicitly re-exported in the root module's `outputs.tf` to be displayed; they are not shown by default.",
+      "Only the last output defined in a module is visible; the others are silently dropped.",
+      "The teammate needs to run `terraform init` inside the `modules/networking` directory to activate its outputs."
+    ],
+    "objective": "Wire all three modules in the root module, threading networking outputs into compute and storage inputs, and expose final outputs for subnet IDs and instance IPs in root outputs.tf"
+  },
+  {
+    "stem": "You run `terraform destroy -auto-approve` against your full stack. The command completes successfully. You then open `terraform.tfstate` and look for the `\"resources\"` key. What do you expect to find?",
+    "options": [
+      "The `\"resources\"` key still lists every resource with a `\"status\": \"destroyed\"` field on each one.",
+      "The file contains the last-known attributes of every resource so you can recreate them with `terraform apply`.",
+      "The file no longer exists; Terraform deletes it after a successful destroy.",
+      "The `\"resources\"` key is present and contains an empty array, confirming no managed resources remain."
+    ],
+    "objective": "Apply the full stack to LocalStack, verify each resource tier using AWS CLI commands, and destroy the stack cleanly, confirming an empty state file"
+  }
+]

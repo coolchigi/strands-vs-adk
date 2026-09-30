@@ -1,0 +1,14 @@
+[
+  {
+    "answer": 3,
+    "explanation": "`terraform -version` prints the exact version number of the installed binary, making it the direct way to confirm both that the binary is on the PATH and which version is active. `terraform -help` confirms the CLI works but does not show the version. `which terraform` shows where the binary lives but not its version. Checking a checksum online is a security step, not a version check."
+  },
+  {
+    "answer": 1,
+    "explanation": "`terraform -help` lists all available subcommands directly in the terminal. `terraform -version` only prints the version number. `terraform -install-autocomplete` sets up shell tab completion but does not list subcommands. `terraform list` is not a valid Terraform command."
+  },
+  {
+    "answer": 1,
+    "explanation": "Appending `-help` to any subcommand \u2014 `terraform workspace -help` or equivalently `terraform -help workspace` \u2014 prints that subcommand's description and options directly in the terminal. Running it without arguments may produce an error rather than helpful docs. Checking the website works but is slower than the built-in help. `terraform -version` tells you the version, not what a subcommand does."
+  }
+]

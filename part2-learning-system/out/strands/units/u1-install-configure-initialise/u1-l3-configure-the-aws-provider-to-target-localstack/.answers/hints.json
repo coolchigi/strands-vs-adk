@@ -1,0 +1,5 @@
+[
+  "Each argument in a provider block is just a `key = value` line inside the braces \u2014 the same HCL syntax as every other block.",
+  "`skip_credentials_validation` and `skip_metadata_api_check` are top-level arguments of the provider block, at the same indentation level as `region`, not inside `endpoints`.",
+  "The `endpoints` block is a nested block inside `provider \"aws\" { \u2026 }`. Each line inside it follows the pattern `service_name = \"url\"` \u2014 for example `ec2 = \"http://localhost:4566\"`."
+]

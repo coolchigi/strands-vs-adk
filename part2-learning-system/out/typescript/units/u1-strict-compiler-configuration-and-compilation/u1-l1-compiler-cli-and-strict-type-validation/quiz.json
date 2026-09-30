@@ -1,0 +1,32 @@
+[
+  {
+    "stem": "A developer runs `tsc --noEmitOnError app.ts` on a project file containing a type error. Prior to this command, an older `app.js` file already existed in the target directory. What happens to `app.js` upon executing the compiler command?",
+    "options": [
+      "app.js is overwritten with comments detailing the type errors detected during compilation.",
+      "app.js is not generated or updated because --noEmitOnError halts emission when type-checking errors are encountered.",
+      "app.js is updated with transpiled JavaScript because type errors never prevent output emission.",
+      "app.js is deleted immediately by the compiler to prevent outdated JavaScript from executing."
+    ],
+    "objective": "Compile TypeScript source files via the command line using tsc and verify that --noEmitOnError suppresses output when errors occur"
+  },
+  {
+    "stem": "You have enabled `--noImplicitAny` in your compiler options. Consider the following function declaration:\n\n```ts\nfunction calculateTotal(items) {\n  return items.length;\n}\n```\n\nWhy does the TypeScript compiler raise an error on this code?",
+    "options": [
+      "The property .length is not recognized unless the array element type is explicitly defined.",
+      "Functions must always declare an explicit return type whenever --noImplicitAny is enabled.",
+      "The parameter items has no type annotation and cannot be inferred, causing TypeScript to implicitly fall back to any, which --noImplicitAny rejects.",
+      "Parameters that access collection properties must declare a generic interface constraint."
+    ],
+    "objective": "Identify type errors triggered by --noImplicitAny and --strictNullChecks when handling unannotated variables and nullish values"
+  },
+  {
+    "stem": "A function signature is defined as `function getLength(str: string | null): number`. When `--strictNullChecks` is enabled, why does the expression `return str.length;` inside the function body trigger a compiler error?",
+    "options": [
+      "TypeScript requires undefined to always be included whenever null is specified in a parameter union type.",
+      "Under --strictNullChecks, null has its own distinct type and cannot be used where a concrete value of type string is expected without checking first.",
+      "Enabling --strictNullChecks completely forbids union types containing null from being passed as function parameters.",
+      "The string type in TypeScript does not have a built-in .length property unless asserted with the as operator."
+    ],
+    "objective": "Identify type errors triggered by --noImplicitAny and --strictNullChecks when handling unannotated variables and nullish values"
+  }
+]

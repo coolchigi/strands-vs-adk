@@ -1,0 +1,14 @@
+[
+  {
+    "answer": 2,
+    "explanation": "A user-defined type guard requires a return type predicate of the form `parameterName is Type`, so `data is User` tells TypeScript to narrow `data` to `User` when the check returns true. Annotating with `boolean` only informs TypeScript that a truth value was returned without performing narrowing. Annotating with `User` would mean the function returns a `User` object itself, not a validation boolean."
+  },
+  {
+    "answer": 1,
+    "explanation": "A return type predicate must follow the syntax `parameterName is Type`, where `parameterName` must match the name of a parameter from the function's signature. In this function, the parameter is named `response`, so the predicate must be `response is Post` rather than `item is Post`."
+  },
+  {
+    "answer": 1,
+    "explanation": "When a type guard with `parameterName is Type` is used in an `if/else` check, TypeScript narrows the variable to `Type` in the `if` branch and eliminates that type in the `else` branch. Eliminating `TextContent` from `TextContent | ImageContent` leaves `ImageContent` in the `else` branch."
+  }
+]

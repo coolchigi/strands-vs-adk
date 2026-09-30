@@ -1,0 +1,5 @@
+[
+  "Use `lookup(var.instance_types, var.environment, \"t3.nano\")` to retrieve the instance type corresponding to the environment.",
+  "In `templatefile`, pass `${path.module}/userdata.sh.tftpl` as the first argument, and `{ server_name = \"${var.environment}-server\" }` as the second argument.",
+  "For `tags`, use `merge({ Name = \"${var.environment}-web\", Environment = var.environment }, var.extra_tags)`."
+]

@@ -1,0 +1,5 @@
+[
+  "In `main.tf`, replace the hardcoded CIDR strings in `module \"vpc\"` with `var.vpc_cidr` and `var.public_subnet_cidr`.",
+  "In `aws_instance.web`, replace the empty string for `subnet_id` with `module.vpc.public_subnet_id` to attach the instance to the child module's subnet.",
+  "Ensure all block definitions keep opening braces `{` on the same line as the block header so `terraform init` can parse the file cleanly."
+]

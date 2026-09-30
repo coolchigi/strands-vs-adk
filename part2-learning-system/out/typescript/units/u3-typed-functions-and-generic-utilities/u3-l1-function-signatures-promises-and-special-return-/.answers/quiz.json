@@ -1,0 +1,14 @@
+[
+  {
+    "answer": 0,
+    "explanation": "Because async functions return promises in JavaScript, the return type must be annotated with the Promise type wrapping the value type, giving Promise<number>. Annotating with number is rejected because an async function returns a Promise object, not an immediate number. Promise<void> incorrectly declares that no value is resolved, and async number is invalid TypeScript syntax."
+  },
+  {
+    "answer": 3,
+    "explanation": "In a function type expression, parameter names are required. If you omit the parameter name and write only (string) => void, TypeScript parses 'string' as the identifier name of the parameter and gives it the type any. Believing that TypeScript treats it as an anonymous positional parameter of type string is a common misconception."
+  },
+  {
+    "answer": 3,
+    "explanation": "The never return type signifies that a function never finishes normally, which includes functions that unconditionally throw an exception or terminate execution. While void indicates a function that finishes normally without returning a value, crash never finishes normally. The unknown option confuses the returned value with a caught error, and never is valid for exceptions as well as infinite loops."
+  }
+]

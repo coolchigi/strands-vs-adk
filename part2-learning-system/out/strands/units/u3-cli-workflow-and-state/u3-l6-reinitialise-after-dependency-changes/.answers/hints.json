@@ -1,0 +1,5 @@
+[
+  "The test checks `output.aws_provider_version_constraint`. That output must hold the string `\"~> 6.0\"` \u2014 change it when you restore the constraint, or leave it pointing at the final value.",
+  "After restoring `version = \"~> 6.0\"` in `terraform.tf`, make sure the `aws_provider_version_constraint` output in `outputs.tf` also says `\"~> 6.0\"` so the test can see the final state.",
+  "The output `aws_provider_version_constraint` is a plain string literal in `outputs.tf`. Set it to `\"~> 6.0\"` to match what the check expects, then run `terraform init -upgrade` to finish the exercise."
+]

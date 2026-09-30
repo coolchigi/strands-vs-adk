@@ -1,0 +1,14 @@
+[
+  {
+    "answer": 2,
+    "explanation": "After `state rm`, Terraform's state has no record of the resource, but the resource block is still in `main.tf`. Terraform compares configuration to state: configuration says 'create it', state says 'it doesn't exist', so the plan shows creation. The real infrastructure is untouched \u2014 `state rm` only modifies the state file, not the cloud. Option 1 is wrong because Terraform plans against state, not directly against the cloud on every plan. Option 3 describes destruction, which would happen only if the resource were in state but absent from configuration."
+  },
+  {
+    "answer": 0,
+    "explanation": "Terraform protects `state push` with lineage \u2014 a unique ID minted when the state is first created, rejected if it differs from the remote \u2014 and serial, a counter that increments on every write, rejected if the incoming serial is lower than the remote's. Both can be bypassed with `-force`, which is why making a backup with `terraform state pull` first is always recommended before forcing an overwrite. The other options describe real Terraform concepts (locking, providers) but are not the safeguards specifically tied to `state push`."
+  },
+  {
+    "answer": 0,
+    "explanation": "`terraform state show ADDRESS` displays all attributes of a single resource whose address matches. A `count`-based resource is addressed with a zero-based index in square brackets, so `aws_subnet.public[1]` is correct. Wrapping it in single quotes prevents the shell from interpreting the brackets. `terraform state list` only lists addresses \u2014 it does not display attributes. The other two options use syntax that Terraform does not accept."
+  }
+]

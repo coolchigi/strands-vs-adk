@@ -1,0 +1,5 @@
+[
+  "The state file is valid JSON. Open it in any text editor and search for `\"aws_subnet\"` to jump straight to the subnet section. Each resource entry has `\"type\"`, `\"name\"`, and `\"provider\"` keys at the top level, and a nested `\"instances\"` array that holds `\"attributes\"` and `\"dependencies\"`.",
+  "For Part B, remember that dependency arrows point *from* the resource that needs something *to* the resource it needs. The subnet needs the VPC (its `vpc_id` comes from `aws_vpc.main.id`), so the subnet lists `aws_vpc.main` in its `dependencies` array. The VPC doesn't need the subnet, so its own `dependencies` array will be empty.",
+  "For Part C, compare what you see in the `\"cidr_block\"` field in state (a resolved CIDR like `10.0.0.0/24`) with what is written in `main.tf` (the `cidrsubnet(...)` call). State always stores the *result* of the expression, never the expression itself."
+]

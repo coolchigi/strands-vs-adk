@@ -1,0 +1,14 @@
+[
+  {
+    "answer": 2,
+    "explanation": "Adding `for_each` to a module block loops through a set of keys so that Terraform provisions similar but distinct module instances, with `each.key` supplying the distinct value per instance. Writing three separate module blocks works but requires a new block for every addition \u2014 that is not a single block. Using `count` produces instances indexed by number, not by name, and nesting module blocks is not a valid Terraform construct for multiplication."
+  },
+  {
+    "answer": 1,
+    "explanation": "When a module block uses `for_each`, instances are differentiated by indexing with the map key \u2014 `module.storage[\"my-project-assets\"]`. Using no index (`module.storage.bucket_id`) is invalid because `module.storage` is now a map of instances, not a single instance. Using `[0]` is the `count` index style and does not apply to `for_each`. The old name `module.storage_assets` no longer exists once the block is renamed."
+  },
+  {
+    "answer": 0,
+    "explanation": "The same module can be called multiple times by writing multiple module blocks with different names and different input values; Terraform treats them as completely independent instances. They do not share state or resources. Using the same source in multiple blocks is valid and is one of the main reasons modules exist. Terraform does not merge or overwrite block inputs."
+  }
+]

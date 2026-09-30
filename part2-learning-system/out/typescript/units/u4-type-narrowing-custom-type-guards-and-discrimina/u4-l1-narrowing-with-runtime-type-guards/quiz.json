@@ -1,0 +1,32 @@
+[
+  {
+    "stem": "Why does checking `typeof value === 'object'` fail to narrow a `string[] | null` union down to just `string[]`?",
+    "options": [
+      "In JavaScript, `typeof null` evaluates to the string `'object'`, so `null` remains in the narrowed union.",
+      "JavaScript considers `null` to be undefined unless strict mode is enabled in the compiler.",
+      "TypeScript requires `Array.isArray()` to be invoked before any `typeof` operator can be parsed.",
+      "TypeScript ignores `typeof` guards unless the value is strictly an object literal."
+    ],
+    "objective": "Explain why typeof null evaluates to 'object' and how to safely narrow null from object unions"
+  },
+  {
+    "stem": "You have a variable `input` with type `string | null | undefined`. Which check safely narrows `input` to just `string` in a single comparison?",
+    "options": [
+      "input != null",
+      "input !== undefined",
+      "typeof input === 'object'",
+      "input === null"
+    ],
+    "objective": "Narrow union types using typeof, truthiness checks, equality checks, and the in operator"
+  },
+  {
+    "stem": "A function receives `response: { success: boolean; data: string } | { success: boolean; error: string }`. How can TypeScript narrow to the error branch?",
+    "options": [
+      "By calling response.hasProperty('error')",
+      "By checking if ('error' in response)",
+      "By checking response.error != null directly without narrowing",
+      "By checking typeof response === 'error'"
+    ],
+    "objective": "Narrow union types using typeof, truthiness checks, equality checks, and the in operator"
+  }
+]

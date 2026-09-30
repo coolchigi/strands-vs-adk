@@ -1,0 +1,14 @@
+[
+  {
+    "answer": 0,
+    "explanation": "When calling nested child modules within the same repository, using relative paths like `./modules/vpc` or `./modules/consul-cluster` ensures Terraform treats them as part of the existing package rather than downloading them separately. Absolute paths are not portable and still require initialization. Sourcing via Git forces remote cloning over the network. The `source` argument is mandatory in all module blocks and cannot be omitted."
+  },
+  {
+    "answer": 3,
+    "explanation": "For Git module sources, the `ref` query parameter specifies any checkout target such as a branch, commit SHA-1 hash, or tag, and the `depth` query parameter specifies how many commits the clone operation should include. The `version` argument only applies to Terraform registry sources, not Git URLs, and `shallow` is not a valid module block argument."
+  },
+  {
+    "answer": 0,
+    "explanation": "If a module's `source` argument or registry `version` argument changes, or when new child modules are declared, running `terraform init` is required to download the child module files into the local workspace directory. Running `terraform plan` without initializing will fail because the required module files are missing from the local working directory."
+  }
+]

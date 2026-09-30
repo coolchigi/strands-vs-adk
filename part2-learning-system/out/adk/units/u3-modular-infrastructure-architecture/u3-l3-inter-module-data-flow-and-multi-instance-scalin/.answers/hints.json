@@ -1,0 +1,5 @@
+[
+  "Outputs from child modules are referenced using module.<module_name>.<output_name>, so module.vpc outputs can be passed directly as arguments to module.compute.",
+  "Inside a block with for_each = var.instance_types, use each.key to get the environment name and each.value to get the instance type.",
+  "In outputs.tf, construct a map using a for expression: { for env, mod in module.compute : env => mod.instance_id }."
+]

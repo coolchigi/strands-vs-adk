@@ -1,0 +1,32 @@
+[
+  {
+    "stem": "You have an `aws_vpc` resource named `\"app\"` and want to declare an `aws_subnet` named `\"web\"` inside it. How should you assign the subnet's `vpc_id` argument to build an implicit dependency on the VPC?",
+    "options": [
+      "vpc_id = vpc.app.id",
+      "vpc_id = aws_vpc.app",
+      "vpc_id = \"aws_vpc.app.id\"",
+      "vpc_id = aws_vpc.app.id"
+    ],
+    "objective": "Link infrastructure resources by referencing exported attributes to build implicit dependency graphs"
+  },
+  {
+    "stem": "An `aws_instance` assumes an IAM role whose policies are attached via an `aws_iam_role_policy_attachment` resource. The instance configuration only references the role name via an instance profile, so no attribute of the attachment is passed to the instance. How can you ensure the policy attachment completes before Terraform launches the instance?",
+    "options": [
+      "Pass `aws_iam_role_policy_attachment.example.id` as a dummy value into the instance's `tags` map.",
+      "Move the `aws_iam_role_policy_attachment` block physically above the `aws_instance` block in the file.",
+      "Add `depends_on = [aws_iam_role_policy_attachment.example]` inside the `aws_instance` block.",
+      "Add `depends_on = [aws_instance.example]` inside the `aws_iam_role_policy_attachment` block."
+    ],
+    "objective": "Define explicit execution order between resources using the depends_on meta-argument"
+  },
+  {
+    "stem": "A resource is declared with `count = 3` as `resource \"aws_subnet\" \"tiers\" { count = 3 ... }`. How do you reference the `id` attribute of only the second subnet instance created by this block?",
+    "options": [
+      "aws_subnet.tiers.*.id",
+      "aws_subnet.tiers[\"1\"].id",
+      "aws_subnet.tiers[1].id",
+      "aws_subnet.tiers.id[1]"
+    ],
+    "objective": "Link infrastructure resources by referencing exported attributes to build implicit dependency graphs"
+  }
+]

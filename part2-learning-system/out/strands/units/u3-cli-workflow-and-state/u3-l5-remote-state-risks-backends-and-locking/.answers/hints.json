@@ -1,0 +1,5 @@
+[
+  "The `backend` block is a child of the `terraform {}` block, at the same level as `required_providers`.",
+  "The backend type goes in the block label: `backend \"s3\" { ... }`. Each argument is a simple key = value assignment inside that block.",
+  "You need five arguments: `bucket`, `key`, `region`, `dynamodb_table`, and `encrypt`. Check the exact string values in the task description \u2014 the tests compare them literally."
+]

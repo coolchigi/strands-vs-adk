@@ -1,0 +1,14 @@
+[
+  {
+    "answer": 0,
+    "explanation": "Passing the pre-generated plan file allows Terraform to reliably carry out the exact set of pre-approved changes without re-evaluating or calculating a new plan against modified files or infrastructure. The option suggesting offline provisioning is incorrect because provider APIs are always used to execute the planned changes. The option regarding state recording is incorrect because Terraform updates state on any apply. The dry-run transaction option is incorrect because `terraform plan` never provisions resources or creates remote transactions."
+  },
+  {
+    "answer": 0,
+    "explanation": "When prompted for interactive confirmation during `terraform apply`, only the exact input 'yes' is accepted to approve execution. Entering 'Y', 'YES', or any other text immediately aborts the run without modifying infrastructure. The option claiming 'Y' is accepted as standard confirmation is incorrect because Terraform strictly enforces the full word 'yes'. The options suggesting partial application or plan file generation are incorrect because confirmation is strictly binary."
+  },
+  {
+    "answer": 3,
+    "explanation": "The `terraform destroy` command reads state data to know which real-world objects correspond to managed resources and destroys all of them after asking for confirmation, behaving like deleting every resource from the configuration without requiring manual file modifications. The cloud tag scanning option is incorrect because Terraform uses state data rather than scanning cloud APIs broadly. The state purging option is incorrect because deleting state orphans resources instead of destroying them. The manual commenting option is incorrect because destroy avoids the need to edit files."
+  }
+]

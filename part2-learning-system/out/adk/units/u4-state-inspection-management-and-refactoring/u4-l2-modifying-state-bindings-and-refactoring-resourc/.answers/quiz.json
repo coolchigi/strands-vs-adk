@@ -1,0 +1,14 @@
+[
+  {
+    "answer": 2,
+    "explanation": "Running `terraform state mv` renames the resource's tracking address in state to match the new configuration block without destroying the existing physical resource. Using `terraform state rm` would untrack the resource entirely, `terraform refresh` reconciles external changes without updating resource bindings, and `-replace` plans an explicit destruction and recreation."
+  },
+  {
+    "answer": 1,
+    "explanation": "Passing `-replace` to `terraform plan` targets a specific tracked resource for recreation without altering configuration files. `terraform taint` is deprecated in favor of `-replace`, `terraform state mv` relocates or renames state bindings rather than planning a replacement, and `terraform refresh` does not support replacing resources."
+  },
+  {
+    "answer": 1,
+    "explanation": "Every `terraform state` subcommand that modifies state writes a backup file, and automatic backups generated during state modifications cannot be turned off. Read-only commands like `terraform state list` do not write backup files, no flag exists to disable state modification backups, and state commands operate identically regardless of whether state is local or remote."
+  }
+]

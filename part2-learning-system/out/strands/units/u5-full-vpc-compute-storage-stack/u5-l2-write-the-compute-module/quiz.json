@@ -1,0 +1,32 @@
+[
+  {
+    "stem": "The networking module outputs `subnet_ids = [\"subnet-aaa\", \"subnet-bbb\"]`. You want the compute module to create one EC2 instance in each subnet. Which `aws_instance` block is correct?",
+    "options": [
+      "count = length(var.subnet_ids)\nsubnet_id = var.subnet_ids[count.index]",
+      "count = 2\nsubnet_id = var.subnet_ids[0]",
+      "count = length(var.subnet_ids)\nsubnet_id = var.subnet_ids[0]",
+      "for_each = var.subnet_ids\nsubnet_id = each.value"
+    ],
+    "objective": "Write a compute module that creates EC2 instances using subnet IDs and instance type received from the networking module's outputs, with count to create multiple instances"
+  },
+  {
+    "stem": "Your compute module declares `variable \"instance_type\" { type = string; default = \"t3.micro\" }`. The root module calls it without setting `instance_type`. What happens?",
+    "options": [
+      "Terraform prompts interactively for the value at plan time.",
+      "Terraform uses an empty string because omitting an argument overrides the default with null.",
+      "Terraform errors because every required variable must be explicitly set by the caller.",
+      "Terraform uses `\"t3.micro\"` because the default applies when the caller omits the argument."
+    ],
+    "objective": "Write a compute module that creates EC2 instances using subnet IDs and instance type received from the networking module's outputs, with count to create multiple instances"
+  },
+  {
+    "stem": "After adding `count` to `aws_instance.app`, which output value correctly exposes all instance IDs as a list?",
+    "options": [
+      "value = aws_instance.app[*].id",
+      "value = aws_instance.app[0].id",
+      "value = tolist(aws_instance.app.id)",
+      "value = aws_instance.app.id"
+    ],
+    "objective": "Write a compute module that creates EC2 instances using subnet IDs and instance type received from the networking module's outputs, with count to create multiple instances"
+  }
+]

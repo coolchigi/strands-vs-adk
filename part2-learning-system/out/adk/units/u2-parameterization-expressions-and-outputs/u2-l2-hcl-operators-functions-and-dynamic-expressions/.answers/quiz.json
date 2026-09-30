@@ -1,0 +1,14 @@
+[
+  {
+    "answer": 3,
+    "explanation": "Running terraform console opens an interactive session specifically designed to evaluate Terraform expressions and test built-in functions against the current configuration context. Running terraform plan has no -dry-run flag for evaluating ad-hoc expressions. Running terraform test executes tests defined in test files rather than an interactive REPL. Running terraform validate statically checks configuration syntax and semantics and does not support an --expr flag for evaluation."
+  },
+  {
+    "answer": 2,
+    "explanation": "merge takes an arbitrary number of maps or objects and merges them in left-to-right order, meaning keys from later arguments overwrite matching keys from earlier ones. Passing var.tags as the second argument allows it to override Project. Placing var.tags first would cause the hardcoded Project = \"Athena\" to overwrite any value provided in var.tags. concat combines lists rather than maps, and coalesce returns the first non-null, non-empty argument rather than merging map keys."
+  },
+  {
+    "answer": 0,
+    "explanation": "templatefile reads the file at the given path and renders its contents using the provided map of template variables. The file function only reads a static file into a string without evaluating template variables and does not accept a variable map argument. Passing a list instead of a map or object to templatefile is invalid syntax, and render is not a built-in Terraform function."
+  }
+]

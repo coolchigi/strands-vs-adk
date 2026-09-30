@@ -1,0 +1,5 @@
+[
+  "The `count` value is just the length of the list variable \u2014 `count = length(var.availability_zones)` \u2014 and `count.index` (0, 1, 2\u2026) is available anywhere inside that resource block to index into the same list.",
+  "For `for_each`, pass a literal map wrapped in `tomap({...})` and use `each.key` where you want the map key (the bucket name) and `each.value` where you want the associated value (the purpose string).",
+  "The splat expression `aws_subnet.public[*].id` works because `count` makes the resource a list. For the `for_each` output, use a for expression: `[for b in aws_s3_bucket.env : b.id]` \u2014 splat doesn't work directly on maps."
+]

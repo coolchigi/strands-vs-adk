@@ -1,0 +1,5 @@
+[
+  "Check which specifiers in the `./guards.ts` import statement are functions called at runtime versus interfaces used as types.",
+  "An inline type import prefixes an identifier with `type` (such as `type Post`). Runtime functions like `isPost` must not have the `type` prefix, otherwise they are stripped and cannot be used as values.",
+  "In `service.ts`, change `type isPost` to `isPost` in the import list from `./guards.ts`, and set `formatted: formatResponse(response)` in `renderPostResponse`."
+]

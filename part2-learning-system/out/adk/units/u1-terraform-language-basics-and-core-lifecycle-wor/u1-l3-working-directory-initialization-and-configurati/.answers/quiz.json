@@ -1,0 +1,14 @@
+[
+  {
+    "answer": 3,
+    "explanation": "Running `terraform init` initializes the working directory by downloading and caching required provider plugins into the hidden `.terraform` directory, which unlocks commands like `terraform plan`. `terraform get` only downloads modules, not provider plugins. `terraform validate` checks syntax and arguments but requires an initialized directory first."
+  },
+  {
+    "answer": 0,
+    "explanation": "Modifying provider requirements, module sources, or backend configurations requires reinitialization via `terraform init` before provisioning commands can continue. Running `terraform fmt` only adjusts style and does not install or update provider plugins."
+  },
+  {
+    "answer": 2,
+    "explanation": "`terraform validate` validates configuration syntax and arguments, checking resource attribute names, types, and module arguments against the provider's schema without provisioning infrastructure. `terraform fmt` only rewrites whitespace and alignment, never modifying attribute names."
+  }
+]

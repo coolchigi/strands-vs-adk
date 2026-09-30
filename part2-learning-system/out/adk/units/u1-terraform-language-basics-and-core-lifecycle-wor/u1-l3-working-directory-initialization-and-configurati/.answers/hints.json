@@ -1,0 +1,5 @@
+[
+  "Locate the `aws_subnet.private` block near the bottom of `main.tf`.",
+  "Replace the placeholder IP CIDR string `10.0.99.0/24` with `10.0.2.0/24`.",
+  "Run `terraform fmt` to canonicalize formatting before running `terraform test`."
+]

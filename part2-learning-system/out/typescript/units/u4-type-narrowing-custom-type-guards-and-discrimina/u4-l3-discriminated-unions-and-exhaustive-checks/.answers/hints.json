@@ -1,0 +1,5 @@
+[
+  "Use literal types like status: \"success\" instead of the broad string type so TypeScript can use status as a discriminant.",
+  "In the switch statement, each case label (\"loading\", \"success\", \"error\") narrows response so you can directly access response.data or response.error.",
+  "In the default block, assign response to a variable explicitly annotated with type never: const _exhaustiveCheck: never = response; return _exhaustiveCheck;"
+]

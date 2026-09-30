@@ -1,0 +1,32 @@
+[
+  {
+    "stem": "You have renamed a resource block in your configuration from `resource \"aws_s3_bucket\" \"data\"` to `resource \"aws_s3_bucket\" \"storage\"`. Before running `terraform apply`, you need Terraform to update the tracked state address so it matches the new configuration identifier without destroying and recreating the live cloud bucket. Which command should you execute?",
+    "options": [
+      "terraform state rm aws_s3_bucket.data && terraform state rm aws_s3_bucket.storage",
+      "terraform plan -replace=aws_s3_bucket.data",
+      "terraform state mv aws_s3_bucket.data aws_s3_bucket.storage",
+      "terraform refresh -target=aws_s3_bucket.storage"
+    ],
+    "objective": "List tracked state addresses and rename or relocate resources in state using terraform state mv"
+  },
+  {
+    "stem": "An EC2 instance managed by Terraform in production (`module.compute[\"prod\"].aws_instance.web`) has experienced an operating system corruption and must be completely recreated on the next deployment. You are not allowed to edit any `.tf` configuration files. How should you plan this recreation?",
+    "options": [
+      "Run terraform state mv module.compute[\"prod\"].aws_instance.web module.compute[\"prod\"].aws_instance.web_new",
+      "Run terraform plan -replace='module.compute[\"prod\"].aws_instance.web'",
+      "Run terraform taint module.compute[\"prod\"].aws_instance.web followed by terraform plan",
+      "Run terraform refresh -replace='module.compute[\"prod\"].aws_instance.web'"
+    ],
+    "objective": "Plan resource recreation using the -replace flag without modifying configuration files"
+  },
+  {
+    "stem": "An engineer runs `terraform state mv aws_instance.web aws_instance.web_app` to rename a resource binding. A team member asks whether this command creates a backup file and whether backup creation can be turned off with a CLI flag. What is the correct answer?",
+    "options": [
+      "Backup creation on terraform state mv can be disabled by supplying the -no-backup flag.",
+      "Terraform automatically writes a backup file on every state-modifying command, and this backup behavior cannot be disabled.",
+      "A backup file is only created if the Terraform state file is managed in a remote backend.",
+      "Terraform only creates backup files for read-only subcommands like terraform state list, so terraform state mv creates none."
+    ],
+    "objective": "List tracked state addresses and rename or relocate resources in state using terraform state mv"
+  }
+]

@@ -1,0 +1,32 @@
+[
+  {
+    "stem": "You have a child module at `./modules/storage` that creates one S3 bucket. You need three buckets with different names. Which approach uses a single module block to achieve this?",
+    "options": [
+      "Add `count = 3` to one module block and pass `count.index` as the bucket name.",
+      "Write three separate module blocks, each with a different block name and bucket_name value.",
+      "Add `for_each = toset([\"a\", \"b\", \"c\"])` to one module block and pass `each.key` as the bucket name.",
+      "Nest one module block inside another to multiply the instances."
+    ],
+    "objective": "Use for_each on a module block to create multiple module instances from a single block, referencing each.key to pass distinct values"
+  },
+  {
+    "stem": "After replacing two explicit `module \"storage_assets\"` and `module \"storage_logs\"` blocks with a single `module \"storage\"` block that uses `for_each = toset([\"my-project-assets\", \"my-project-logs\"])`, how do you reference the assets bucket's output in a root output?",
+    "options": [
+      "`module.storage[0].bucket_id`",
+      "`module.storage[\"my-project-assets\"].bucket_id`",
+      "`module.storage_assets.bucket_id`",
+      "`module.storage.bucket_id`"
+    ],
+    "objective": "Use for_each on a module block to create multiple module instances from a single block, referencing each.key to pass distinct values"
+  },
+  {
+    "stem": "A root `main.tf` contains these two blocks:\n```hcl\nmodule \"db_primary\" {\n  source = \"./modules/db\"\n  name   = \"primary\"\n}\nmodule \"db_replica\" {\n  source = \"./modules/db\"\n  name   = \"replica\"\n}\n```\nWhat does Terraform treat these as?",
+    "options": [
+      "Two independent module instances, each managing their own set of resources.",
+      "One module instance that creates two resources inside `./modules/db`.",
+      "An error, because the same source cannot be used in two module blocks.",
+      "A single module instance whose `name` variable is set to the last value declared."
+    ],
+    "objective": "Call the same child module twice from the root module with different input values and verify both instances are planned as distinct resources"
+  }
+]

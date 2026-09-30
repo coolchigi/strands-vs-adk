@@ -1,0 +1,5 @@
+[
+  "Check the parameter list of `parseScore`: TypeScript requires an explicit type such as `input: string` when `--noImplicitAny` is enabled.",
+  "In `parseScore`, wrap `Number.parseInt(input, 10)` and check `Number.isNaN(parsed)` to return `0` for non-numeric inputs.",
+  "In `formatGreeting`, verify whether `name === null || name === undefined` before attempting to access `.trim()` on `name`."
+]

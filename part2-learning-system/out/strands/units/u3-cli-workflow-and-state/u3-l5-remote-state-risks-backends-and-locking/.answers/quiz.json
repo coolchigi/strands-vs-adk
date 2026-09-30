@@ -1,0 +1,14 @@
+[
+  {
+    "answer": 0,
+    "explanation": "With a local state file there is no locking mechanism. Both runs read the same file, each writes back its own version, and whichever finishes last overwrites the other \u2014 potentially losing tracked resources or corrupting the state. A 'state locked' error only occurs with a backend that supports locking (e.g. S3 + DynamoDB); a merge never happens because Terraform has no merge logic for state."
+  },
+  {
+    "answer": 0,
+    "explanation": "Many Terraform resources write sensitive values \u2014 database passwords, IAM access keys, and similar secrets \u2014 in plaintext into the state file. Pushing that file to a public repo makes those secrets readable by anyone. The other options describe fictional limitations; git handles binary files fine, has no 1 MB file limit, and drift detection is unrelated to whether state is committed."
+  },
+  {
+    "answer": 0,
+    "explanation": "A fully-featured backend with locking prevents two or more users from running Terraform simultaneously. When Engineer A's run acquires the DynamoDB lock, any subsequent run that tries to acquire the same lock is rejected with an error immediately \u2014 it does not queue, run in parallel, or silently wait. The run can be retried once the lock is released."
+  }
+]

@@ -1,0 +1,5 @@
+[
+  "To thread a networking output into compute's input, set the argument inside the compute module block: `subnet_ids = module.networking.subnet_ids`. All non-source, non-version arguments in a module block become that module's input variables.",
+  "A `for_each` module creates instances keyed by the set values. To address a specific instance's output in `outputs.tf`, use `module.storage[\"my-project-assets\"].bucket_id` \u2014 the string key in square brackets selects which instance you want.",
+  "If a check about `networking_subnet_ids` or `compute_instance_ids` fails, open `outputs.tf` and confirm each output's `value` is set to the exact module output reference \u2014 for example `value = module.networking.subnet_ids` rather than a hard-coded list."
+]

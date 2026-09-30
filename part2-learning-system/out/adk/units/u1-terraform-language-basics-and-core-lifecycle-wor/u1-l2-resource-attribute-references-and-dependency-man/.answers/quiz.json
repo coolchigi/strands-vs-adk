@@ -1,0 +1,14 @@
+[
+  {
+    "answer": 3,
+    "explanation": "Referencing `aws_vpc.app.id` directly accesses the exported `id` attribute and establishes an implicit dependency so Terraform provisions the VPC before the subnet. Wrapping the reference in quotes evaluates to a literal string rather than the resource attribute. Assigning `aws_vpc.app` passes the entire resource object rather than the string ID required by `vpc_id`. Omitting the provider prefix `aws_` is invalid syntax."
+  },
+  {
+    "answer": 2,
+    "explanation": "Setting `depends_on = [aws_iam_role_policy_attachment.example]` in the `aws_instance` block explicitly forces Terraform to finish all operations on the policy attachment before starting instance operations. Placing `depends_on` inside the attachment block would invert the relationship and create the opposite ordering. Physical ordering in the file does not dictate Terraform execution order. While dummy tags would technically create a dependency, `depends_on` is the intended mechanism designed specifically for explicit ordering without altering resource arguments."
+  },
+  {
+    "answer": 2,
+    "explanation": "When a resource uses `count`, referencing it produces a list of objects representing its instances. You access a specific instance using zero-based integer indexing on the resource list (`aws_subnet.tiers[1].id`). `aws_subnet.tiers.id[1]` is invalid because the list represents instances, not an attribute holding a list. String keys like `[\"1\"]` are used for resources configured with `for_each`, and splat syntax `.*.` produces a list of all IDs rather than a single ID."
+  }
+]

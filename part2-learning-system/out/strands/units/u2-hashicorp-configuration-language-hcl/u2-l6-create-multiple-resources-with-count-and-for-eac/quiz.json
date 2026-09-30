@@ -1,0 +1,32 @@
+[
+  {
+    "stem": "Your configuration has `var.availability_zones = [\"us-east-1a\", \"us-east-1b\", \"us-east-1c\"]` and a subnet resource with `count = length(var.availability_zones)`. Which expression correctly outputs a list of all three subnet IDs?",
+    "options": [
+      "aws_subnet.public[each.key].id",
+      "values(aws_subnet.public)[*].id",
+      "aws_subnet.public.id",
+      "aws_subnet.public[*].id"
+    ],
+    "objective": "Use count with length() to create one subnet per availability zone and reference individual instances with index notation"
+  },
+  {
+    "stem": "You have a count-based resource `aws_subnet.public` with three instances and want to rewrite it using `for_each` with the map `{ web = \"10.0.0.0/24\", app = \"10.0.1.0/24\", db = \"10.0.2.0/24\" }`. Inside the new resource block, how do you set the `cidr_block` argument?",
+    "options": [
+      "cidr_block = each.value",
+      "cidr_block = var.subnets[count.index]",
+      "cidr_block = aws_subnet.public[each.key].cidr_block",
+      "cidr_block = each.key"
+    ],
+    "objective": "Rewrite a count-based resource block using for_each with a map, referencing each.key and each.value inside the block"
+  },
+  {
+    "stem": "A team needs to create three S3 buckets: `prod-logs`, `staging-logs`, and `dev-logs`. Later, they expect to destroy only the `dev-logs` bucket without affecting the others. Which approach is better and why?",
+    "options": [
+      "Use count = 3 because the buckets are nearly identical and an integer index is sufficient.",
+      "Use for_each with toset() on a list of integers, because sets are more efficient than maps.",
+      "Use for_each with a map keyed by environment name, because stable string keys mean removing one entry destroys only that bucket.",
+      "Use count = 3 because count always creates resources faster than for_each."
+    ],
+    "objective": "Choose between count and for_each for a given scenario, justifying the decision"
+  }
+]

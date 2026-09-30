@@ -1,0 +1,14 @@
+[
+  {
+    "answer": 1,
+    "explanation": "Prefixing an individual import specifier with `type` declares an inline type import. Values imported with `type` do not exist in emitted JavaScript and can only be used in non-emitting type positions; using them in a runtime value position produces a compiler error. The compiler does allow the `type` keyword before functions, but restricts their subsequent use to types."
+  },
+  {
+    "answer": 2,
+    "explanation": "TypeScript allows individual imports within an import statement to be prefixed with `type` (inline type imports). This informs transpilers that `RequestConfig` is purely a type to be elided, while `sendRequest` is a runtime value that must be preserved. Using `import type` for the entire statement would turn `sendRequest` into a type-only reference that cannot be called at runtime."
+  },
+  {
+    "answer": 3,
+    "explanation": "A type-only import declaration (`import type`) cannot declare both a default import and named bindings together because the syntax creates ambiguity over whether `type` applies to just the default import or the entire import statement. To import both, developers separate them into distinct declarations or use inline `type` imports."
+  }
+]

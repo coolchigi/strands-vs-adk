@@ -1,0 +1,14 @@
+[
+  {
+    "answer": 0,
+    "explanation": "A variable with no default is required \u2014 the caller must supply it every time the module is used. A variable with default = {} is optional because Terraform uses the default when the caller omits it. Setting bucket_name to default = \"\" makes it optional (empty string is still a value), and giving tags no default makes it required, which is the opposite of what is needed."
+  },
+  {
+    "answer": 3,
+    "explanation": "Outputs are the only supported way to get information about resources inside a module. The root module accesses them via module.<name>[<key>].<output_name>. aws_s3_bucket.main.arn is only in scope inside the storage module itself, not in the root. File paths and var references are not valid ways to read module outputs."
+  },
+  {
+    "answer": 3,
+    "explanation": "A precondition in an output block is evaluated when Terraform reads that output's value \u2014 during apply (or plan when the value is known). It is not a validate-only check, it is not run at variable-parsing time before planning, and it applies to normal plan/apply operations, not only import."
+  }
+]

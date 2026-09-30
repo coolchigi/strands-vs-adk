@@ -1,0 +1,5 @@
+[
+  "Move the VPC and subnet resources from root into `modules/vpc/main.tf`. Do not place a provider block inside the child module.",
+  "In `modules/vpc/outputs.tf`, set `value = aws_vpc.main.id` for `vpc_id` and `value = aws_subnet.public.id` for `public_subnet_id`.",
+  "In root `main.tf`, pass `vpc_cidr = var.vpc_cidr` and `public_subnet_cidr = var.public_subnet_cidr` inside the `module \"vpc\"` block, and reference `module.vpc.public_subnet_id` in `aws_instance.web`."
+]

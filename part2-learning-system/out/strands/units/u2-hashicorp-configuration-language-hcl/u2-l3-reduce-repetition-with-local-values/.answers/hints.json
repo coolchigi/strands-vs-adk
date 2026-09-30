@@ -1,0 +1,5 @@
+[
+  "A `locals` block uses the plural keyword, but when you reference a local value inside a resource argument you write `local.<NAME>` \u2014 singular.",
+  "String interpolation in HCL looks like `\"${var.foo}-${var.bar}\"`. The local value is just that expression assigned to a name inside `locals { ... }`.",
+  "The `tags` argument takes a map. For example: `tags = { Project = local.name_prefix }`. Both resources need their own `tags` block referencing the same local."
+]

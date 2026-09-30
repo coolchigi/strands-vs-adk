@@ -1,0 +1,32 @@
+[
+  {
+    "stem": "You have an `aws_instance` whose AMI ID must change. Terraform's plan shows this forces replacement. You have `create_before_destroy = true` in its lifecycle block. What does Terraform do?",
+    "options": [
+      "Terraform returns an error and refuses to proceed because the instance must be replaced.",
+      "Terraform destroys the original instance first, then creates the new one.",
+      "Terraform creates the new instance first, then destroys the original once the new one is ready.",
+      "Terraform updates the AMI ID in-place without replacing the instance."
+    ],
+    "objective": "Predict the effect of create_before_destroy and ignore_changes lifecycle arguments on a planned replacement"
+  },
+  {
+    "stem": "An auto-scaling group sometimes changes `desired_capacity` at runtime. Every time a teammate runs `terraform apply`, Terraform resets `desired_capacity` back to the value in the config. Which lifecycle directive stops this?",
+    "options": [
+      "`ignore_changes = [desired_capacity]`",
+      "`create_before_destroy = true`",
+      "`replace_triggered_by = [desired_capacity]`",
+      "`prevent_destroy = true`"
+    ],
+    "objective": "Predict the effect of create_before_destroy and ignore_changes lifecycle arguments on a planned replacement"
+  },
+  {
+    "stem": "A colleague adds `ignore_changes = [ami]` to an EC2 instance's lifecycle block. The AMI ID in the config is later updated to a new value. What happens on the next `terraform plan`?",
+    "options": [
+      "Terraform shows an in-place update of the ami attribute.",
+      "Terraform shows a replacement because the AMI ID changed.",
+      "Terraform shows no change for the instance because the ami attribute is ignored.",
+      "Terraform returns an error because ami cannot appear in ignore_changes."
+    ],
+    "objective": "Predict the effect of create_before_destroy and ignore_changes lifecycle arguments on a planned replacement"
+  }
+]

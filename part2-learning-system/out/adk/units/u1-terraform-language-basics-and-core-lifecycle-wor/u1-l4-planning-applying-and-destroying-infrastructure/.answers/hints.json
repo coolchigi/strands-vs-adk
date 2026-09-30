@@ -1,0 +1,5 @@
+[
+  "Look at the aws_route_table_association resource at the bottom of main.tf. It needs to link the public subnet to the public route table.",
+  "Access attributes using resource references in the format <resource_type>.<resource_name>.<attribute>.",
+  "Assign subnet_id = aws_subnet.public.id and route_table_id = aws_route_table.public.id."
+]

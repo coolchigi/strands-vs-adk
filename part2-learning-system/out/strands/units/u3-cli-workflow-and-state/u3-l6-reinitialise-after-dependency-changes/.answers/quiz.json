@@ -1,0 +1,14 @@
+[
+  {
+    "answer": 1,
+    "explanation": "`terraform init -upgrade` tells Terraform to ignore the existing lock file and pick the newest provider version that still satisfies the version constraint \u2014 that is exactly what the flag is designed for. Deleting the lock file manually would work but is not the recommended approach and loses the hash records. `terraform apply` has no `-upgrade` flag for providers. Editing the lock file by hand would corrupt its checksums."
+  },
+  {
+    "answer": 3,
+    "explanation": "Without `-upgrade`, `terraform init` respects whatever version is already recorded in the lock file and does not re-select providers. You must pass `-upgrade` to have Terraform pick the newest version allowed by the updated constraint."
+  },
+  {
+    "answer": 2,
+    "explanation": "`terraform init` is explicitly documented as safe to run multiple times and will never delete existing configuration or state. The `-upgrade` flag affects only which provider (or module) version is downloaded and recorded in the lock file \u2014 state is untouched."
+  }
+]

@@ -1,0 +1,32 @@
+[
+  {
+    "stem": "You saved a plan with `terraform plan -out=tfplan` ten minutes ago. A colleague has since manually added a tag to one of the resources in the AWS console. You now run `terraform apply tfplan`. What does Terraform do?",
+    "options": [
+      "Detects the manual tag change, updates the plan to include it, and asks you to approve the revised plan.",
+      "Performs exactly the operations recorded in the saved plan without asking for confirmation.",
+      "Refuses to apply because the real infrastructure no longer matches the plan.",
+      "Runs a fresh plan against current infrastructure and prompts you to approve it before applying."
+    ],
+    "objective": "Apply the saved plan file to LocalStack, confirm the state file is updated, and verify outputs are printed"
+  },
+  {
+    "stem": "After running `terraform apply tfplan` successfully against LocalStack, you open `terraform.tfstate`. What should you expect to find there?",
+    "options": [
+      "Only the plan diff showing what was added, not the current attribute values.",
+      "Every managed resource's attributes, including computed values like IDs, written by Terraform after the apply.",
+      "An empty resources list, because the plan file was consumed by the apply.",
+      "The file is unchanged from before the apply, because LocalStack is not real AWS."
+    ],
+    "objective": "Apply the saved plan file to LocalStack, confirm the state file is updated, and verify outputs are printed"
+  },
+  {
+    "stem": "You run `terraform destroy` on a working directory that manages a VPC, two subnets, and an S3 bucket. After typing `yes` at the prompt and waiting for it to complete, you inspect `terraform.tfstate`. What do you expect to see?",
+    "options": [
+      "The state file is deleted from disk because there are no more resources.",
+      "The state file still exists and its `resources` key is an empty array.",
+      "The state file still exists and still lists all four resources, but marks each one as `destroyed = true`.",
+      "The state file contains the last-known attributes of the destroyed resources so Terraform can recreate them."
+    ],
+    "objective": "Run terraform destroy, confirm the prompt, and verify the state file shows an empty resources list"
+  }
+]

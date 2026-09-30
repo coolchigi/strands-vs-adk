@@ -1,0 +1,32 @@
+[
+  {
+    "stem": "You have a VPC with CIDR `10.10.0.0/16`. You call `cidrsubnet(\"10.10.0.0/16\", 8, 3)`. What is the resulting subnet CIDR?",
+    "options": [
+      "10.10.0.0/24",
+      "10.10.3.0/24",
+      "10.10.3.0/16",
+      "10.10.0.3/24"
+    ],
+    "objective": "Predict the CIDR output of a cidrsubnet call given a parent prefix, newbits, and netnum"
+  },
+  {
+    "stem": "In your Terraform configuration you write `vpc_id = aws_vpc.main.id` inside an `aws_subnet` resource block. What does this expression do beyond supplying the value?",
+    "options": [
+      "It copies the VPC's id into a local variable for reuse elsewhere.",
+      "It registers an explicit depends_on relationship that appears in the state file.",
+      "It forces Terraform to refresh the VPC's state before every plan.",
+      "It creates an implicit dependency so Terraform creates the VPC before the subnet."
+    ],
+    "objective": "Reference resource attributes across blocks using dot-notation expressions and implicit dependency, and compute subnet CIDRs using cidrsubnet and length"
+  },
+  {
+    "stem": "You call `cidrsubnet(\"192.168.0.0/24\", 4, 5)`. What prefix length does the result have, and why?",
+    "options": [
+      "A /24, because newbits replaces the existing prefix length.",
+      "A /20, because 24 \u2212 4 = 20.",
+      "A /28, because 24 + 4 = 28.",
+      "A /32, because cidrsubnet always produces host addresses."
+    ],
+    "objective": "Predict the CIDR output of a cidrsubnet call given a parent prefix, newbits, and netnum"
+  }
+]

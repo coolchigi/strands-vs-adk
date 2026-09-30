@@ -1,0 +1,5 @@
+[
+  "Remember that a type predicate has the form `parameterName is TargetType` instead of `boolean` in the function's return signature.",
+  "Check `typeof data === \"object\" && data !== null` first before using the `in` operator to verify properties exist on the object.",
+  "Once you know the properties exist using `\"prop\" in data`, verify each property's runtime type with `typeof data.prop === \"number\"` or `typeof data.prop === \"string\"`."
+]

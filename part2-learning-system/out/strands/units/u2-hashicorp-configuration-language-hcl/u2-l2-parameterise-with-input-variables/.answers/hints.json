@@ -1,0 +1,5 @@
+[
+  "Check that `variables.tf` has two complete `variable` blocks \u2014 one for `bucket_name` and one for `instance_type`. Each needs `type`, `description`, and `default`.",
+  "The `bucket_name` variable needs a `validation` block inside it. The `condition` should evaluate to `false` when the string is empty \u2014 `length(var.bucket_name) > 0` is one way to express that.",
+  "In `main.tf`, the `bucket` argument of `aws_s3_bucket.assets` should read `var.bucket_name`, and `instance_type` of `aws_instance.app` should read `var.instance_type`. In `terraform.tfvars`, add a line: `bucket_name = \"my-learn-assets-2024\"`."
+]

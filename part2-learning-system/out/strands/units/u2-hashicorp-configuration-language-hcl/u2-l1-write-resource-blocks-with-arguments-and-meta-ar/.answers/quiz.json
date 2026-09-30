@@ -1,0 +1,14 @@
+[
+  {
+    "answer": 2,
+    "explanation": "`create_before_destroy = true` tells Terraform to provision the replacement resource before tearing down the current one, avoiding a gap in availability [c:5173ec833c69]. Without it, the default order is destroy-then-create."
+  },
+  {
+    "answer": 0,
+    "explanation": "`ignore_changes` takes a list of attribute names that Terraform should not attempt to reconcile, so it will leave `desired_capacity` at whatever value the auto-scaler set [c:5cd7732a9c55]. `create_before_destroy` only affects replacement order, and `prevent_destroy` blocks deletions, neither of which is the issue here."
+  },
+  {
+    "answer": 2,
+    "explanation": "`ignore_changes` tells Terraform not to reconcile the listed attributes [c:8df2a85eeeec]. Even though the config value differs from the real resource, Terraform will not plan any action for that attribute. The wrong option \u2014 showing a replacement \u2014 would only happen without `ignore_changes`."
+  }
+]

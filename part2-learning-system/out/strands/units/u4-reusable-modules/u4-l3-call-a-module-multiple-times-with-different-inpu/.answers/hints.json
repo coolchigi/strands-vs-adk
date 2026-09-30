@@ -1,0 +1,5 @@
+[
+  "A `for_each` module block looks just like a resource block with `for_each` \u2014 add the meta-argument inside the `module` block and use `each.key` wherever you need the instance-specific value.",
+  "The set you pass to `for_each` should contain the exact bucket names as strings. `toset([...])` turns a list literal into the set type that `for_each` expects.",
+  "To reference one specific instance of a `for_each` module, index it with the key in square brackets: `module.storage[\"my-project-assets\"]`."
+]

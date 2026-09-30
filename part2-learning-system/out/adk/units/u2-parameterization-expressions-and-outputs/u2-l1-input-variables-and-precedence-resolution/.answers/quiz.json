@@ -1,0 +1,14 @@
+[
+  {
+    "answer": 2,
+    "explanation": "CLI flags (`-var`) have the highest priority in Terraform precedence resolution, overriding values from `terraform.tfvars`, `TF_VAR_` environment variables, and the variable's default value. The value `\"192.168.0.0/16\"` from `terraform.tfvars` would beat the environment variable and default, but cannot override CLI flags."
+  },
+  {
+    "answer": 0,
+    "explanation": "`terraform.tfvars` has higher precedence than `TF_VAR_` environment variables and block default arguments. The option stating environment variables take precedence over file-based definitions is incorrect because environment variables sit lower in precedence than any tfvars files. Terraform does not raise an error on multiple assignments; it resolves them via precedence rules."
+  },
+  {
+    "answer": 2,
+    "explanation": "Terraform variable blocks support custom constraints via `validation` blocks that define a boolean `condition` expression and an `error_message`. Terraform does not have an `enum` type constraint. The `sensitive` and `ephemeral` arguments control CLI display and state storage respectively, not value validation."
+  }
+]

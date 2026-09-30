@@ -1,0 +1,32 @@
+[
+  {
+    "stem": "You change the AWS provider constraint from `~> 6.0` to `~> 6.66` and run `terraform init`. Terraform exits with an error saying the locked version does not match the new constraint. What is the correct next step?",
+    "options": [
+      "Edit the lock file by hand to match the new constraint, then rerun `terraform init`.",
+      "Run `terraform init -upgrade` so Terraform selects the newest version allowed by the new constraint.",
+      "Delete `.terraform.lock.hcl` manually, then rerun `terraform init`.",
+      "Run `terraform apply -upgrade` to update the provider during the next deployment."
+    ],
+    "objective": "Change a provider version constraint and re-run terraform init with appropriate flags to update the lock file"
+  },
+  {
+    "stem": "After running `terraform init -upgrade` with constraint `~> 6.66`, you restore the constraint to `~> 6.0` but run only `terraform init` (no flags). What happens to the lock file?",
+    "options": [
+      "Terraform raises an error and refuses to initialise until you add `-reconfigure`.",
+      "Terraform rewrites the lock file to the latest 6.x release automatically.",
+      "Terraform deletes the lock file and forces you to rerun with `-upgrade`.",
+      "Terraform leaves the lock file unchanged because it does not re-select already-installed providers without `-upgrade`."
+    ],
+    "objective": "Change a provider version constraint and re-run terraform init with appropriate flags to update the lock file"
+  },
+  {
+    "stem": "A colleague asks whether running `terraform init -upgrade` on a production configuration is dangerous because it might overwrite state. What is the correct answer?",
+    "options": [
+      "Yes \u2014 `-upgrade` rewrites both the lock file and the state file, so you should back up state first.",
+      "Yes \u2014 any `terraform init` run can destroy resources if a provider version changes behaviour.",
+      "No \u2014 `terraform init` never deletes your existing configuration or state, regardless of flags; it only updates downloaded plugins and the lock file.",
+      "No \u2014 but only because `-upgrade` skips state entirely and only affects module source code."
+    ],
+    "objective": "Change a provider version constraint and re-run terraform init with appropriate flags to update the lock file"
+  }
+]

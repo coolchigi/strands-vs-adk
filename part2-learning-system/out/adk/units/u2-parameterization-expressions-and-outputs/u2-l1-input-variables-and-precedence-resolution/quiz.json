@@ -1,0 +1,32 @@
+[
+  {
+    "stem": "An engineer has a configuration where `variables.tf` defines `default = \"10.0.0.0/16\"` for `vpc_cidr`. The shell environment has `TF_VAR_vpc_cidr=\"172.16.0.0/16\"`. The directory also contains `terraform.tfvars` with `vpc_cidr = \"192.168.0.0/16\"`. The engineer executes `terraform apply -var=\"vpc_cidr=10.50.0.0/16\"`. Which value does Terraform assign to `var.vpc_cidr`?",
+    "options": [
+      "\"10.0.0.0/16\"",
+      "\"192.168.0.0/16\"",
+      "\"10.50.0.0/16\"",
+      "\"172.16.0.0/16\""
+    ],
+    "objective": "Predict variable value assignment according to Terraform precedence rules across CLI flags, tfvars, and environment variables"
+  },
+  {
+    "stem": "A CI/CD automation pipeline exports `TF_VAR_environment=\"staging\"`. In the repository root, there is a `terraform.tfvars` file setting `environment = \"production\"`, while `variables.tf` declares `default = \"development\"`. If the pipeline runs `terraform plan` with no CLI flags, which value is assigned to `var.environment`?",
+    "options": [
+      "\"production\", because `terraform.tfvars` has higher precedence than environment variables and defaults.",
+      "\"staging\", because environment variables take precedence over file-based definitions.",
+      "Terraform halts with an error because identical variables are defined in multiple locations.",
+      "\"development\", because the variable block default overrides outside definitions unless explicit CLI flags are used."
+    ],
+    "objective": "Predict variable value assignment according to Terraform precedence rules across CLI flags, tfvars, and environment variables"
+  },
+  {
+    "stem": "You need to ensure that an input variable `environment` only accepts `\"dev\"`, `\"staging\"`, or `\"prod\"`, displaying a clear explanation if a user supplies an invalid value. How should this constraint be implemented?",
+    "options": [
+      "Mark the variable with `sensitive = true` and `ephemeral = true`.",
+      "Add an `enum(\"dev\", \"staging\", \"prod\")` constraint to the variable's `type` argument.",
+      "Add a `validation` block inside the variable definition containing a `condition` and an `error_message`.",
+      "Set `default = [\"dev\", \"staging\", \"prod\"]` to constrain the variable's possible assignments."
+    ],
+    "objective": "Define input variables with type constraints, default values, descriptions, and custom validation blocks"
+  }
+]

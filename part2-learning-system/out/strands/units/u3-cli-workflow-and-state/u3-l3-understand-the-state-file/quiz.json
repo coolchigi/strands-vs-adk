@@ -1,0 +1,32 @@
+[
+  {
+    "stem": "After a successful `terraform apply`, your colleague deletes `terraform.tfstate` by accident and then runs `terraform plan`. Which outcome should they expect?",
+    "options": [
+      "Terraform automatically restores the state file from a built-in backup and produces a correct plan.",
+      "Terraform refuses to run and prints an error saying the state file is missing.",
+      "Terraform has no record of what it manages and plans to create all resources again, as if none of them existed.",
+      "Terraform detects the existing infrastructure by querying the provider API and produces an empty plan showing no changes needed."
+    ],
+    "objective": "Explain what terraform.tfstate contains (resource map, dependencies, provider pointer, cached attributes) and why Terraform cannot plan without it"
+  },
+  {
+    "stem": "You open `terraform.tfstate` and find this snippet inside the `aws_subnet.public[0]` entry:\n\n```json\n\"attributes\": {\n  \"cidr_block\": \"10.0.1.0/24\",\n  ...\n},\n\"dependencies\": [\"aws_vpc.main\"]\n```\n\nWhat does the `cidr_block` value `\"10.0.1.0/24\"` represent?",
+    "options": [
+      "The default CIDR block hard-coded by the AWS provider.",
+      "The resolved, plain-text result that the expression evaluated to when the resource was last applied.",
+      "The Terraform expression `cidrsubnet(var.vpc_cidr, 8, count.index)` copied verbatim from the configuration file.",
+      "A placeholder that Terraform will replace with the real value on the next plan."
+    ],
+    "objective": "Explain what terraform.tfstate contains (resource map, dependencies, provider pointer, cached attributes) and why Terraform cannot plan without it"
+  },
+  {
+    "stem": "A teammate wants to rename a resource in state to match a refactored configuration block. They propose opening `terraform.tfstate` in a text editor and changing the `\"name\"` field directly. What is the risk, and what should they do instead?",
+    "options": [
+      "There is no risk; editing state directly is the recommended way to rename resources quickly.",
+      "The file might become invalid JSON, but as long as it parses correctly Terraform will handle it fine.",
+      "Manual edits risk creating drift between configuration, state, and infrastructure, which could cause resources to be destroyed and recreated on the next apply; use `terraform state mv` instead.",
+      "Terraform encrypts the state file, so a text-editor edit will be silently ignored on the next run."
+    ],
+    "objective": "Identify the risk of editing the state file directly and state the correct alternative"
+  }
+]

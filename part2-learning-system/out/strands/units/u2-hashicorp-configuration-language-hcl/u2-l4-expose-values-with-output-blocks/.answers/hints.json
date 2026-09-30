@@ -1,0 +1,5 @@
+[
+  "Each output block starts with the keyword `output`, followed by a quoted name, then a block body with `value` and optionally `description`.",
+  "The `sensitive` argument sits inside the output block body alongside `value` and `description` \u2014 it takes a boolean: `sensitive = true`.",
+  "The resource address for the bucket is `aws_s3_bucket.assets` and for the instance is `aws_instance.app`. The id attribute is accessed with `.id`."
+]

@@ -1,0 +1,5 @@
+[
+  "A variable declared with only `type` and `description` \u2014 no `default` \u2014 is required. Terraform errors if the caller does not pass it.",
+  "To expose a value from a child module, add an `output` block in the module's `outputs.tf`. The root module then reads it as `module.<NAME>.<OUTPUT>`.",
+  "In the root `main.tf`, the `module \"compute\"` block needs `subnet_id = module.network.subnet_id`. That single expression both supplies the value and tells Terraform to create the network resources first."
+]

@@ -1,0 +1,14 @@
+[
+  {
+    "answer": 2,
+    "explanation": "Without a state file Terraform has no baseline to compare the configuration against, so it treats every resource as new and plans to create them all [c:9a49434974b8]. It does not refuse to run \u2014 it runs, but from a blank slate. It does not automatically restore state; `terraform.tfstate.backup` exists but must be restored manually. Terraform does not reconstruct state by querying the provider during a normal plan."
+  },
+  {
+    "answer": 1,
+    "explanation": "State stores cached attribute values as resolved plain text, not as the original expressions [c:bbdd7754d635][c:627f241e2026]. `10.0.1.0/24` is the concrete value that `cidrsubnet(var.vpc_cidr, 8, 1)` produced at apply time. The expression itself lives only in `main.tf`, not in state."
+  },
+  {
+    "answer": 2,
+    "explanation": "Manually editing state risks unnecessary drift between your configuration, state, and actual infrastructure, and that drift can cause Terraform to destroy and recreate resources on the next apply [c:7ab45dfb503d]. The correct tool is `terraform state mv`, which performs the rename safely with proper locking. Terraform does not encrypt the local state file, and correct JSON alone is not sufficient to guarantee a safe state."
+  }
+]

@@ -1,0 +1,14 @@
+[
+  {
+    "answer": 0,
+    "explanation": "Output value declarations belong in `outputs.tf` by convention. `variables.tf` holds input variable declarations, not outputs. `main.tf` is the resource entrypoint, not the home for outputs. Splitting a declaration across files is not valid Terraform."
+  },
+  {
+    "answer": 0,
+    "explanation": "After adding or changing a module block's source, `terraform init` must be run to register the module. A `./` prefix is the correct form for local paths. `README.md` is recommended but not required. A `version` argument is only used with registry modules, not local paths."
+  },
+  {
+    "answer": 1,
+    "explanation": "`main.tf` is the primary entrypoint of a module and is where resources are created. `variables.tf` is for input variable declarations and `outputs.tf` is for output declarations \u2014 neither holds resource blocks. While Terraform itself does not enforce the convention, the standard module structure assigns resources to `main.tf`."
+  }
+]

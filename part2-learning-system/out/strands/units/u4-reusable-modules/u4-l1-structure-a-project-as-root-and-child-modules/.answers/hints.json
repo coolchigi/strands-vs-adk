@@ -1,0 +1,5 @@
+[
+  "The `source` argument in a `module` block must be a relative path starting with `./` \u2014 Terraform will not recognise a bare directory name like `modules/storage` as a local path.",
+  "Each of the three files in `modules/storage/` has a specific job: variable declarations go in `variables.tf`, the resource goes in `main.tf`, and the output declaration goes in `outputs.tf`.",
+  "After adding the `module` blocks, run `terraform init` before `terraform test` \u2014 without it Terraform won't know where `./modules/storage` is and the test will fail with a module-not-installed error."
+]

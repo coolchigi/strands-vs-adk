@@ -1,0 +1,14 @@
+[
+  {
+    "answer": 1,
+    "explanation": "`newbits = 8` adds 8 bits to the /16 prefix, giving /24. `netnum = 3` encodes 3 into those 8 new bits, which sets the third octet to 3. The result is `10.10.3.0/24`. Option A is wrong because it uses netnum 0, not 3. Option C keeps the wrong prefix length (/16 instead of /24). Option D places the netnum in the host portion instead of the network portion."
+  },
+  {
+    "answer": 3,
+    "explanation": "Referencing another resource's attribute with dot-notation creates an implicit dependency. Terraform reads the graph of references to determine apply order, so it will create `aws_vpc.main` before `aws_subnet.public` \u2014 no `depends_on` is needed. The expression does not copy to a local, does not force a refresh, and is not the same as an explicit `depends_on` block."
+  },
+  {
+    "answer": 2,
+    "explanation": "The `newbits` argument is *added* to the existing prefix length: 24 + 4 = 28, giving a /28. Option A is wrong \u2014 newbits extends the prefix, it does not replace it. Option B subtracts instead of adding. Option D confuses cidrsubnet (which produces network prefixes) with a host address."
+  }
+]

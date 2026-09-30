@@ -1,0 +1,14 @@
+[
+  {
+    "answer": 0,
+    "explanation": "To use an aliased provider configuration, child modules must declare expected provider aliases using the configuration_aliases argument in their required_providers block. Defining a provider block inside the child module violates the standard practice where provider configurations are defined in the root module and inherited by child modules. Putting configuration_aliases in the module block confuses module provider passing (via the providers argument) with declaration, and Terraform does not have a provider data type for input variables."
+  },
+  {
+    "answer": 3,
+    "explanation": "Provider configurations should be defined in the root module, and child modules receive their provider configurations from their parent modules. Defining provider blocks inside child modules is strongly discouraged as it breaks inheritance and causes coupling. Placing provider files directly in the modules/ directory outside module blocks is not evaluated as a parent configuration, and Terraform providers cannot be exported through module outputs."
+  },
+  {
+    "answer": 3,
+    "explanation": "The root module is the only required element in the standard module structure, requiring Terraform files to exist in the repository's root directory, with main.tf, variables.tf, and outputs.tf as recommended filenames; nested child modules should exist under the modules/ subdirectory. Keeping the root empty violates the requirement that root module files exist at the repository root. Arbitrary sibling folders or inlining everything into a single file ignores the standard modules/ directory convention."
+  }
+]

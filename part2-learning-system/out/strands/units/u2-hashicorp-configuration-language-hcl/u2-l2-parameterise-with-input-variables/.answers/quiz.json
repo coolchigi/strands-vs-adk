@@ -1,0 +1,14 @@
+[
+  {
+    "answer": 2,
+    "explanation": "The -var flag carries the highest precedence, overriding both .tfvars file values and the variable's default. \"dev\" is wrong because the default is the lowest precedence. \"staging\" is wrong because .tfvars sits in the middle, below -var. Terraform does not error when multiple sources provide the same variable \u2014 it simply uses the highest-precedence one."
+  },
+  {
+    "answer": 3,
+    "explanation": "Terraform silently ignores TF_VAR_ environment variables that have no matching variable block. It would error for the same name passed via -var, and warn for the same name in a .tfvars file \u2014 but for environment variables the failure mode is silent. Terraform never auto-creates variable declarations."
+  },
+  {
+    "answer": 2,
+    "explanation": "Input variables are referenced with the var.<NAME> prefix, so var.bucket_name is correct. The prefixes variable. and input. do not exist in Terraform's expression syntax. The string-template form using input[\"bucket_name\"] is also not valid Terraform syntax."
+  }
+]

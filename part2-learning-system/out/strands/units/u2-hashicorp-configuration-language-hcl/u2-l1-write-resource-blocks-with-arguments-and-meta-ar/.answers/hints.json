@@ -1,0 +1,5 @@
+[
+  "A resource block starts with `resource`, then two quoted labels (the type and local name), then a body with `{}`.",
+  "The `lifecycle` block sits inside the resource body, at the same level as `ami` and `instance_type` \u2014 not inside another block.",
+  "The lifecycle directive name is `create_before_destroy` and its value is the literal `true` (no quotes)."
+]

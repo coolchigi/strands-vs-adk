@@ -1,0 +1,5 @@
+[
+  "The `ami` argument on `aws_instance.app` is the one you need to change in `main.tf`. Look for the line that starts with `ami =`.",
+  "The `instance_type` variable is overridden by `terraform.tfvars`, not by editing `variables.tf`. Change the value in `terraform.tfvars` to `\"t3.small\"`.",
+  "After both edits, run `terraform plan -out=tfplan` and look for a `-/+` line for `aws_instance.app` with `# forces replacement` next to the `ami` attribute, and a `~` marker on `instance_type`."
+]

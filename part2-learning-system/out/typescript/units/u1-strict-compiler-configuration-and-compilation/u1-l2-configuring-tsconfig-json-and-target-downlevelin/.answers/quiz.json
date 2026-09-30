@@ -1,0 +1,14 @@
+[
+  {
+    "answer": 3,
+    "explanation": "Passing input files directly on the command line causes tsc to ignore tsconfig.json configuration files. To compile using tsconfig.json, run tsc without input file arguments or pass the --project (-p) option. Options mentioning administrator privileges, stdin, or requiring -p for subdirectories do not reflect how tsc handles command-line arguments."
+  },
+  {
+    "answer": 2,
+    "explanation": "The target compiler option specifies the ECMAScript language version for emitted JavaScript, and setting it to es2015 downlevels newer syntax to ECMAScript 2015. Options such as downlevel, ecmaVersion, or outputSyntax are not valid TypeScript compiler options."
+  },
+  {
+    "answer": 2,
+    "explanation": "Setting strict: true activates all strict mode family options simultaneously, giving stronger guarantees of program correctness. It does not restrict runtime environments to ES3, prevent external module imports, or unconditionally block output for warnings."
+  }
+]

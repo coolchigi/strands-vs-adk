@@ -1,0 +1,14 @@
+[
+  {
+    "answer": 1,
+    "explanation": "When no version constraint is given, Terraform defaults to installing the most recent version of the provider. [c:a1c9960d65de] There is no error \u2014 the argument is optional. [c:6b96318cf090] There is no lock file on a machine that has never initialised the project, so option 3 does not apply here. Terraform CLI and provider versions are independent and unrelated, so option 4 is not how Terraform works."
+  },
+  {
+    "answer": 1,
+    "explanation": "`~> 6.0` pins the major version component (6) and allows the minor and patch components to increment freely. [c:64017b3c41f3] So 6.1.0, 6.23.4, and 6.99.0 are all permitted, but 7.0.0 is not. Option 1 is wrong because the constraint is not an exact pin. Option 3 is wrong because `~>` never allows the pinned major version to increment. Option 4 is wrong because `~>` does not filter by minor version across different majors."
+  },
+  {
+    "answer": 2,
+    "explanation": "`required_providers` must be nested inside the top-level `terraform {}` block. [c:9ab67f62b662] Each entry uses the local name as the key and an object containing `source` and `version` as the value. [c:8df9f67adc3b] Placing it as a standalone top-level block (option 1) or inside `provider {}` (option 2) is invalid HCL that Terraform will reject. `locals {}` (option 4) has no special meaning for provider registration."
+  }
+]

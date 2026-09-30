@@ -1,0 +1,14 @@
+[
+  {
+    "answer": 0,
+    "explanation": "TypeScript types and values can be imported together using standard named import syntax with curly braces: `import { User, DEFAULT_USER } from \"./types.js\";`. The option `import User, { DEFAULT_USER } from \"./types.js\";` is incorrect because `User` was not declared with `export default`. The option `import { interface User, const DEFAULT_USER } from \"./types.js\";` is invalid syntax because declaration keywords (`interface`, `const`) cannot appear inside an import specifier clause. The option `import * as User from \"./types.js\";` imports the entire module as a single namespace object rather than importing the individual bindings."
+  },
+  {
+    "answer": 3,
+    "explanation": "The wildcard re-export syntax `export * from \"./validators.js\";` exports all named bindings and types from the target module into the current module's public exports. The option `import * from \"./validators.js\";` is invalid syntax because namespace imports require `* as name`. The option `export default from \"./validators.js\";` is not valid ECMAScript syntax and would only target a default export. The option `export { * as all } from \"./validators.js\";` nests all exports under an `all` object rather than exposing them directly at the top level of the public API."
+  },
+  {
+    "answer": 2,
+    "explanation": "Default and named imports can be combined in a single import statement by placing the default import before the comma and the curly braces for named imports: `import log, { formatLog } from \"./logger.js\";`. The option `import { log, formatLog } from \"./logger.js\";` fails because `log` was exported as a default export, not as a named export. The option `import log and { formatLog } from \"./logger.js\";` is invalid syntax because ES module syntax separates import clauses with commas, not the word `and`. The option `import * as log, { formatLog } from \"./logger.js\";` is invalid syntax because namespace imports cannot be combined with named import brackets."
+  }
+]

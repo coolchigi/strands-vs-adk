@@ -1,0 +1,5 @@
+[
+  "Look at `tsconfig.json` inside the `compilerOptions` block.",
+  "Change `\"target\": \"TODO_TARGET\"` to `\"target\": \"es2015\"`.",
+  "Set `\"strict\": true` instead of `\"strict\": false`."
+]

@@ -1,0 +1,32 @@
+[
+  {
+    "stem": "You defined a root module output named `vpc_id` referencing your VPC's ID. When does Terraform display this value in the terminal, and how can another configuration read it?",
+    "options": [
+      "Terraform displays it during `terraform plan` in the console, and other configurations must read it directly from the `.tf` source code files.",
+      "Terraform displays it in the CLI output after running `terraform apply`, and other configurations using remote state can access it with the `terraform_remote_state` data source.",
+      "Terraform displays it after `terraform fmt`, and other configurations access it using child module syntax `module.vpc_id.value`.",
+      "Terraform only displays it when you run `terraform destroy`, and other configurations query it using an environment variable prefix `TF_OUTPUT_`."
+    ],
+    "objective": "Declare root module outputs to display resource attributes and structured expressions on the command line (apply, proved by exercise)"
+  },
+  {
+    "stem": "An engineer marks an output block `db_password` with `sensitive = true`. How does Terraform treat this value during `terraform apply` and subsequent CLI inspections?",
+    "options": [
+      "Terraform encrypts the password with a local key in the state file and prints a SHA-256 hash when running `terraform output -json`.",
+      "Terraform masks the password in the CLI output during apply, saves the value in state, and displays it in plain text if queried with `terraform output -json` or `-raw`.",
+      "Setting `sensitive = true` prevents the password from being written to the state file, so querying it returns null.",
+      "Terraform prompts for a master password during `apply` and permanently redacts the output from all CLI inspection flags."
+    ],
+    "objective": "Configure sensitive and ephemeral attributes on outputs to protect confidential infrastructure values (apply, proved by exercise)"
+  },
+  {
+    "stem": "A team wants to pass a short-lived authentication token through a child module output without persisting it to state or plan files. Which output argument provides this protection?",
+    "options": [
+      "Setting `sensitive = true`, which encrypts the value in the plan file and purges it from state once applied.",
+      "Setting `protected = true`, which instructs the parent module to read the value strictly in-memory without checking constraints.",
+      "Setting `ephemeral = true` on the root module output to automatically clear root state variables after every run.",
+      "Marking the output with `ephemeral = true`, which excludes the value from state and plan files while adding restrictions to the assigned value."
+    ],
+    "objective": "Configure sensitive and ephemeral attributes on outputs to protect confidential infrastructure values (apply, proved by exercise)"
+  }
+]

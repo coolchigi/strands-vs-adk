@@ -1,0 +1,4 @@
+[
+  "Remember that child module outputs are accessed using the syntax `module.<module_name>.<output_name>`.",
+  "To mark a root module output as sensitive, include `sensitive = true` inside the output block declaration."
+]

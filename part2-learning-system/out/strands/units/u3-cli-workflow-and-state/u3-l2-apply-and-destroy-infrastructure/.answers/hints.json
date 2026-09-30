@@ -1,0 +1,5 @@
+[
+  "The two missing outputs follow the same shape as `subnet_ids` and `instance_ami` already in the file \u2014 look at those as patterns.",
+  "For `bucket_ids`, you need a `for` expression that iterates over `aws_s3_bucket.env` (a map) and collects each bucket's `.id` attribute.",
+  "For `instance_id`, the value is a single attribute reference: the resource type, resource name, and the attribute `id`, separated by dots."
+]

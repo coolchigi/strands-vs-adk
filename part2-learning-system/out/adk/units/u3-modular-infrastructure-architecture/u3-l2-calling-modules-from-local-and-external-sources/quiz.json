@@ -1,0 +1,32 @@
+[
+  {
+    "stem": "A project maintains child modules in the same repository under the `./modules/vpc` directory. How should the calling root module declare the `source` argument, and why?",
+    "options": [
+      "It should use a relative path like `./modules/vpc` so Terraform considers the module part of the same package and avoids downloading it separately.",
+      "It should use an absolute system path like `/opt/modules/vpc` so Terraform does not require running `terraform init`.",
+      "It should use a remote Git URL with `?ref=HEAD` so Terraform automatically stores independent clones in `.terraform/modules`.",
+      "It should omit the `source` argument entirely and specify only the module name because child folders in the same directory are detected automatically."
+    ],
+    "objective": "Declare module blocks referencing local relative file paths and external Git or Registry sources"
+  },
+  {
+    "stem": "You need to reference an external module hosted in a private Git repository, pin it to a release tag named `v2.4.0`, and ensure Git performs a shallow clone with a depth of 1. How should the `module` block be configured?",
+    "options": [
+      "Set `source = \"git::https://example.com/repo.git#v2.4.0\"` and add a `depth` argument inside the module block.",
+      "Set `source` to the Git URL, and declare `version = \"v2.4.0\"` with `shallow = true` inside the module block.",
+      "Set `source` to the Git URL and execute `git clone --depth 1` manually before running `terraform plan`.",
+      "Set `source` to the Git URL with query parameters `?ref=v2.4.0&depth=1` appended to the address."
+    ],
+    "objective": "Declare module blocks referencing local relative file paths and external Git or Registry sources"
+  },
+  {
+    "stem": "Your root module calls a public registry module with `version = \"~> 1.0\"`. You update the configuration to `version = \"~> 2.0\"` and add a new Git-backed child module. What must you do before running `terraform plan`, and what does it accomplish?",
+    "options": [
+      "Run `terraform init`, which downloads the child module files and updated versions into the local workspace directory.",
+      "Run `terraform apply -upgrade`, because modules are only updated during the apply phase of the workflow.",
+      "Run `terraform fmt`, which checks out module dependencies while verifying configuration syntax.",
+      "Run `terraform plan` directly with `-refresh=true`, which loads remote module code into memory without touching disk."
+    ],
+    "objective": "Initialize module dependencies using terraform init and terraform get"
+  }
+]

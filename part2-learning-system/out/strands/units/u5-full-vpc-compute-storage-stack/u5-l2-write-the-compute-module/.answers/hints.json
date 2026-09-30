@@ -1,0 +1,5 @@
+[
+  "The starter's `modules/compute/main.tf` still references `var.subnet_id` (singular). Once you add `count`, the resource becomes a list \u2014 switch every `var.subnet_id` reference to `var.subnet_ids[count.index]`.",
+  "A splat expression `resource_type.resource_name[*].attribute` collects one attribute from every instance in a counted resource into a list \u2014 use this pattern for both `instance_ids` and `public_ips` in `outputs.tf`.",
+  "The root `main.tf` module block must be updated in two places: add `ami_id = \"...\"` and change `subnet_id = module.networking.subnet_ids[0]` to `subnet_ids = module.networking.subnet_ids` (passing the whole list)."
+]

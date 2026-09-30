@@ -1,0 +1,32 @@
+[
+  {
+    "stem": "Your configuration sets `environment = \"prod\"` in four different resource `tags` blocks by repeating the string `\"${var.project}-prod\"` each time. A colleague suggests extracting this into a local value. What is the strongest reason to accept their suggestion?",
+    "options": [
+      "Repeating the expression in four places means you must update it in four places if it ever changes; a local value means one change updates all four.",
+      "A local value is evaluated before variables, so it is more reliable in a plan.",
+      "Local values can reference resource attributes that variables cannot, making the configuration more powerful.",
+      "Extracting to a local value allows the expression to be used in other modules without any extra wiring."
+    ],
+    "objective": "Explain when to use a local value instead of repeating an expression directly"
+  },
+  {
+    "stem": "You write the following and Terraform returns an error saying it cannot find `locals.name_prefix`. What is wrong?\n\n```hcl\nlocals {\n  name_prefix = \"${var.project}-${var.environment}\"\n}\n\nresource \"aws_s3_bucket\" \"assets\" {\n  tags = {\n    Name = locals.name_prefix\n  }\n}\n```",
+    "options": [
+      "The `locals` block must be placed inside the resource block to be referenced there.",
+      "The reference should be `local.name_prefix`, not `locals.name_prefix`.",
+      "String interpolation is not allowed inside a `locals` block.",
+      "The local value must be declared with `var.` before it can be used in a resource."
+    ],
+    "objective": "Define a locals block that combines input variables and function calls into reusable named expressions, then reference them with local.<NAME> inside resource arguments"
+  },
+  {
+    "stem": "You want to add a local value `short_name` that takes the first 8 characters of `local.name_prefix`. Which declaration is valid inside a `locals` block?",
+    "options": [
+      "`short_name = substr(local.name_prefix, 0, 8)`",
+      "`short_name = substr(var.name_prefix, 0, 8)`",
+      "`short_name = local[\"name_prefix\"][0:8]`",
+      "`short_name = name_prefix[0:8]`"
+    ],
+    "objective": "Define a locals block that combines input variables and function calls into reusable named expressions, then reference them with local.<NAME> inside resource arguments"
+  }
+]

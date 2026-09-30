@@ -1,0 +1,32 @@
+[
+  {
+    "stem": "You declare a variable in `modules/network/variables.tf` with only `type` and `description` \u2014 no `default`. What happens when the root module calls this module without passing that variable?",
+    "options": [
+      "Terraform errors and refuses to proceed until the variable is supplied in the module block.",
+      "Terraform ignores the missing variable and plans using a null value.",
+      "Terraform uses an empty string as the default and continues.",
+      "Terraform prompts the user for the value interactively at plan time."
+    ],
+    "objective": "Write a child module that accepts required input variables (no defaults) and exposes resource attributes as outputs, then consume those outputs in the root module (apply, proved by exercise)"
+  },
+  {
+    "stem": "The `modules/network/` module creates an `aws_subnet` and outputs its id as `subnet_id`. Which expression correctly passes that subnet id to the `modules/compute/` module's `subnet_id` variable in the root `main.tf`?",
+    "options": [
+      "`subnet_id = module.network.subnet_id`",
+      "`subnet_id = var.network.subnet_id`",
+      "`subnet_id = network.outputs.subnet_id`",
+      "`subnet_id = module.network.outputs[\"subnet_id\"]`"
+    ],
+    "objective": "Reference a child module's output in a root-level resource argument using the module.<NAME>.<OUTPUT> syntax (apply, proved by exercise)"
+  },
+  {
+    "stem": "In the root `main.tf` you write `module \"compute\" { subnet_id = module.network.subnet_id }`. What does Terraform infer from this reference, without any explicit `depends_on`?",
+    "options": [
+      "That both modules can be applied in parallel, since Terraform ignores cross-module references for ordering.",
+      "Nothing \u2014 Terraform always requires `depends_on` to order modules.",
+      "That `module.network` will be destroyed whenever `module.compute` is destroyed.",
+      "That `module.compute` must be planned and applied after `module.network`, because it reads a value produced by it."
+    ],
+    "objective": "Reference a child module's output in a root-level resource argument using the module.<NAME>.<OUTPUT> syntax (apply, proved by exercise)"
+  }
+]

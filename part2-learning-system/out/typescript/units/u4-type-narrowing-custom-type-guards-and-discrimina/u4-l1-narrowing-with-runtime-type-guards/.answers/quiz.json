@@ -1,0 +1,14 @@
+[
+  {
+    "answer": 0,
+    "explanation": "Because typeof null evaluates to 'object' in JavaScript, narrowing with typeof strs === 'object' on a union containing null leaves null in the type. The option stating that TypeScript ignores typeof guards is wrong because typeof is a recognized built-in type guard."
+  },
+  {
+    "answer": 0,
+    "explanation": "Checking loosely whether a value is not equal to null using != null narrows out both null and undefined from the type, leaving string. In contrast, checking input !== undefined leaves null in the type, and input === null only tests specifically for null."
+  },
+  {
+    "answer": 1,
+    "explanation": "Using the in operator to test 'error' in response narrows the true branch to types with that property. Checking typeof response === 'error' is invalid because typeof never returns 'error', and accessing response.error before narrowing causes a compiler error because 'error' is not guaranteed to exist on both union members."
+  }
+]

@@ -1,0 +1,32 @@
+[
+  {
+    "stem": "Your networking module declares `aws_subnet.public` with `count = length(var.availability_zones)` and `cidr_block = cidrsubnet(var.vpc_cidr, 8, count.index)`. The root passes `vpc_cidr = \"10.0.0.0/16\"` and `availability_zones = [\"us-east-1a\", \"us-east-1b\", \"us-east-1c\"]`. What CIDR block does the third subnet receive?",
+    "options": [
+      "10.0.2.0/24",
+      "10.0.0.0/24",
+      "10.0.3.0/24",
+      "10.0.2.0/16"
+    ],
+    "objective": "Write a networking module that creates a VPC, public subnets across AZs using cidrsubnet, an internet gateway, and route tables, with CIDR and AZ lists as input variables and vpc_id and subnet_ids as outputs"
+  },
+  {
+    "stem": "You move provider configuration into `modules/networking/provider.tf` so the module controls its own AWS region. What happens when Terraform processes the module?",
+    "options": [
+      "The module should not contain a provider block; it inherits the root configuration's provider automatically.",
+      "Terraform raises a warning but continues to use the root provider.",
+      "The module's provider block overrides the root only for resources inside that module.",
+      "Terraform uses the module's provider block and ignores the root provider."
+    ],
+    "objective": "Write a networking module that creates a VPC, public subnets across AZs using cidrsubnet, an internet gateway, and route tables, with CIDR and AZ lists as input variables and vpc_id and subnet_ids as outputs"
+  },
+  {
+    "stem": "A colleague's compute module needs the VPC ID and the list of subnet IDs created by your networking module. Where should you expose these values, and how does the compute module receive them?",
+    "options": [
+      "Store them in a shared `terraform.tfvars` file that both modules read at plan time.",
+      "Declare them as resource attributes; the compute module references `aws_vpc.main.id` directly from another module.",
+      "Declare them as local values inside the networking module; the compute module reads them with `module.networking.locals`.",
+      "Declare `vpc_id` and `subnet_ids` as output blocks in the networking module's `outputs.tf`; pass them as input variables to the compute module in the root `main.tf`."
+    ],
+    "objective": "Write a networking module that creates a VPC, public subnets across AZs using cidrsubnet, an internet gateway, and route tables, with CIDR and AZ lists as input variables and vpc_id and subnet_ids as outputs"
+  }
+]

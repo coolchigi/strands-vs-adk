@@ -1,0 +1,14 @@
+[
+  {
+    "answer": 0,
+    "explanation": "The description field documents the output's intent for teammates and future readers of the configuration source code \u2014 it is metadata about the value, not a functional argument. It does not set defaults (that is the `default` argument on variables), does not redact values (that is `sensitive = true`), and has no bearing on remote state access."
+  },
+  {
+    "answer": 2,
+    "explanation": "`terraform output -raw <name>` retrieves a specific output value as a plain string, bypassing the sensitive redaction. Removing `sensitive = true` would expose the secret in all future apply output, which defeats the purpose of marking it sensitive. Plan files do not contain post-apply output values, and `terraform show` also redacts sensitive outputs."
+  },
+  {
+    "answer": 0,
+    "explanation": "The `terraform_remote_state` data source is the purpose-built way for one Terraform configuration to read root module outputs from a separate configuration's state file. Passing a value with `-var` works but requires a human or pipeline to look the value up first \u2014 it does not read state automatically. Moving the resource collapses two independent workspaces into one, which breaks the separation. The `module.<name>.<output>` syntax is for child modules within the *same* configuration, not across separate state files."
+  }
+]

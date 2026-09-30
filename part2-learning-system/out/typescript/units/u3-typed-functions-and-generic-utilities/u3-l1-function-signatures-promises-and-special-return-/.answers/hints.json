@@ -1,0 +1,5 @@
+[
+  "In TypeScript, functions that throw without returning normally must be annotated with the return type `never`.",
+  "In callback type signatures like `(msg: string) => void`, the parameter name (`msg`) is required; writing just `(string) => void` would create a parameter named `string` with type `any`.",
+  "For async functions, wrap the resolved type in `Promise<...>`, such as `Promise<number>`."
+]

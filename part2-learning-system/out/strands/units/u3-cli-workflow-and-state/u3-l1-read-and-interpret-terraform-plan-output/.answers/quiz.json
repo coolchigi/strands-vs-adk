@@ -1,0 +1,14 @@
+[
+  {
+    "answer": 2,
+    "explanation": "The `-/+` symbol means Terraform will destroy the resource and then recreate it. The `# forces replacement` annotation on the `ami` attribute explains why: AMI cannot be changed in place on a running instance, so the only path to reach the desired state is a destroy-then-recreate cycle. An in-place update (`~`) would leave the instance running; `-/+` does not."
+  },
+  {
+    "answer": 2,
+    "explanation": "Saving the plan with `-out=tfplan` produces a file that `terraform apply tfplan` will execute exactly as-is. A fresh `terraform apply` (without a plan file) re-runs the plan at apply time, so any change to the configuration or infrastructure between review and apply can produce different actions than what was approved. `-auto-approve` still runs a fresh plan; `-refresh=false` skips state refresh but still re-plans."
+  },
+  {
+    "answer": 0,
+    "explanation": "When every resource in the configuration already matches its real-world state, Terraform reports that no actions need to be taken and the summary shows zeros in all three counts. This is not an error \u2014 it means the infrastructure is already in the desired state. A missing state file would cause Terraform to propose creating all resources, not a zero-change plan."
+  }
+]

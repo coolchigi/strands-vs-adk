@@ -1,0 +1,32 @@
+[
+  {
+    "stem": "An engineer wants to use an AWS provider configured with an alias (such as aws.west) inside a child module to manage resources in an alternate region. How should the child module declare this requirement according to Terraform conventions?",
+    "options": [
+      "In the child module's terraform.required_providers block, declare the alias name inside configuration_aliases.",
+      "In the parent module's module block, declare configuration_aliases = [\"aws.west\"] alongside source.",
+      "In the child module's main.tf, define a new provider \"aws\" block configured with alias = \"west\".",
+      "In the child module's variables.tf, declare an input variable of type provider default = \"aws.west\"."
+    ],
+    "objective": "Explain how provider inheritance functions between parent and child modules, including configuration_aliases"
+  },
+  {
+    "stem": "A team is refactoring infrastructure into multiple child modules located in the modules/ directory. Where should the primary provider \"aws\" configuration blocks be defined?",
+    "options": [
+      "In a shared provider.tf file placed directly inside the modules/ directory outside any child module.",
+      "Inside an environment-specific child module that exports the provider via an output value.",
+      "In each child module's main.tf, so that every child module remains self-contained with its own provider block.",
+      "In the root module, because child modules automatically receive their provider configurations from their parent modules."
+    ],
+    "objective": "Explain how provider inheritance functions between parent and child modules, including configuration_aliases"
+  },
+  {
+    "stem": "You are organizing a Terraform repository following the standard module structure. Which layout correctly adheres to the standard hierarchy?",
+    "options": [
+      "Create arbitrary sibling directories at the repository root for each module without using a modules/ subdirectory.",
+      "Keep the repository root empty and place all configurations and root files into a src/ root directory.",
+      "Place all child module resources into a single modules.tf file in the repository root without separate directories.",
+      "Store root module configuration files (main.tf, variables.tf, outputs.tf) in the repository root, and place nested child modules under the modules/ subdirectory."
+    ],
+    "objective": "Organize infrastructure configurations into root modules and child modules located in modules/ directories"
+  }
+]

@@ -1,0 +1,32 @@
+[
+  {
+    "stem": "You run `terraform init` successfully and commit `.terraform.lock.hcl` to version control. A colleague clones the repository and runs `terraform init` on their machine. Which statement best describes what happens?",
+    "options": [
+      "Terraform ignores the lock file and installs the newest AWS provider version that satisfies `~> 6.0`.",
+      "Terraform reads the lock file and installs exactly the same AWS provider version that was recorded in it.",
+      "Terraform raises an error because the lock file was created on a different machine.",
+      "Terraform prompts the user to confirm the recorded version before installing."
+    ],
+    "objective": "Run terraform init and describe what the .terraform directory and .terraform.lock.hcl file contain"
+  },
+  {
+    "stem": "You add a new `required_providers` entry for `hashicorp/random` to `terraform.tf`. Which of the following is true about re-running `terraform init`?",
+    "options": [
+      "It is unsafe to re-run terraform init when a .terraform directory already exists; you must delete it first.",
+      "Re-running terraform init only works if you pass -upgrade, otherwise it skips newly added providers.",
+      "Re-running terraform init is safe and will download the new provider without touching the existing AWS provider installation.",
+      "Re-running terraform init will delete the existing .terraform.lock.hcl and regenerate it from scratch, losing AWS version pins."
+    ],
+    "objective": "Explain why terraform init is idempotent and when it must be re-run"
+  },
+  {
+    "stem": "A team member changed the AWS provider constraint from `~> 5.0` to `~> 6.0` in `terraform.tf`, but running `terraform init` still installs a 5.x version. What is the most likely cause?",
+    "options": [
+      "The version constraint must also be updated inside `.terraform.lock.hcl` directly for `terraform init` to pick it up.",
+      "The `.terraform` directory must be deleted before `terraform init` will respect a new version constraint.",
+      "The `.terraform.lock.hcl` file still records a 5.x version; `terraform init -upgrade` is needed to update it to a 6.x version.",
+      "The `terraform init` command never changes provider versions once they have been installed."
+    ],
+    "objective": "Explain why terraform init is idempotent and when it must be re-run"
+  }
+]

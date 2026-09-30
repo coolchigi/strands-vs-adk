@@ -1,0 +1,14 @@
+[
+  {
+    "answer": 0,
+    "explanation": "The core reason to extract a repeated expression into a local value is maintainability: if the expression ever needs to change, you update it in exactly one place instead of hunting down every copy [c:9f5e7188c424]. Option B is false \u2014 locals and variables are both resolved during the same evaluation pass. Option C conflates where references are allowed with why locals are useful. Option D is wrong because local values are scoped to the module where they are defined and cannot be accessed from other modules directly [c:c6b70af36481]."
+  },
+  {
+    "answer": 1,
+    "explanation": "The block is declared with the plural keyword `locals`, but individual values are always referenced with the singular `local.<NAME>` syntax [c:bd9bc889c678]. Writing `locals.name_prefix` is the exact mistake the documentation warns against. The other options describe rules that do not exist in Terraform."
+  },
+  {
+    "answer": 0,
+    "explanation": "A local value can reference another local value using the `local.<NAME>` syntax [c:88aaa7742c62], and function calls are valid expressions inside a `locals` block [c:7c7f3bcc5b91]. Option B incorrectly treats `name_prefix` as an input variable. Options C and D use invalid HCL syntax for referencing locals."
+  }
+]

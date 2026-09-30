@@ -1,0 +1,32 @@
+[
+  {
+    "stem": "You have an interface `interface HasId { id: string }` and you write the following generic function:\n\n```ts\nfunction resetRecord<T extends HasId>(item: T): T {\n  return { id: \"default-id\" };\n}\n```\n\nWhy does TypeScript report a type error on `return { id: \"default-id\" }`?",
+    "options": [
+      "The function promises to return the specific type T passed by the caller, which may contain additional properties beyond id, not just an arbitrary object matching the constraint.",
+      "Type parameter constraints using extends are only permitted on interface declarations and cannot be applied to generic function parameters.",
+      "Type parameter constraints require a default type argument to be specified whenever an extends clause is present.",
+      "The return value must be explicitly cast to HasId with 'as HasId' because T cannot be resolved without a type assertion."
+    ],
+    "objective": "Write generic functions and generic types with type parameter constraints using extends"
+  },
+  {
+    "stem": "You want to write a utility function `pluck<T, K extends keyof T>(record: T, key: K): T[K]`. A teammate writes:\n\n```ts\nfunction pluck<T, K>(record: T, key: K): T[K] {\n  return record[key];\n}\n```\n\nWhat compilation error does TypeScript raise for this signature?",
+    "options": [
+      "The indexed access type T[K] is only supported if record is typed as Record<string, unknown>.",
+      "Generic functions in TypeScript cannot declare more than one type parameter within angle brackets.",
+      "The compiler cannot infer type arguments for K unless a default type is assigned in the signature.",
+      "Type 'K' cannot be used to index type 'T' because K is unconstrained and is not guaranteed to be a key of T."
+    ],
+    "objective": "Constrain a generic type parameter to valid keys of another type using extends keyof"
+  },
+  {
+    "stem": "You are writing a generic store interface with a constrained type parameter and decide to provide a default type argument:\n\n```ts\ninterface Store<T extends { id: string } = { id: string; name: string }> {\n  items: T[];\n}\n```\n\nWhich rule governs the default type assigned to `T`?",
+    "options": [
+      "Default types for a type parameter must satisfy any constraint specified on that type parameter.",
+      "Generic type parameter constraints with extends forbid providing default type arguments.",
+      "The default type argument must match the constraint interface identically without adding extra properties.",
+      "Default types override and bypass any extends constraint on the type parameter."
+    ],
+    "objective": "Write generic functions and generic types with type parameter constraints using extends"
+  }
+]

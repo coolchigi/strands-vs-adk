@@ -1,0 +1,5 @@
+[
+  "To add a string index signature to an interface, use `[key: string]: ReturnType;` inside the interface definition.",
+  "In `HttpHeaders`, remember that explicit properties like `contentType?: string` must match the index signature's return type `string | undefined`.",
+  "In `sendWithIntermediate`, store the incoming parameter in an intermediate variable (`const intermediate = options;`) and pass that variable to `createRequest`."
+]

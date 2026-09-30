@@ -1,0 +1,14 @@
+[
+  {
+    "answer": 2,
+    "explanation": "Object types can be named using either an interface declaration or a type alias, but interfaces can only declare object shapes and cannot rename primitives. Therefore, the primitive ID shorthand must use a type alias. The option suggesting an interface for both is wrong because interfaces cannot rename primitives. The option suggesting an interface for the primitive shorthand is backwards for the same reason. The option suggesting const confuses runtime variable declaration with type declarations."
+  },
+  {
+    "answer": 0,
+    "explanation": "Marking a property with readonly prevents reassignment to that property during type-checking, and under strictNullChecks reading an optional property indicates that its value is potentially undefined. The option claiming a runtime TypeError is wrong because readonly does not change runtime behavior. The option claiming undefined is stripped is wrong because optional properties include undefined. The option claiming let allows property reassignment is wrong because readonly applies to the property itself regardless of variable declaration."
+  },
+  {
+    "answer": 2,
+    "explanation": "The readonly modifier prevents re-writing the property itself during type-checking, but it does not make nested object contents immutable. Therefore, list.tags = [] is rejected, but mutating the array via list.tags.push('javascript') is allowed. The option stating both are forbidden is a common misconception that readonly deeply freezes objects. The option stating reassigning is permitted confuses variable bindings with property modifiers. The option claiming runtime freezing is wrong because readonly has no runtime effect."
+  }
+]

@@ -1,0 +1,14 @@
+[
+  {
+    "answer": 3,
+    "explanation": "`skip_metadata_api_check = true` stops the provider from querying the EC2 instance metadata endpoint (IMDSv2) for credentials \u2014 the call that hangs when there is no real EC2 metadata service running. `skip_credentials_validation` stops a different check: it prevents an STS call to verify that the supplied credentials are genuine, but that produces a fast authentication error, not the metadata hang."
+  },
+  {
+    "answer": 2,
+    "explanation": "Without an `endpoints` block, the provider uses the default AWS service URLs. The real S3 API at `s3.amazonaws.com` will reject the mock `access_key = \"test\"` credentials with an authentication error. LocalStack only receives traffic if the endpoint is explicitly redirected to `localhost`. Terraform does not intercept or default-redirect outbound API calls on its own."
+  },
+  {
+    "answer": 2,
+    "explanation": "`terraform validate` checks HCL syntax and whether each argument is known to the provider schema \u2014 it makes no network calls and does not contact LocalStack or any other endpoint. A 'valid' result tells you the configuration is structurally correct, not that services are reachable or credentials will be accepted at apply time."
+  }
+]

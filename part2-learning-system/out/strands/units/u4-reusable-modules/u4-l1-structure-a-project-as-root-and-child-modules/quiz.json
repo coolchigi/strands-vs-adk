@@ -1,0 +1,32 @@
+[
+  {
+    "stem": "A teammate puts an `output` declaration inside `main.tf` of a new child module. The configuration works, but your team follows the standard module structure. What should they change?",
+    "options": [
+      "Move the output declaration to `outputs.tf`, because output declarations belong there by convention.",
+      "Split it across both `main.tf` and `outputs.tf` so Terraform can find it in either place.",
+      "Leave it in `main.tf`, because that is the primary entrypoint and all declarations belong there.",
+      "Move the output declaration to `variables.tf`, because that file holds all values the module exposes."
+    ],
+    "objective": "Explain the role of main.tf, variables.tf, and outputs.tf in the standard module structure"
+  },
+  {
+    "stem": "You add a new `module` block to your root `main.tf` with `source = \"./modules/network\"`. When you run `terraform plan` immediately, Terraform reports it cannot find the module. What is the most likely cause?",
+    "options": [
+      "`terraform init` has not been run since the module block was added, so the module is not yet registered.",
+      "A `version` argument is required in the `module` block when using a local source path.",
+      "The `source` path must start with `../` rather than `./` for Terraform to recognise local modules.",
+      "The `modules/network/` directory must contain a `README.md` before Terraform will accept the source path."
+    ],
+    "objective": "Create a modules/ subdirectory with a child module containing variables.tf, main.tf, and outputs.tf, and call it from the root module using a module block with a local source path"
+  },
+  {
+    "stem": "Which file in a child module is the correct place to put the `resource` blocks that the module creates?",
+    "options": [
+      "Any file works equally well; the three standard filenames have no special meaning to Terraform.",
+      "`main.tf`, because it is the primary entrypoint where resources are defined.",
+      "`outputs.tf`, because outputs reference the resources and should live in the same file.",
+      "`variables.tf`, because that file describes everything the module needs to operate."
+    ],
+    "objective": "Explain the role of main.tf, variables.tf, and outputs.tf in the standard module structure"
+  }
+]

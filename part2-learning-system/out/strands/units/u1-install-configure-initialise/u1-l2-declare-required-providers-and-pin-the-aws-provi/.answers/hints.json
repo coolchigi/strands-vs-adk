@@ -1,0 +1,5 @@
+[
+  "The `required_version` argument and the `required_providers` block both go directly inside the `terraform {}` block \u2014 `required_providers` is not a separate top-level block.",
+  "Each entry in `required_providers` is a map with two keys: `source` (the registry address) and `version` (the constraint string). Make sure both keys are present for the `aws` entry.",
+  "The `~>` operator needs the version written as `\"~> 6.0\"` \u2014 the tilde and greater-than sign together, followed by a space, then the version. After editing, run `terraform fmt` to catch any typos."
+]

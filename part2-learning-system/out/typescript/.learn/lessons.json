@@ -1,0 +1,86 @@
+[
+  {
+    "id": "u1-l1",
+    "title": "Compiler CLI and Strict Type Validation",
+    "path": "units/u1-strict-compiler-configuration-and-compilation/u1-l1-compiler-cli-and-strict-type-validation",
+    "exercise": true,
+    "runner": "node"
+  },
+  {
+    "id": "u1-l2",
+    "title": "Configuring tsconfig.json and Target Downleveling",
+    "path": "units/u1-strict-compiler-configuration-and-compilation/u1-l2-configuring-tsconfig-json-and-target-downlevelin",
+    "exercise": true,
+    "runner": "node"
+  },
+  {
+    "id": "u2-l1",
+    "title": "Interfaces, Type Aliases, and Property Modifiers",
+    "path": "units/u2-modeling-data-shapes-with-interfaces-and-types/u2-l1-interfaces-type-aliases-and-property-modifiers",
+    "exercise": true,
+    "runner": "node"
+  },
+  {
+    "id": "u2-l2",
+    "title": "Composing Shapes with Inheritance and Intersections",
+    "path": "units/u2-modeling-data-shapes-with-interfaces-and-types/u2-l2-composing-shapes-with-inheritance-and-intersecti",
+    "exercise": true,
+    "runner": "node"
+  },
+  {
+    "id": "u2-l3",
+    "title": "Index Signatures and Excess Property Checks",
+    "path": "units/u2-modeling-data-shapes-with-interfaces-and-types/u2-l3-index-signatures-and-excess-property-checks",
+    "exercise": true,
+    "runner": "node"
+  },
+  {
+    "id": "u3-l1",
+    "title": "Function Signatures, Promises, and Special Return Types",
+    "path": "units/u3-typed-functions-and-generic-utilities/u3-l1-function-signatures-promises-and-special-return-",
+    "exercise": true,
+    "runner": "node"
+  },
+  {
+    "id": "u3-l2",
+    "title": "Generic Functions and Type Constraints",
+    "path": "units/u3-typed-functions-and-generic-utilities/u3-l2-generic-functions-and-type-constraints",
+    "exercise": true,
+    "runner": "node"
+  },
+  {
+    "id": "u4-l1",
+    "title": "Narrowing with Runtime Type Guards",
+    "path": "units/u4-type-narrowing-custom-type-guards-and-discrimina/u4-l1-narrowing-with-runtime-type-guards",
+    "exercise": true,
+    "runner": "node"
+  },
+  {
+    "id": "u4-l2",
+    "title": "User-Defined Type Guards and Predicates",
+    "path": "units/u4-type-narrowing-custom-type-guards-and-discrimina/u4-l2-user-defined-type-guards-and-predicates",
+    "exercise": true,
+    "runner": "node"
+  },
+  {
+    "id": "u4-l3",
+    "title": "Discriminated Unions and Exhaustive Checks",
+    "path": "units/u4-type-narrowing-custom-type-guards-and-discrimina/u4-l3-discriminated-unions-and-exhaustive-checks",
+    "exercise": true,
+    "runner": "node"
+  },
+  {
+    "id": "u5-l1",
+    "title": "ES Modules with Types and Values",
+    "path": "units/u5-modular-architecture-and-type-only-imports/u5-l1-es-modules-with-types-and-values",
+    "exercise": true,
+    "runner": "node"
+  },
+  {
+    "id": "u5-l2",
+    "title": "Type-Only Imports and Bundler Optimization",
+    "path": "units/u5-modular-architecture-and-type-only-imports/u5-l2-type-only-imports-and-bundler-optimization",
+    "exercise": true,
+    "runner": "node"
+  }
+]

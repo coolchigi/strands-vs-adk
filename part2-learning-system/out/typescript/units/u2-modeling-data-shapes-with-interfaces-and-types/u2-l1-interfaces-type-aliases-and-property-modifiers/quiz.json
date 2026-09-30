@@ -1,0 +1,32 @@
+[
+  {
+    "stem": "A developer wants to define a contract for an API response representing a product entity with an id, title, and price. They also want to define a shorthand name for an ID primitive that can be either string or number. Which TypeScript declaration strategy should they choose?",
+    "options": [
+      "Use the const keyword to declare both the product shape and the primitive ID shorthand.",
+      "Use an interface for both the product object and the primitive ID shorthand.",
+      "Use an interface or type alias for the product object, and a type alias for the primitive ID shorthand.",
+      "Use an interface for the primitive ID shorthand, but a type alias for the product object."
+    ],
+    "objective": "Define application entity shapes using interface declarations and type aliases"
+  },
+  {
+    "stem": "Consider the following contract:\n\ninterface Account {\n  readonly id: string;\n  nickname?: string;\n}\n\nWith strictNullChecks enabled, what happens when code tries to reassign account.id = 'new-id' and accesses account.nickname?",
+    "options": [
+      "The compiler rejects account.id = 'new-id' during type-checking, and treats account.nickname as potentially undefined.",
+      "The compiler allows account.id = 'new-id' at compile time, but throws a runtime TypeError when modifying the property.",
+      "The compiler allows account.id = 'new-id' if account was declared with let, and treats nickname as string | null.",
+      "The compiler rejects account.id = 'new-id', but treats account.nickname as strictly string because undefined is stripped."
+    ],
+    "objective": "Apply optional (?) and readonly modifiers to object properties to prevent unwanted reassignment and support optional fields"
+  },
+  {
+    "stem": "A developer creates an object matching an interface with a readonly array property:\n\ninterface TagList {\n  readonly tags: string[];\n}\nconst list: TagList = { tags: ['typescript'] };\n\nWhat does TypeScript allow or forbid when manipulating list?",
+    "options": [
+      "TypeScript permits reassigning list.tags = [] because list was declared with const.",
+      "TypeScript forbids both reassigning list.tags = [] and mutating list.tags.push('javascript').",
+      "TypeScript forbids reassigning list.tags = [], but permits mutating list.tags.push('javascript').",
+      "TypeScript converts tags into a runtime-frozen array that throws on list.tags.push('javascript')."
+    ],
+    "objective": "Apply optional (?) and readonly modifiers to object properties to prevent unwanted reassignment and support optional fields"
+  }
+]

@@ -1,0 +1,14 @@
+[
+  {
+    "answer": 1,
+    "explanation": "A string index signature enforces that all explicitly defined properties match the index signature's return type. Because Dictionary has `[key: string]: number`, every named property must have a type compatible with `number`. Saying that named properties are not allowed with string index signatures is incorrect, as named properties can be combined with index signatures as long as their types align."
+  },
+  {
+    "answer": 1,
+    "explanation": "Passing an object literal directly triggers excess property checks, rejecting properties not present on the target type. Assigning the object literal to an intermediate variable first bypasses excess property checks as long as at least one common property exists. The compiler does not discard properties at runtime or turn intermediate variables into `any`."
+  },
+  {
+    "answer": 2,
+    "explanation": "Supported index signature key types are string, number, symbol, template string patterns, or union types composed purely of these. Types like boolean, object, or Function are not permitted as index signature key types."
+  }
+]

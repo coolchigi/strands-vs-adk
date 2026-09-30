@@ -1,0 +1,5 @@
+[
+  "Run `terraform init` first \u2014 without it the `.terraform/` directory and `.terraform.lock.hcl` file do not exist yet.",
+  "Open `.terraform.lock.hcl` in your editor. The `provider` block's label (the quoted string after the word `provider` on that line) is the value for `lock_provider_source`.",
+  "Both locals end up being the same three-segment string: registry hostname, namespace, and provider type joined with `/`."
+]

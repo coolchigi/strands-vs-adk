@@ -1,0 +1,5 @@
+[
+  "Run `terraform -version` in your terminal first and read the output carefully \u2014 that's the string you need.",
+  "The value you paste in must be a Terraform string literal, so wrap it in double quotes inside the `= ` assignment.",
+  "The full string includes the prefix \u2014 it's `\"Terraform v1.16.4\"`, not just `\"1.16.4\"`."
+]

@@ -1,0 +1,32 @@
+[
+  {
+    "stem": "Two engineers on your team both run `terraform apply` at the same time against the same local state file. What is the most likely result?",
+    "options": [
+      "Both applies succeed but one overwrites the other's state, potentially corrupting it.",
+      "Terraform merges both sets of changes safely into a single state file.",
+      "The second apply fails with a clear 'state locked' error and makes no changes.",
+      "Terraform detects the conflict and queues the second run automatically."
+    ],
+    "objective": "Explain why storing state locally in version control is risky for teams and describe the recommended remote-backend alternative with locking"
+  },
+  {
+    "stem": "A colleague asks why your team's Terraform state must never be committed to a public GitHub repository. Which answer is most accurate?",
+    "options": [
+      "The state file may contain plaintext secrets such as passwords and access keys that would be exposed to anyone who can read the repo.",
+      "Git cannot store binary files like terraform.tfstate reliably.",
+      "Committing state prevents Terraform from detecting drift because it caches the file locally.",
+      "Public repositories automatically delete files larger than 1 MB, so the state file would be lost."
+    ],
+    "objective": "Explain why storing state locally in version control is risky for teams and describe the recommended remote-backend alternative with locking"
+  },
+  {
+    "stem": "Your team configures an S3 backend with a DynamoDB lock table. Engineer A starts a `terraform apply` that will take two minutes. Engineer B runs `terraform apply` thirty seconds later against the same workspace. What happens to Engineer B's run?",
+    "options": [
+      "It fails immediately with a lock error, because Engineer A's run holds the DynamoDB lock.",
+      "It waits silently and begins as soon as Engineer A's apply writes the new state to S3.",
+      "It proceeds in parallel but writes to a separate temporary state key to avoid conflict.",
+      "It succeeds immediately by reading the state snapshot Engineer A started with."
+    ],
+    "objective": "Explain why storing state locally in version control is risky for teams and describe the recommended remote-backend alternative with locking"
+  }
+]

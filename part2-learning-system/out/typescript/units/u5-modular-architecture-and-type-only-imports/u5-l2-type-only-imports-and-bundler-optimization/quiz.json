@@ -1,0 +1,32 @@
+[
+  {
+    "stem": "A developer writes the following import statement and function call in a service file:\n\n```ts\nimport { type validateToken, type AuthToken } from \"./auth.ts\";\n\nexport function verify(token: AuthToken): boolean {\n  return validateToken(token);\n}\n```\n\nWhy does the TypeScript compiler flag an error on `validateToken(token)`?",
+    "options": [
+      "The compiler cannot infer the return type of `validateToken` without an explicit type parameter in the function declaration.",
+      "`validateToken` was imported with the inline `type` modifier, which restricts it to non-emitting type positions and causes a compiler error when used as a value.",
+      "Inline `type` imports are restricted to interface and type alias identifiers and cannot be placed before function names.",
+      "Module `./auth.ts` must export `validateToken` as a `default` export when consumed alongside type-only specifiers."
+    ],
+    "objective": "Debug compiler errors caused by using identifiers imported via import type in runtime value positions"
+  },
+  {
+    "stem": "You are building a client utility that needs the runtime helper `sendRequest` and the interface `RequestConfig` from `./client.ts`. You want a single import statement where tools like esbuild or swc can safely elide `RequestConfig` without stripping `sendRequest`. Which declaration accomplishes this?",
+    "options": [
+      "import type { sendRequest } and { RequestConfig } from \"./client.ts\";",
+      "import { sendRequest, RequestConfig as type } from \"./client.ts\";",
+      "import { sendRequest, type RequestConfig } from \"./client.ts\";",
+      "import type { sendRequest, RequestConfig } from \"./client.ts\";"
+    ],
+    "objective": "Declare type-only imports (import type) and inline type imports to distinguish types from runtime values"
+  },
+  {
+    "stem": "A developer attempts to combine a default import and named type specifiers in a type-only import declaration:\n\n```ts\nimport type Client, { ClientOptions } from \"./client.ts\";\n```\n\nWhy does the TypeScript compiler disallow this statement?",
+    "options": [
+      "TypeScript requires all default imports to be runtime values and cannot elide default exports during bundling.",
+      "The `import type` keyword can only be applied to named import clauses enclosed in curly braces, never default imports.",
+      "Bundlers like esbuild require default type imports to use `import { default as Client }` instead.",
+      "A type-only import declaration cannot specify both a default import and named bindings together because it is ambiguous whether `type` applies to the default import or the entire declaration."
+    ],
+    "objective": "Declare type-only imports (import type) and inline type imports to distinguish types from runtime values"
+  }
+]

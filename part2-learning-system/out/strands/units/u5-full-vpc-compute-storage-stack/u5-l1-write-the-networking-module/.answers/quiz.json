@@ -1,0 +1,14 @@
+[
+  {
+    "answer": 0,
+    "explanation": "`count.index` for the third subnet is `2` (zero-based). `cidrsubnet(\"10.0.0.0/16\", 8, 2)` extends the prefix by 8 bits (giving a /24) and encodes `2` into the new bits, yielding `10.0.2.0/24`. `10.0.3.0/24` would be index 3. `10.0.2.0/16` is wrong because `newbits=8` always produces a /24 from a /16. `10.0.0.0/24` is index 0."
+  },
+  {
+    "answer": 0,
+    "explanation": "Terraform inherits the provider from the enclosing (root) configuration when it processes a module block, so provider blocks must not appear inside modules. The options suggesting the module's block takes precedence or that it merely raises a warning both contradict this: Terraform's recommendation is that modules contain no provider blocks at all."
+  },
+  {
+    "answer": 3,
+    "explanation": "Outputs are the only supported way for callers to get information about resources inside a module. The root then passes those output values (`module.networking.vpc_id`, `module.networking.subnet_ids`) as input variables to the compute module \u2014 the flat composition pattern. Locals are not accessible outside a module, resource attributes from another module cannot be referenced directly across module boundaries, and `terraform.tfvars` holds root-level variable values, not computed resource attributes."
+  }
+]

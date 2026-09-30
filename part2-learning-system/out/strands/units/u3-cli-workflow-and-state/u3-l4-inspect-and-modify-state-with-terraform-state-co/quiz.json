@@ -1,0 +1,32 @@
+[
+  {
+    "stem": "You run `terraform state rm aws_instance.app` and then immediately run `terraform plan`. What does Terraform show for `aws_instance.app`?",
+    "options": [
+      "No changes, because the real instance still exists in LocalStack.",
+      "The instance scheduled for destruction, because it is in LocalStack but not in state.",
+      "The instance scheduled for creation, because it is in the configuration but not in state.",
+      "An error, because `terraform state rm` deletes the real infrastructure."
+    ],
+    "objective": "Use terraform state list, state show, and state rm to inspect and remove a tracked resource without editing the state file directly"
+  },
+  {
+    "stem": "A colleague asks why `terraform state push` is flagged as extremely dangerous. Which pair of built-in safeguards does Terraform use to prevent accidental overwrites, and what defeats both of them?",
+    "options": [
+      "Lineage (a unique state ID) and serial (a write counter); both are defeated by the `-force` flag.",
+      "Backend version checks and provider version checks; both are defeated by downgrading the Terraform binary.",
+      "Encryption and access-control lists; both are defeated by rotating the KMS key.",
+      "A read lock and a write lock; both are defeated by running `terraform force-unlock`."
+    ],
+    "objective": "Explain why terraform state push is dangerous and what safeguards (lineage, serial) exist"
+  },
+  {
+    "stem": "You want to read the `cidr_block` of `aws_subnet.public[1]` from state without opening the state file. Which command is correct?",
+    "options": [
+      "`terraform state show 'aws_subnet.public[1]'`",
+      "`terraform state list aws_subnet.public[1]`",
+      "`terraform show aws_subnet public 1`",
+      "`terraform state show aws_subnet --index=1`"
+    ],
+    "objective": "Use terraform state list, state show, and state rm to inspect and remove a tracked resource without editing the state file directly"
+  }
+]

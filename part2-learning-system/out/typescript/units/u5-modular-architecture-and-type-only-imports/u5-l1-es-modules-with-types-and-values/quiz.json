@@ -1,0 +1,32 @@
+[
+  {
+    "stem": "A module `types.ts` defines `export interface User { id: string; }` and `export const DEFAULT_USER: User = { id: \"guest\" };`. In another file, which statement correctly imports both the interface and the object value using standard ES module syntax?",
+    "options": [
+      "import { User, DEFAULT_USER } from \"./types.js\";",
+      "import * as User from \"./types.js\";",
+      "import User, { DEFAULT_USER } from \"./types.js\";",
+      "import { interface User, const DEFAULT_USER } from \"./types.js\";"
+    ],
+    "objective": "Export and import functions, objects, and type definitions using standard ES Module syntax"
+  },
+  {
+    "stem": "You are creating a centralized entry-point `index.ts` file for a domain package. You want to expose all functions, constants, and types defined in `./validators.ts` as part of the public API without importing and naming each one individually. Which syntax accomplishes this?",
+    "options": [
+      "export default from \"./validators.js\";",
+      "import * from \"./validators.js\";",
+      "export { * as all } from \"./validators.js\";",
+      "export * from \"./validators.js\";"
+    ],
+    "objective": "Organize module public APIs using named exports, default exports, and wildcard re-exports"
+  },
+  {
+    "stem": "A module `logger.ts` declares a primary function with `export default function log(msg: string): void` and also exports a helper `export function formatLog(msg: string): string`. In `server.ts`, how can you import both functions in a single statement?",
+    "options": [
+      "import * as log, { formatLog } from \"./logger.js\";",
+      "import log and { formatLog } from \"./logger.js\";",
+      "import log, { formatLog } from \"./logger.js\";",
+      "import { log, formatLog } from \"./logger.js\";"
+    ],
+    "objective": "Organize module public APIs using named exports, default exports, and wildcard re-exports"
+  }
+]

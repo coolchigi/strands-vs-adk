@@ -1,0 +1,5 @@
+[
+  "In service.ts, check that response.status === 'success' and call isUser(response.data) to set the boolean valid flag.",
+  "Use `export * from './guards.ts';` and `export * from './api.ts';` to wildcard re-export both files from index.ts.",
+  "To re-export a default export in a barrel file, you can write `export { default } from './service.ts';` alongside `export * from './service.ts';`."
+]

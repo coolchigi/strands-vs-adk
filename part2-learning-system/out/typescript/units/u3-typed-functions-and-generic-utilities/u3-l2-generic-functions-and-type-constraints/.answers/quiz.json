@@ -1,0 +1,14 @@
+[
+  {
+    "answer": 0,
+    "explanation": "Constraining a generic type parameter to a shape does not allow returning an arbitrary object matching that constraint if the return type is typed as the parameter itself [c:07de23982fb8]. The caller promises a concrete `T` (which might have fields like `name` or `role`), and returning `{ id: \"default-id\" }` fails to satisfy those additional properties. The option claiming constraints only work on interfaces is incorrect because `extends` can constrain generic functions [c:884b13fb3aab]. The option claiming defaults are required is incorrect because constraints do not require defaults. Casting to `HasId` would still fail because the promised return type is `T`."
+  },
+  {
+    "answer": 3,
+    "explanation": "A type parameter can be constrained by another type parameter using extends keyof to ensure a key exists on an object type [c:6c2b0d4e64f5]. Without `K extends keyof T`, `K` is completely unconstrained, so TypeScript cannot guarantee that `key` exists on `record` and rejects `T[K]` and `record[key]`. The option stating functions cannot have multiple type parameters is incorrect because TypeScript allows multiple parameters. The option regarding `Record<string, unknown>` is incorrect because indexed access `T[K]` works directly with constrained parameters. The option regarding default types is incorrect because TypeScript infers type arguments automatically from arguments [c:dedb5cb9abbf]."
+  },
+  {
+    "answer": 0,
+    "explanation": "Default types for a type parameter must satisfy any constraint specified on that type parameter [c:f5bd37b7b1ac]. Because `{ id: string; name: string }` possesses an `id: string` property, it satisfies `{ id: string }`. The option claiming defaults bypass constraints is incorrect because constraints are always enforced. The option stating extends forbids defaults is incorrect. The option requiring identical properties without extras is incorrect because any subtype satisfying the constraint shape is permitted."
+  }
+]

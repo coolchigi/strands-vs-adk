@@ -1,0 +1,32 @@
+[
+  {
+    "stem": "You are configuring a module that requires the AWS provider. You want to permit any 6.x release (for instance, allowing 6.1.0 or 6.2.0, but preventing an upgrade to 7.0.0). Which provider requirement entry inside required_providers correctly implements this constraint?",
+    "options": [
+      "aws = { source = \"hashicorp/aws\", version = \">= 6.0\" }",
+      "aws = { source = \"hashicorp/aws\", version = \"~> 6.0\" }",
+      "aws = { source = \"hashicorp/aws\", version = \"< 7.0\" }",
+      "aws = { source = \"hashicorp/aws\", version = \"= 6.0\" }"
+    ],
+    "objective": "Configure the AWS provider and version constraints inside a required_providers block pointing to local mock endpoints"
+  },
+  {
+    "stem": "You declare a resource block resource \"aws_vpc\" \"primary\" { cidr_block = \"10.0.0.0/16\" } without specifying a provider meta-argument. How does Terraform determine which provider plugin should manage this resource?",
+    "options": [
+      "Terraform requires an explicit provider argument inside every resource block or it produces a syntax error.",
+      "Terraform checks the resource label primary against the provider configurations declared in the root module.",
+      "Terraform interprets the first word of the resource type, aws, as the local provider name.",
+      "Terraform queries the public registry to identify which provider published the aws_vpc type."
+    ],
+    "objective": "Declare AWS resource blocks with required type labels, resource names, and arguments"
+  },
+  {
+    "stem": "In your configuration, you have declared resource \"aws_s3_bucket\" \"app_storage\" { bucket = \"my-data-bucket\" }. You now want to reference this resource elsewhere in your configuration. How should this resource be referenced?",
+    "options": [
+      "app_storage.bucket",
+      "aws_s3_bucket.app_storage",
+      "aws_provider.aws_s3_bucket.app_storage",
+      "aws_s3_bucket.my-data-bucket"
+    ],
+    "objective": "Declare AWS resource blocks with required type labels, resource names, and arguments"
+  }
+]

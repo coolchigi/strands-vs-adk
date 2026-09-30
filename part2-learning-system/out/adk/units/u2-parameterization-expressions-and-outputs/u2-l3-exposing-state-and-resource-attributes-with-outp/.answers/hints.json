@@ -1,0 +1,5 @@
+[
+  "Define three output blocks in outputs.tf named vpc_id, public_subnet_ids, and db_token.",
+  "Assign aws_vpc.main.id to vpc_id, and assign aws_subnet.public[*].id to public_subnet_ids.",
+  "In db_token, assign \"supersecret-token-123\" to value and specify sensitive = true inside the output block."
+]

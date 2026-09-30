@@ -1,0 +1,32 @@
+[
+  {
+    "stem": "You declare a variable `env` in `variables.tf` with `default = \"dev\"`. You also have `env = \"staging\"` in `terraform.tfvars`, and you run `terraform apply -var=\"env=prod\"`. Which value does Terraform use?",
+    "options": [
+      "\"staging\" \u2014 values from .tfvars files take highest precedence",
+      "Terraform errors because the variable is assigned in more than one place",
+      "\"prod\" \u2014 the -var flag takes highest precedence over both .tfvars and default",
+      "\"dev\" \u2014 the default is always the source of truth"
+    ],
+    "objective": "Choose between -var flag, .tfvars file, and TF_VAR_ environment variable to supply a value, explaining the precedence order"
+  },
+  {
+    "stem": "A colleague sets `export TF_VAR_bucket_name=corp-assets` in their shell but forgot to declare a `bucket_name` variable block in the configuration. What does Terraform do?",
+    "options": [
+      "Prints a warning about the undeclared variable, the same as a .tfvars file would",
+      "Creates the variable automatically from the environment variable",
+      "Raises an error and refuses to continue, the same as -var would",
+      "Silently ignores the environment variable and continues"
+    ],
+    "objective": "Choose between -var flag, .tfvars file, and TF_VAR_ environment variable to supply a value, explaining the precedence order"
+  },
+  {
+    "stem": "You want the `aws_s3_bucket` resource to use the value of an input variable called `bucket_name`. Which resource argument is correct?",
+    "options": [
+      "bucket = variable.bucket_name",
+      "bucket = input.bucket_name",
+      "bucket = var.bucket_name",
+      "bucket = \"${input[\\\"bucket_name\\\"]}\""
+    ],
+    "objective": "Declare input variables with type, description, default, and validation, then reference them inside resource arguments using var.<NAME>"
+  }
+]

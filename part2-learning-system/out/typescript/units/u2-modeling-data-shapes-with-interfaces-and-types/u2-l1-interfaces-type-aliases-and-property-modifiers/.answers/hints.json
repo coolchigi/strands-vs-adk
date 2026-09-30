@@ -1,0 +1,5 @@
+[
+  "Use 'interface User { ... }' for the user declaration, and 'type Post = { ... }' for the post declaration.",
+  "Prepend 'readonly' before 'id' (and 'authorId') to prevent reassignment, and append '?' after 'bio' and 'avatarUrl' to mark them optional.",
+  "In formatUserProfile, check 'if (user.bio !== undefined)' to choose between including ': ' + user.bio or just the username and email."
+]

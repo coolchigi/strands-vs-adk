@@ -1,0 +1,14 @@
+[
+  {
+    "answer": 1,
+    "explanation": "The lock file's purpose is reproducibility: when it is present, `terraform init` selects the exact version recorded in it rather than resolving the constraint afresh. Option 0 describes the behaviour of `terraform init -upgrade`, which explicitly ignores the lock file. Options 2 and 3 are not behaviours Terraform has."
+  },
+  {
+    "answer": 2,
+    "explanation": "`terraform init` is always safe to run multiple times and will never delete existing configuration or state. It adds the new provider while reusing the already-installed AWS provider recorded in the lock file. You do not need to delete anything first, and `-upgrade` is not required for new providers."
+  },
+  {
+    "answer": 2,
+    "explanation": "The lock file pins the exact version. When it records a 5.x version, `terraform init` honours it even after the constraint is widened to `~> 6.0`. Running `terraform init -upgrade` tells Terraform to ignore the lock file entry and resolve the constraint fresh, finding and recording a 6.x version. Deleting `.terraform` alone would not update the lock file, and editing the lock file directly is not the recommended workflow."
+  }
+]

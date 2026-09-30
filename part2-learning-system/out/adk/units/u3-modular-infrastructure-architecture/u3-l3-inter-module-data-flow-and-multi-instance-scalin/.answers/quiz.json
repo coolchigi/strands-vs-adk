@@ -1,0 +1,14 @@
+[
+  {
+    "answer": 3,
+    "explanation": "Values from child module outputs are accessed in the parent module using the expression syntax `module.<MODULE-NAME>.<OUTPUT-NAME>`, and inputs exposed by a module can be provided as arguments within its module block. Referencing `var.vpc.public_subnet_id` assumes an undeclared input variable, child modules cannot reach across into sibling modules directly, and module outputs do not have a `target` attribute."
+  },
+  {
+    "answer": 2,
+    "explanation": "The `for_each` meta-argument allows looping over a set of keys so Terraform provisions similar module instances that can each be configured uniquely using `each.key` or `each.value`. The `count` meta-argument provisions instances with the same configuration, the `moved` block is for refactoring state addresses, and `source` only specifies the module location."
+  },
+  {
+    "answer": 0,
+    "explanation": "When a module is created with `for_each`, its instances are indexed by key (like `module.compute[\"dev\"]`). To collect outputs across instances into a map, use a `for` expression: `{ for env, mod in module.compute : env => mod.instance_id }`. The splat expression `[*]` only works on lists created by `count`, `each.key` is only valid inside blocks that declare `for_each`, and `.all` is not a valid Terraform expression."
+  }
+]

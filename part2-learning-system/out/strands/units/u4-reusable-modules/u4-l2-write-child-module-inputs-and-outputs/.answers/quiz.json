@@ -1,0 +1,14 @@
+[
+  {
+    "answer": 0,
+    "explanation": "A variable declared without a default is required, and Terraform errors if the calling module block does not supply it. Terraform does not silently substitute an empty string, null, or prompt interactively \u2014 the configuration is invalid until every required argument is present."
+  },
+  {
+    "answer": 0,
+    "explanation": "`module.<MODULE-NAME>.<OUTPUT-NAME>` is the correct syntax for reading a child module's output in the calling configuration. `var.network.subnet_id` confuses a module reference with a variable. `network.outputs.subnet_id` and `module.network.outputs[\"subnet_id\"]` are not valid Terraform expressions."
+  },
+  {
+    "answer": 3,
+    "explanation": "A reference to `module.network.subnet_id` creates an implicit dependency: Terraform knows it must create the network module's resources first so the subnet id is available. No explicit `depends_on` is needed. Terraform does not ignore cross-module references for ordering, nor does a dependency imply anything about destruction order in this context."
+  }
+]

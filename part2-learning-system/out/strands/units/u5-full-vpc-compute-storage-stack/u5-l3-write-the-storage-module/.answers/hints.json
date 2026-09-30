@@ -1,0 +1,5 @@
+[
+  "The module needs all three files: variables.tf, main.tf, and outputs.tf. Start with variables.tf and make sure bucket_name has no default (required) while tags has default = {}.",
+  "In outputs.tf the precondition block goes inside the output block, before or after the value argument \u2014 check the syntax from the worked example.",
+  "For bucket_id, use aws_s3_bucket.main.bucket (the argument you set) rather than .id \u2014 with a mock provider .id is a random string, but .bucket always equals the name you passed in."
+]

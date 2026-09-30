@@ -1,0 +1,32 @@
+[
+  {
+    "stem": "You remove the `version` argument from your `required_providers` entry for `hashicorp/aws` and run `terraform init` on a machine that has never initialised this project before. What does Terraform install?",
+    "options": [
+      "It refuses to initialise and prints an error asking you to add a version constraint.",
+      "It installs the most recent available version of the AWS provider.",
+      "It installs the version recorded in the `.terraform.lock.hcl` file.",
+      "It installs the version that matches the current Terraform CLI version."
+    ],
+    "objective": "Explain what the ~> version constraint operator means and why pinning provider versions matters"
+  },
+  {
+    "stem": "Your `terraform.tf` contains `version = \"~> 6.0\"` for the AWS provider. A colleague asks which provider versions this constraint allows. What is the correct answer?",
+    "options": [
+      "Only exactly version 6.0.0 and nothing else.",
+      "Any version with major number 6, such as 6.1.0, 6.23.4, or 6.99.0, but not 7.0.0.",
+      "Any version 6.0.0 or higher, including 7.0.0 and 8.0.0.",
+      "Any version with minor number 0, such as 6.0.0, 7.0.0, or 8.0.0."
+    ],
+    "objective": "Explain what the ~> version constraint operator means and why pinning provider versions matters"
+  },
+  {
+    "stem": "You are setting up a new AWS project and want to declare the AWS provider correctly. Where must the `required_providers` block be placed, and what does a correctly written entry look like?",
+    "options": [
+      "As a top-level block in any `.tf` file, with `aws { source = \"hashicorp/aws\" }`.",
+      "Inside the `provider \"aws\" {}` block, with a `version` argument.",
+      "Inside the `terraform {}` block, with `aws = { source = \"hashicorp/aws\", version = \"~> 6.0\" }`.",
+      "Inside the `locals {}` block, as a map value assigned to a variable named `required_providers`."
+    ],
+    "objective": "Write a terraform block containing a required_providers entry that pins the hashicorp/aws provider to a specific version constraint"
+  }
+]

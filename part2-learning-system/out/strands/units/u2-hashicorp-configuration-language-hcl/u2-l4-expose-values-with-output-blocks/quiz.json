@@ -1,0 +1,32 @@
+[
+  {
+    "stem": "You add a `description` to an output block in outputs.tf. What is the primary benefit of that description?",
+    "options": [
+      "It documents what the value represents for anyone reading the configuration.",
+      "It sets a default value for the output when none is provided.",
+      "It prevents the value from appearing in terraform apply terminal output.",
+      "It makes the output available to the terraform_remote_state data source."
+    ],
+    "objective": "Write output blocks that expose the S3 bucket id and EC2 instance id, adding descriptions and marking a sensitive output appropriately"
+  },
+  {
+    "stem": "After running `terraform apply`, a colleague notices the terminal shows `db_password = <sensitive>` instead of the actual value. They need to use the password in a shell script. What is the correct way to retrieve the plain-text value?",
+    "options": [
+      "Remove `sensitive = true` from the output block and re-apply.",
+      "Read the value directly from the Terraform plan file.",
+      "Run `terraform output -raw db_password`.",
+      "Use `terraform show` and search for db_password."
+    ],
+    "objective": "Write output blocks that expose the S3 bucket id and EC2 instance id, adding descriptions and marking a sensitive output appropriately"
+  },
+  {
+    "stem": "A networking configuration in one Terraform workspace creates a VPC and exposes its id as a root module output. A separate application workspace, managed independently with its own state file, needs that VPC id. Which mechanism is designed for exactly this use case?",
+    "options": [
+      "Use the terraform_remote_state data source in the application workspace to read the networking workspace's output.",
+      "Declare the VPC id as a variable in the application workspace and pass it on the command line with -var.",
+      "Reference the networking workspace's output directly using module.<name>.<output> syntax.",
+      "Move the VPC resource into the application workspace so both resources share the same state."
+    ],
+    "objective": "Explain the four purposes of output values and where each applies (child module, CLI display, remote state, automation)"
+  }
+]

@@ -1,0 +1,32 @@
+[
+  {
+    "stem": "A developer writes an asynchronous helper function that queries a database and returns an integer count:\n\n```ts\nasync function getRetryCount(): ??? {\n  return 3;\n}\n```\n\nHow should the return type be annotated?",
+    "options": [
+      "Promise<number>",
+      "Promise<void>",
+      "number",
+      "async number"
+    ],
+    "objective": "Annotate function parameters, return values, and asynchronous Promise return types"
+  },
+  {
+    "stem": "You want to declare a callback function type that accepts a string argument and returns no value. What happens if you define the parameter type as `(string) => void` instead of `(message: string) => void`?",
+    "options": [
+      "TypeScript raises a compile-time syntax error requiring parameter names to precede colons.",
+      "TypeScript reverses the definition and treats string as the return type.",
+      "TypeScript treats string as the type and generates an anonymous positional parameter.",
+      "TypeScript treats string as the parameter name and gives it an inferred type of any."
+    ],
+    "objective": "Specify function types using void, unknown, and never for callbacks, untyped inputs, and terminal error functions"
+  },
+  {
+    "stem": "An API client library contains a function `crash(reason: string)` that logs a message and unconditionally throws an `Error` to stop program execution. What is the correct return type annotation for `crash`?",
+    "options": [
+      "unknown, because the thrown error may be of any arbitrary type.",
+      "void, because the function does not return an explicit value.",
+      "void, because never is only permitted for infinite loops.",
+      "never, because the function never finishes execution normally."
+    ],
+    "objective": "Specify function types using void, unknown, and never for callbacks, untyped inputs, and terminal error functions"
+  }
+]

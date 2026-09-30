@@ -1,0 +1,32 @@
+[
+  {
+    "stem": "You have two interfaces:\n```ts\ninterface Named { name: string; }\ninterface Aged { age: number; }\n```\nWhich declaration creates a new interface `Person` containing both properties using interface inheritance?",
+    "options": [
+      "interface Person implements Named, Aged {}",
+      "interface Person extends (Named & Aged) {}",
+      "interface Person = Named & Aged;",
+      "interface Person extends Named, Aged {}"
+    ],
+    "objective": "Compose object shapes using interface extends and type intersection (&)"
+  },
+  {
+    "stem": "Consider the following type aliases:\n```ts\ntype ResponseA = { status: string; data: object };\ntype ResponseB = { status: number; message: string };\ntype CombinedResponse = ResponseA & ResponseB;\n```\nWhat is the type of `CombinedResponse['status']`?",
+    "options": [
+      "string | number",
+      "any",
+      "never",
+      "number"
+    ],
+    "objective": "Predict type conflicts resulting in never when intersecting types with incompatible property definitions"
+  },
+  {
+    "stem": "Why might a development team prefer `interface Child extends Parent` over `type Child = Parent & { ... }` when composing object shapes in a large project?",
+    "options": [
+      "Extending interfaces using the extends keyword is often more performant for the compiler than composing type aliases with intersections.",
+      "Type intersections with `&` cannot combine two object types that have different property names.",
+      "Interfaces can only extend classes, while type intersections can only combine primitive types.",
+      "Interfaces automatically prevent any two properties from having the same name, while intersections always compile without checking."
+    ],
+    "objective": "Compose object shapes using interface extends and type intersection (&)"
+  }
+]

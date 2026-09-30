@@ -1,0 +1,14 @@
+[
+  {
+    "answer": 0,
+    "explanation": "Setting `count = length(var.subnet_ids)` creates one instance per element, and `var.subnet_ids[count.index]` picks the matching subnet for each instance. Using `subnet_ids[0]` for every instance (options 1 and 3) would put all instances in the same subnet. `for_each` on a list requires `toset()` and uses `each.value`, which is a valid but different approach \u2014 the exercise specifically asks for `count`."
+  },
+  {
+    "answer": 3,
+    "explanation": "A variable with a `default` value is optional; when the caller omits it Terraform silently uses the default. Only variables *without* a default are required and cause an error when omitted. Terraform does not prompt interactively when a default is present."
+  },
+  {
+    "answer": 0,
+    "explanation": "The splat expression `aws_instance.app[*].id` collects the `id` attribute from every instance in the counted resource into a list. `aws_instance.app.id` and `tolist(aws_instance.app.id)` are invalid when `count` is used because `aws_instance.app` is no longer a single object. `aws_instance.app[0].id` returns only the first instance's ID, not all of them."
+  }
+]

@@ -1,0 +1,32 @@
+[
+  {
+    "stem": "You clone a colleague's repository containing Terraform configuration for AWS resources and immediately execute `terraform plan`. The command fails with an error stating that the directory is not initialized. What action should you take to resolve this, and what occurs as a result?",
+    "options": [
+      "Run `terraform validate` to establish provider plugins and test whether local credentials can connect to AWS.",
+      "Run `terraform get` to install provider plugins and backend configurations into the current working directory.",
+      "Manually create a `.terraform` directory and copy provider binaries directly into the workspace root.",
+      "Run `terraform init` to download and cache the required AWS provider plugin into the hidden `.terraform` directory."
+    ],
+    "objective": "Initialize a working directory using terraform init to download provider plugins into the .terraform cache"
+  },
+  {
+    "stem": "An engineer edits `main.tf` to update the version constraint of the AWS provider from `~> 5.0` to `~> 6.0`. When they run `terraform apply`, Terraform halts with an error explaining that provider requirements have changed. What explains this behavior?",
+    "options": [
+      "Changes to provider requirements or version constraints require reinitializing the directory with `terraform init` before continuing normal operations.",
+      "Semantic version operators such as `~>` cannot be evaluated during apply operations.",
+      "The `.terraform` directory is permanent and cannot be modified once created.",
+      "The `terraform fmt` command must always be executed after changing any provider block."
+    ],
+    "objective": "Initialize a working directory using terraform init to download provider plugins into the .terraform cache"
+  },
+  {
+    "stem": "A developer accidentally types `cidrs_block = \"10.0.1.0/24\"` instead of `cidr_block` inside an AWS subnet resource block. Which command detects this typo without attempting to provision cloud infrastructure, and why?",
+    "options": [
+      "The `terraform fmt` command, because it automatically renames misspelled arguments to canonical attribute names.",
+      "The `terraform init` command, because provider plugin downloads fail if resource attribute names are misspelled.",
+      "The `terraform validate` command, because it checks configuration syntax and verifies argument and attribute names and types against provider schemas.",
+      "The `terraform get` command, because it contacts the registry to replace invalid resource arguments."
+    ],
+    "objective": "Validate HCL syntax and enforce standard formatting using terraform validate and terraform fmt"
+  }
+]

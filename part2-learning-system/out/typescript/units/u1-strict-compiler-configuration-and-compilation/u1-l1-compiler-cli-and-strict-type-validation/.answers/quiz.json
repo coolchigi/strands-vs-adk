@@ -1,0 +1,14 @@
+[
+  {
+    "answer": 1,
+    "explanation": "The --noEmitOnError compiler flag instructs TypeScript not to generate or update JavaScript output files when type-checking errors are encountered. It does not delete existing files or replace them with error messages. Without this flag, TypeScript by default emits output even when errors exist, but --noEmitOnError suppresses that emission."
+  },
+  {
+    "answer": 2,
+    "explanation": "When type annotations are missing and TypeScript cannot infer a variable or parameter type, it defaults to type any. Enabling --noImplicitAny turns this implicit fallback into a compiler error. TypeScript can still infer the return type of items.length as number, so the return type is not what triggers the error."
+  },
+  {
+    "answer": 1,
+    "explanation": "When strictNullChecks is true, null and undefined have their own distinct types and cause type errors if used where a concrete value is expected. Because str can be null, dereferencing .length is unsafe until str is checked or narrowed. Union types containing null are allowed, but the null case must be handled explicitly."
+  }
+]

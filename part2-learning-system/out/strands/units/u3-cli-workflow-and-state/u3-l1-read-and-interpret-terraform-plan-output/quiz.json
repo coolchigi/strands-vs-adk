@@ -1,0 +1,32 @@
+[
+  {
+    "stem": "You run `terraform plan` against a configuration that already has state. The output shows this block:\n\n```\n  # aws_instance.app must be replaced\n  -/+ resource \"aws_instance\" \"app\" {\n      ~ ami = \"ami-aaaa\" -> \"ami-bbbb\" # forces replacement\n        instance_type = \"t3.micro\"\n    }\n```\n\nWhat will Terraform do to `aws_instance.app` if you apply this plan?",
+    "options": [
+      "Update the instance in place by swapping the AMI without any downtime",
+      "Create a second instance with the new AMI and leave the original running",
+      "Destroy the existing instance and then create a new one with the new AMI",
+      "Take no action because instance_type is unchanged"
+    ],
+    "objective": "Run terraform plan and correctly identify every change symbol (+, -, ~, -/+), the forced-replacement attribute, and the plan summary line"
+  },
+  {
+    "stem": "After reviewing a plan with your team and getting approval, you want to ensure that the `terraform apply` step carries out **exactly** the changes that were reviewed \u2014 no more, no less \u2014 even if another engineer changes the configuration in the meantime. Which approach achieves this?",
+    "options": [
+      "Run `terraform apply -auto-approve` so no new plan is generated",
+      "Run `terraform apply -refresh=false` to skip re-reading remote state",
+      "Run `terraform plan -out=tfplan` during review, then pass the file to `terraform apply tfplan` when ready to apply",
+      "Run `terraform plan` immediately before `terraform apply` in the same terminal session"
+    ],
+    "objective": "Save a plan to a file with -out and explain when passing a plan file to terraform apply is preferable to running a fresh plan"
+  },
+  {
+    "stem": "You run `terraform plan` and the final line reads:\n\n```\nPlan: 0 to add, 0 to change, 0 to destroy.\n```\n\nWhat does this tell you?",
+    "options": [
+      "The real infrastructure already matches the configuration; no actions are needed",
+      "The state file is missing and Terraform defaulted to a no-op",
+      "The plan was saved to a file and is waiting to be applied",
+      "Terraform encountered an error and could not evaluate the configuration"
+    ],
+    "objective": "Run terraform plan and correctly identify every change symbol (+, -, ~, -/+), the forced-replacement attribute, and the plan summary line"
+  }
+]

@@ -1,0 +1,14 @@
+[
+  {
+    "answer": 1,
+    "explanation": "Terraform displays root module output values in the CLI after you apply your configuration, and other configurations using remote state can access root module outputs with the terraform_remote_state data source. During plan, outputs are not applied to the terminal, and other configurations cannot inspect unapplied source code to retrieve state."
+  },
+  {
+    "answer": 1,
+    "explanation": "Setting sensitive = true on an output prevents Terraform from displaying the value in standard CLI output. Terraform still stores sensitive outputs in state, and running terraform output with -json or -raw prints sensitive values in plain text."
+  },
+  {
+    "answer": 3,
+    "explanation": "Marking an output with the ephemeral argument excludes the value from state and plan files, but it also adds restrictions to the values you can assign to that output. Setting sensitive = true stores values in state, and ephemeral outputs are not allowed on root modules."
+  }
+]

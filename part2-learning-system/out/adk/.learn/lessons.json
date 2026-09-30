@@ -1,0 +1,86 @@
+[
+  {
+    "id": "u1-l1",
+    "title": "Declaring Providers and AWS Resource Blocks",
+    "path": "units/u1-terraform-language-basics-and-core-lifecycle-wor/u1-l1-declaring-providers-and-aws-resource-blocks",
+    "exercise": true,
+    "runner": "terraform"
+  },
+  {
+    "id": "u1-l2",
+    "title": "Resource Attribute References and Dependency Management",
+    "path": "units/u1-terraform-language-basics-and-core-lifecycle-wor/u1-l2-resource-attribute-references-and-dependency-man",
+    "exercise": true,
+    "runner": "terraform"
+  },
+  {
+    "id": "u1-l3",
+    "title": "Working Directory Initialization and Configuration Validation",
+    "path": "units/u1-terraform-language-basics-and-core-lifecycle-wor/u1-l3-working-directory-initialization-and-configurati",
+    "exercise": true,
+    "runner": "terraform"
+  },
+  {
+    "id": "u1-l4",
+    "title": "Planning, Applying, and Destroying Infrastructure",
+    "path": "units/u1-terraform-language-basics-and-core-lifecycle-wor/u1-l4-planning-applying-and-destroying-infrastructure",
+    "exercise": true,
+    "runner": "terraform"
+  },
+  {
+    "id": "u2-l1",
+    "title": "Input Variables and Precedence Resolution",
+    "path": "units/u2-parameterization-expressions-and-outputs/u2-l1-input-variables-and-precedence-resolution",
+    "exercise": true,
+    "runner": "terraform"
+  },
+  {
+    "id": "u2-l2",
+    "title": "HCL Operators, Functions, and Dynamic Expressions",
+    "path": "units/u2-parameterization-expressions-and-outputs/u2-l2-hcl-operators-functions-and-dynamic-expressions",
+    "exercise": true,
+    "runner": "terraform"
+  },
+  {
+    "id": "u2-l3",
+    "title": "Exposing State and Resource Attributes with Output Values",
+    "path": "units/u2-parameterization-expressions-and-outputs/u2-l3-exposing-state-and-resource-attributes-with-outp",
+    "exercise": true,
+    "runner": "terraform"
+  },
+  {
+    "id": "u3-l1",
+    "title": "Standard Module Architecture and Hierarchy",
+    "path": "units/u3-modular-infrastructure-architecture/u3-l1-standard-module-architecture-and-hierarchy",
+    "exercise": true,
+    "runner": "terraform"
+  },
+  {
+    "id": "u3-l2",
+    "title": "Calling Modules from Local and External Sources",
+    "path": "units/u3-modular-infrastructure-architecture/u3-l2-calling-modules-from-local-and-external-sources",
+    "exercise": true,
+    "runner": "terraform"
+  },
+  {
+    "id": "u3-l3",
+    "title": "Inter-Module Data Flow and Multi-Instance Scaling",
+    "path": "units/u3-modular-infrastructure-architecture/u3-l3-inter-module-data-flow-and-multi-instance-scalin",
+    "exercise": true,
+    "runner": "terraform"
+  },
+  {
+    "id": "u4-l1",
+    "title": "Inspecting State and Output Extraction",
+    "path": "units/u4-state-inspection-management-and-refactoring/u4-l1-inspecting-state-and-output-extraction",
+    "exercise": true,
+    "runner": "terraform"
+  },
+  {
+    "id": "u4-l2",
+    "title": "Modifying State Bindings and Refactoring Resources",
+    "path": "units/u4-state-inspection-management-and-refactoring/u4-l2-modifying-state-bindings-and-refactoring-resourc",
+    "exercise": true,
+    "runner": "terraform"
+  }
+]

@@ -1,0 +1,5 @@
+[
+  "Inside each variable block in `variables.tf`, add a `validation` block containing both `condition` and `error_message` attributes.",
+  "The `can()` function catches errors from functions like `cidrnetmask()`. Use `condition = can(cidrnetmask(var.<NAME>))`.",
+  "In `main.tf`, replace the literal string values `\"10.0.0.0/16\"` and `\"10.0.1.0/24\"` with `var.vpc_cidr` and `var.public_subnet_cidr` respectively."
+]

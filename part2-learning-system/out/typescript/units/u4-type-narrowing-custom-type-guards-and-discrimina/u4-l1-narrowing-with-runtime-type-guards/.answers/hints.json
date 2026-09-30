@@ -1,0 +1,5 @@
+[
+  "Remember that typeof null is 'object', so test for null with `payload === null` before relying on object or array operations.",
+  "Check `typeof payload === 'number'` and `typeof payload === 'string'`. In the string branch, use `if (!payload)` to detect the empty string.",
+  "For `extractData`, use `if ('error' in response)` to let TypeScript narrow `response` to `{ error: string }` in the true branch."
+]

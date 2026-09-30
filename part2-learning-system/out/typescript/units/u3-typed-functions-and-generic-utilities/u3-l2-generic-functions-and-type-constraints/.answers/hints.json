@@ -1,0 +1,5 @@
+[
+  "Use the `extends` keyword after a type parameter to constrain it to a shape or interface, such as `<T extends Identifiable>`.",
+  "To ensure a property key belongs to an object type, constrain a second type parameter using `K extends keyof T`.",
+  "In `getProperty`, write the signature as `<T, K extends keyof T>(item: T, key: K): T[K]` and return `item[key]`."
+]

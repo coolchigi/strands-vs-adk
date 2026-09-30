@@ -1,0 +1,32 @@
+[
+  {
+    "stem": "You are refactoring configuration and want to experiment with merge(), lookup(), and arithmetic expressions before applying changes to your resources. How should you interactively test these expressions against your current configuration context?",
+    "options": [
+      "Run terraform plan -dry-run to output an evaluation table of all expressions declared in main.tf.",
+      "Run terraform validate --expr to verify the return types of individual function calls.",
+      "Run terraform test --eval to invoke an ad-hoc REPL that parses expressions from test assertions.",
+      "Run terraform console to launch an interactive command-line session where expressions and built-in functions can be evaluated directly."
+    ],
+    "objective": "Evaluate expressions and built-in functions interactively using the terraform console command"
+  },
+  {
+    "stem": "You have an input map var.tags and want to ensure every resource receives standard tags Project = \"Athena\" and Env = var.environment, while allowing callers to override Project or supply additional tags via var.tags. Which expression should you assign to tags?",
+    "options": [
+      "merge(var.tags, { Project = \"Athena\", Env = var.environment })",
+      "coalesce(var.tags, { Project = \"Athena\", Env = var.environment })",
+      "merge({ Project = \"Athena\", Env = var.environment }, var.tags)",
+      "concat([ { Project = \"Athena\", Env = var.environment } ], [ var.tags ])"
+    ],
+    "objective": "Construct dynamic resource arguments combining conditional logic, collection transformations, and template functions"
+  },
+  {
+    "stem": "You need to pass an initialization script to an aws_instance resource using an external file bootstrap.sh.tftpl. The script requires an interpolated variable db_endpoint supplied from a database resource attribute aws_db_instance.db.endpoint. How should the user_data argument be constructed?",
+    "options": [
+      "user_data = templatefile(\"${path.module}/bootstrap.sh.tftpl\", { db_endpoint = aws_db_instance.db.endpoint })",
+      "user_data = file(\"${path.module}/bootstrap.sh.tftpl\", { db_endpoint = aws_db_instance.db.endpoint })",
+      "user_data = templatefile(\"${path.module}/bootstrap.sh.tftpl\", [ aws_db_instance.db.endpoint ])",
+      "user_data = render(\"${path.module}/bootstrap.sh.tftpl\", { db_endpoint = aws_db_instance.db.endpoint })"
+    ],
+    "objective": "Construct dynamic resource arguments combining conditional logic, collection transformations, and template functions"
+  }
+]

@@ -1,0 +1,4 @@
+[
+  "Look inside main.tf for the resource block labeled aws_s3_bucket \"storage\".",
+  "Assign the exact bucket name string \"my-learning-bucket-2024\" to the bucket argument of aws_s3_bucket.storage."
+]

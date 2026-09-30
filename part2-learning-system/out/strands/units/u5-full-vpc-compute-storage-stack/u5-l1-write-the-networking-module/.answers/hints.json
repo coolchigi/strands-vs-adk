@@ -1,0 +1,5 @@
+[
+  "If `terraform test` says a variable or output attribute doesn't exist, check that every `output` block in `modules/networking/outputs.tf` is spelled exactly as the test references it: `vpc_id`, `subnet_ids`, and `subnet_cidrs`.",
+  "For `aws_subnet.public`, you need two arguments that both use `count.index`: `cidr_block = cidrsubnet(var.vpc_cidr, 8, count.index)` and `availability_zone = var.availability_zones[count.index]`.",
+  "The `aws_route_table_association.public` resource needs `count = length(var.availability_zones)` and `subnet_id = aws_subnet.public[count.index].id` to wire each subnet to the route table."
+]

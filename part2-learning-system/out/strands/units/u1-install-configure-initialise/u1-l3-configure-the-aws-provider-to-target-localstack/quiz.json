@@ -1,0 +1,32 @@
+[
+  {
+    "stem": "Your colleague's Terraform apply against LocalStack hangs for 30 seconds and then fails with \"NoCredentialProviders: no valid providers in chain\". Which provider argument, if added and set to `true`, would prevent that specific hang?",
+    "options": [
+      "skip_requesting_account_id",
+      "skip_credentials_validation",
+      "s3_use_path_style",
+      "skip_metadata_api_check"
+    ],
+    "objective": "Explain the purpose of each LocalStack-specific provider argument (skip_credentials_validation, skip_metadata_api_check, endpoints block)"
+  },
+  {
+    "stem": "A teammate configures the AWS provider for LocalStack but leaves out the `endpoints` block entirely. What happens when they run `terraform apply` on an `aws_s3_bucket` resource?",
+    "options": [
+      "Terraform skips the S3 call and applies a default empty bucket.",
+      "Terraform creates the bucket in LocalStack because LocalStack intercepts all outbound traffic on port 443.",
+      "Terraform contacts the real AWS S3 API at s3.amazonaws.com, which rejects the mock credentials.",
+      "Terraform raises a schema validation error before making any API call."
+    ],
+    "objective": "Explain the purpose of each LocalStack-specific provider argument (skip_credentials_validation, skip_metadata_api_check, endpoints block)"
+  },
+  {
+    "stem": "You write an AWS provider block for LocalStack with mock credentials, both skip flags set to `true`, and an `endpoints` block. When you run `terraform validate`, Terraform reports the configuration is valid. What does this confirm?",
+    "options": [
+      "LocalStack is running and accepted a test connection from the provider.",
+      "The endpoints block URLs are reachable from your machine.",
+      "The provider block's HCL syntax and argument names are recognised by the AWS provider schema.",
+      "The mock credentials will be accepted by LocalStack when you run terraform apply."
+    ],
+    "objective": "Write an AWS provider block that uses mock credentials, sets skip flags, and points service endpoints at LocalStack so no real AWS API calls are made"
+  }
+]

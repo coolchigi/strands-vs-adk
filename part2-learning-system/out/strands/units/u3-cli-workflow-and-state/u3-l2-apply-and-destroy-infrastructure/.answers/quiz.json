@@ -1,0 +1,14 @@
+[
+  {
+    "answer": 1,
+    "explanation": "When you pass a saved plan file, Terraform performs the operations in the saved plan without prompting for confirmation \u2014 the act of passing the plan file is itself the approval [c:503a7989071a, c:cfc0efea255b]. It does not re-plan or refuse; the saved plan contains the final decisions [c:107b6584b15d]. The option about running a fresh plan only applies when no plan file is passed [c:7f509a738f18]."
+  },
+  {
+    "answer": 1,
+    "explanation": "After a successful apply, Terraform updates the state file with any changes to your resources [c:a9b8cfbc1020]. The state file reflects the real current attributes of each resource, including computed IDs. The plan file being consumed has no bearing on the state file's content, and LocalStack returns real attribute values that Terraform records."
+  },
+  {
+    "answer": 1,
+    "explanation": "After terraform destroy completes, the state file still exists but its `resources` key is set to an empty array [c:d44c4164abb0, c:6e7c72d30e67]. Terraform does not delete the file, and it does not keep the old resource entries in any form \u2014 the empty array confirms nothing is managed any more."
+  }
+]

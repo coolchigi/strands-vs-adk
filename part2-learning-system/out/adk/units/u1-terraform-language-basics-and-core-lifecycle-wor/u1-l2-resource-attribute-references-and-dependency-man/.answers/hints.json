@@ -1,0 +1,5 @@
+[
+  "When accessing an attribute of a single resource, write `<resource_type>.<resource_name>.<attribute>` without quotes.",
+  "The VPC resource is defined as `resource \"aws_vpc\" \"main\"`, so its exported identifier attribute is accessed as `aws_vpc.main.id`.",
+  "Replace the empty strings `\"\"` assigned to `vpc_id` in `aws_internet_gateway.gw`, `aws_subnet.public`, and `aws_route_table.public` with `aws_vpc.main.id`."
+]

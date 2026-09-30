@@ -1,0 +1,32 @@
+[
+  {
+    "stem": "An engineer runs `terraform plan -out=tfplan` in an environment where multiple developers make changes. Why would they choose to pass `tfplan` to `terraform apply tfplan` instead of running `terraform apply` directly?",
+    "options": [
+      "Passing the pre-generated plan file guarantees that Terraform executes the exact pre-approved changes even if configuration or remote infrastructure changed after the plan was created.",
+      "A saved plan file is the only way Terraform can record resource IDs in the state file during an apply operation.",
+      "Passing the saved plan file bypasses provider API evaluation during execution so that resources can be provisioned when offline.",
+      "The plan command directly provisions resources in dry-run mode, and passing the file to apply commits the transaction to the provider."
+    ],
+    "objective": "Generate, save, and review speculative execution plans using terraform plan"
+  },
+  {
+    "stem": "A developer runs `terraform apply` without passing a saved plan file. Terraform displays the planned execution actions and waits for interactive confirmation. The developer types `Y` and presses Enter. What happens next?",
+    "options": [
+      "Terraform aborts execution without modifying any infrastructure because only the exact word 'yes' is accepted to confirm execution.",
+      "Terraform defaults to generating a saved plan file on disk instead of applying the changes.",
+      "Terraform accepts 'Y' as standard affirmative confirmation and begins provisioning the planned resources.",
+      "Terraform applies non-destructive changes but leaves resources requiring recreation unapplied."
+    ],
+    "objective": "Apply changes and destroy infrastructure resources safely against LocalStack to create state snapshots"
+  },
+  {
+    "stem": "An engineer finishes testing a staging environment and runs `terraform destroy`. How does Terraform determine which real-world infrastructure objects to remove, and how does this command differ from editing files?",
+    "options": [
+      "Terraform requires every resource block to be manually commented out in configuration files before destroy can execute.",
+      "Terraform purges the local state file first, causing the remote cloud provider to detect orphan objects and tear them down.",
+      "Terraform scans the cloud provider for any resource matching tags in configuration and deletes them immediately without user confirmation.",
+      "Terraform uses state data to identify managed objects and removes them without requiring the developer to delete resource definitions from configuration files."
+    ],
+    "objective": "Apply changes and destroy infrastructure resources safely against LocalStack to create state snapshots"
+  }
+]

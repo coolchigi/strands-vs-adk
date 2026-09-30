@@ -1,0 +1,5 @@
+[
+  "Use `interface User extends Timestamped` to inherit common date properties.",
+  "Combine `Permission` and `AuditDetails` using the `&` operator: `export type AdminRole = Permission & AuditDetails;`.",
+  "In TypeScript, intersecting `{ id: string } & { id: number }` forces `id` to be `string & number`, which resolves to `never`."
+]

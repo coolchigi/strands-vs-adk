@@ -1,0 +1,32 @@
+[
+  {
+    "stem": "A team has a project containing a valid `tsconfig.json` file in the project root. A developer runs `tsc src/index.ts` from that root directory. Why does TypeScript report unexpected errors or ignore settings defined in `tsconfig.json`?",
+    "options": [
+      "A tsconfig.json file can only be detected when input files are provided through stdin.",
+      "TypeScript only parses tsconfig.json if the command is executed with sudo or administrator privileges.",
+      "The compiler requires passing the -p flag whenever an individual file is located inside a subdirectory.",
+      "Passing input files directly on the command line causes tsc to ignore tsconfig.json configuration files."
+    ],
+    "objective": "Write a tsconfig.json file enabling strict mode and project compilation"
+  },
+  {
+    "stem": "You need to compile modern TypeScript code so that the emitted JavaScript runs on an environment that only supports ECMAScript 2015. Which configuration option achieves this downleveling in `tsconfig.json`?",
+    "options": [
+      "\"compilerOptions\": { \"outputSyntax\": \"es6-compatible\" }",
+      "\"compilerOptions\": { \"ecmaVersion\": 2015 }",
+      "\"compilerOptions\": { \"target\": \"es2015\" }",
+      "\"compilerOptions\": { \"downlevel\": \"es2015\" }"
+    ],
+    "objective": "Configure the target compiler option to downlevel modern JavaScript syntax to ECMAScript 2015"
+  },
+  {
+    "stem": "What is the effect of configuring `\"strict\": true` inside `compilerOptions` in a `tsconfig.json` file?",
+    "options": [
+      "It restricts TypeScript to running only on ECMAScript 3 compatible runtime environments.",
+      "It forbids importing modules from external packages outside the local directory.",
+      "It activates all strict mode family options at once to provide stronger guarantees of program correctness.",
+      "It prevents JavaScript files from being emitted whenever any warning occurs during compilation."
+    ],
+    "objective": "Write a tsconfig.json file enabling strict mode and project compilation"
+  }
+]

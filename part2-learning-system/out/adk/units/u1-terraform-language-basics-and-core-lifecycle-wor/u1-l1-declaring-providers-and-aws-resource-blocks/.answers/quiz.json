@@ -1,0 +1,14 @@
+[
+  {
+    "answer": 1,
+    "explanation": "The ~> operator allows only the rightmost component of the specified version number to increment. Setting version = \"~> 6.0\" permits any 6.x version while preventing an upgrade to 7.0.0. In contrast, = 6.0 locks strictly to 6.0 without patch or minor updates, and >= 6.0 permits major version upgrades to 7.0.0 and beyond."
+  },
+  {
+    "answer": 2,
+    "explanation": "When a resource does not explicitly define which provider configuration to use, Terraform determines the local provider name from the first word of the resource type (aws_vpc maps to aws). The label primary is only used for tracking in state, and provider arguments are not mandatory."
+  },
+  {
+    "answer": 1,
+    "explanation": "Managed resources are referenced in configuration using the <RESOURCE TYPE>.<NAME> format (<TYPE>.<LABEL>), which here is aws_s3_bucket.app_storage. The physical AWS bucket name my-data-bucket is an argument attribute value, not the configuration reference identifier."
+  }
+]

@@ -1,0 +1,32 @@
+[
+  {
+    "stem": "You have just installed Terraform on a new laptop. What is the quickest way to confirm the binary is on your PATH and the correct version is active?",
+    "options": [
+      "Open the HashiCorp website and compare the download checksum",
+      "Run `terraform -help` and read the list of subcommands",
+      "Run `which terraform` and inspect the file path",
+      "Run `terraform -version` and read the version number it prints"
+    ],
+    "objective": "Explain what terraform -version reports and why it is useful after installation"
+  },
+  {
+    "stem": "A colleague asks how to find out which subcommands Terraform supports without leaving the terminal. What should they run?",
+    "options": [
+      "`terraform -install-autocomplete`",
+      "`terraform -help`",
+      "`terraform -version`",
+      "`terraform list`"
+    ],
+    "objective": "Explain what terraform -help reports and why it is useful after installation"
+  },
+  {
+    "stem": "After running `terraform -help` you see a subcommand called `workspace` but you are unsure what it does. What is the most direct next step?",
+    "options": [
+      "Run `terraform -version` to check if the subcommand is available in your version",
+      "Run `terraform -help workspace` to see workspace-specific options",
+      "Search the HashiCorp documentation website",
+      "Run `terraform workspace` without arguments and read the error"
+    ],
+    "objective": "Explain what terraform -help reports and why it is useful after installation"
+  }
+]

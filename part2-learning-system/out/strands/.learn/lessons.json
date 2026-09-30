@@ -1,0 +1,163 @@
+[
+  {
+    "id": "u1-l1",
+    "title": "Install Terraform CLI and verify the installation",
+    "path": "units/u1-install-configure-initialise/u1-l1-install-terraform-cli-and-verify-the-installatio",
+    "exercise": true,
+    "runner": "terraform"
+  },
+  {
+    "id": "u1-l2",
+    "title": "Declare required_providers and pin the AWS provider version",
+    "path": "units/u1-install-configure-initialise/u1-l2-declare-required-providers-and-pin-the-aws-provi",
+    "exercise": true,
+    "runner": "terraform"
+  },
+  {
+    "id": "u1-l3",
+    "title": "Configure the AWS provider to target LocalStack",
+    "path": "units/u1-install-configure-initialise/u1-l3-configure-the-aws-provider-to-target-localstack",
+    "exercise": true,
+    "runner": "terraform"
+  },
+  {
+    "id": "u1-l4",
+    "title": "Initialise the working directory with terraform init",
+    "path": "units/u1-install-configure-initialise/u1-l4-initialise-the-working-directory-with-terraform-",
+    "exercise": true,
+    "runner": "terraform"
+  },
+  {
+    "id": "u2-l1",
+    "title": "Write resource blocks with arguments and meta-arguments",
+    "path": "units/u2-hashicorp-configuration-language-hcl/u2-l1-write-resource-blocks-with-arguments-and-meta-ar",
+    "exercise": true,
+    "runner": "terraform"
+  },
+  {
+    "id": "u2-l2",
+    "title": "Parameterise with input variables",
+    "path": "units/u2-hashicorp-configuration-language-hcl/u2-l2-parameterise-with-input-variables",
+    "exercise": true,
+    "runner": "terraform"
+  },
+  {
+    "id": "u2-l3",
+    "title": "Reduce repetition with local values",
+    "path": "units/u2-hashicorp-configuration-language-hcl/u2-l3-reduce-repetition-with-local-values",
+    "exercise": true,
+    "runner": "terraform"
+  },
+  {
+    "id": "u2-l4",
+    "title": "Expose values with output blocks",
+    "path": "units/u2-hashicorp-configuration-language-hcl/u2-l4-expose-values-with-output-blocks",
+    "exercise": true,
+    "runner": "terraform"
+  },
+  {
+    "id": "u2-l5",
+    "title": "Reference attributes across blocks and use built-in functions",
+    "path": "units/u2-hashicorp-configuration-language-hcl/u2-l5-reference-attributes-across-blocks-and-use-built",
+    "exercise": true,
+    "runner": "terraform"
+  },
+  {
+    "id": "u2-l6",
+    "title": "Create multiple resources with count and for_each",
+    "path": "units/u2-hashicorp-configuration-language-hcl/u2-l6-create-multiple-resources-with-count-and-for-eac",
+    "exercise": true,
+    "runner": "terraform"
+  },
+  {
+    "id": "u3-l1",
+    "title": "Read and interpret terraform plan output",
+    "path": "units/u3-cli-workflow-and-state/u3-l1-read-and-interpret-terraform-plan-output",
+    "exercise": true,
+    "runner": "terraform"
+  },
+  {
+    "id": "u3-l2",
+    "title": "Apply and destroy infrastructure",
+    "path": "units/u3-cli-workflow-and-state/u3-l2-apply-and-destroy-infrastructure",
+    "exercise": true,
+    "runner": "terraform"
+  },
+  {
+    "id": "u3-l3",
+    "title": "Understand the state file",
+    "path": "units/u3-cli-workflow-and-state/u3-l3-understand-the-state-file",
+    "exercise": true,
+    "runner": "terraform"
+  },
+  {
+    "id": "u3-l4",
+    "title": "Inspect and modify state with terraform state commands",
+    "path": "units/u3-cli-workflow-and-state/u3-l4-inspect-and-modify-state-with-terraform-state-co",
+    "exercise": true,
+    "runner": "terraform"
+  },
+  {
+    "id": "u3-l5",
+    "title": "Remote state: risks, backends, and locking",
+    "path": "units/u3-cli-workflow-and-state/u3-l5-remote-state-risks-backends-and-locking",
+    "exercise": true,
+    "runner": null
+  },
+  {
+    "id": "u3-l6",
+    "title": "Reinitialise after dependency changes",
+    "path": "units/u3-cli-workflow-and-state/u3-l6-reinitialise-after-dependency-changes",
+    "exercise": true,
+    "runner": "terraform"
+  },
+  {
+    "id": "u4-l1",
+    "title": "Structure a project as root and child modules",
+    "path": "units/u4-reusable-modules/u4-l1-structure-a-project-as-root-and-child-modules",
+    "exercise": true,
+    "runner": "terraform"
+  },
+  {
+    "id": "u4-l2",
+    "title": "Write child module inputs and outputs",
+    "path": "units/u4-reusable-modules/u4-l2-write-child-module-inputs-and-outputs",
+    "exercise": true,
+    "runner": "terraform"
+  },
+  {
+    "id": "u4-l3",
+    "title": "Call a module multiple times with different inputs",
+    "path": "units/u4-reusable-modules/u4-l3-call-a-module-multiple-times-with-different-inpu",
+    "exercise": true,
+    "runner": "terraform"
+  },
+  {
+    "id": "u5-l1",
+    "title": "Write the networking module",
+    "path": "units/u5-full-vpc-compute-storage-stack/u5-l1-write-the-networking-module",
+    "exercise": true,
+    "runner": "terraform"
+  },
+  {
+    "id": "u5-l2",
+    "title": "Write the compute module",
+    "path": "units/u5-full-vpc-compute-storage-stack/u5-l2-write-the-compute-module",
+    "exercise": true,
+    "runner": null
+  },
+  {
+    "id": "u5-l3",
+    "title": "Write the storage module",
+    "path": "units/u5-full-vpc-compute-storage-stack/u5-l3-write-the-storage-module",
+    "exercise": true,
+    "runner": "terraform"
+  },
+  {
+    "id": "u5-l4",
+    "title": "Compose all three modules and verify the full stack",
+    "path": "units/u5-full-vpc-compute-storage-stack/u5-l4-compose-all-three-modules-and-verify-the-full-st",
+    "exercise": true,
+    "runner": "terraform"
+  }
+]
