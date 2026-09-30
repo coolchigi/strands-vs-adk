@@ -23,3 +23,10 @@ wheels/
 # and are published on Dev.to, so they are deliberately not part of the repo.
 blog-series/
 SESSION-TODO.md
+
+# Working notes and build state, kept local. The repo holds what readers use.
+PROGRESS.md
+HANDOFF.md
+part2-learning-system/runs/
+part2-learning-system/DESIGN.md
+part2-learning-system/CRITERIA.md
