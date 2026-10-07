@@ -9,6 +9,12 @@ and it does not bound a routed one. The `rounds` counter is what ends this loop.
 Workflow lives at google.adk.Workflow, not google.adk.agents. These agents have no
 `sub_agents`: with that wiring left in, the model can hand control to another agent
 mid-run and a node runs twice or the workflow stops early.
+
+An agent in a Workflow only sees what the node before it hands over (ADK runs it in
+single_turn mode). On a revision, `review` hands `teacher` the feedback, so on its own
+the teacher never sees the lesson it's revising and writes a new one, sometimes on a
+different topic. `output_key="lesson"` saves the lesson in session state, the `lesson`
+parameter on `review` reads it back, and the revise route carries both.
 """
 import asyncio
 
@@ -30,7 +36,8 @@ curriculum_builder = Agent(
 teacher = Agent(
     name="teacher",
     model="gemini-flash-latest",
-    instruction="Write the first lesson from the plan in two sentences.",
+    instruction="Write the first lesson from the plan in two sentences. If feedback asks for a change, make it.",
+    output_key="lesson",
 )
 feedback = Agent(
     name="feedback",
@@ -44,10 +51,10 @@ feedback = Agent(
 rounds = {"n": 0}
 
 
-def review(node_input: str) -> Event:
+def review(node_input: str, lesson: str) -> Event:
     rounds["n"] += 1
     if "revise the lesson" in node_input.lower() and rounds["n"] < 3:
-        return Event(route="revise", output=node_input)
+        return Event(route="revise", output=f"Your lesson: {lesson}\nFeedback: {node_input}")
     return Event(route="done", output=node_input)
 
 
