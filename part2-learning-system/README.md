@@ -22,11 +22,21 @@ If you've cloned the repo, `uv tool install .` from this folder does the same.
 That gives you a `learn` command you can run from anywhere. (If your shell can't find it,
 `uv tool update-shell` adds uv's tool folder to your PATH.)
 
-The first time you build a course, `learn` asks for a Gemini API key, which you can get at
-[aistudio.google.com/apikey](https://aistudio.google.com/apikey). It saves it to
-`~/.config/learning-system/env`, readable only by you, and doesn't ask again. If you'd rather
-build with Claude on Amazon Bedrock, have AWS credentials set up and no Gemini key, or pass
-`--engine strands`.
+That one install includes both builds. Which one runs depends on what you have set up:
+
+- **ADK, with Gemini.** The first time you build a course, `learn` asks for a Gemini API key,
+  which you can get at [aistudio.google.com/apikey](https://aistudio.google.com/apikey). It
+  saves it to `~/.config/learning-system/env`, readable only by you, and doesn't ask again.
+- **Strands, with Claude on Amazon Bedrock.** You need AWS credentials and access to Claude
+  Sonnet 4.6 and Claude Haiku 4.5 in Bedrock. It picks Strands when you have no Gemini key
+  saved, or when you pass `--engine strands`. If you sign in with `aws login`, install it this
+  way instead:
+
+  ```bash
+  uv tool install --with "botocore[crt]" "git+https://github.com/coolchigi/strands-vs-adk#subdirectory=part2-learning-system"
+  ```
+
+If you have both set up, it uses Gemini unless you pass `--engine strands`.
 
 ## Ask for a course
 
