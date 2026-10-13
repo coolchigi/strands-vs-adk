@@ -1,5 +1,11 @@
 # Terraform Deep Dive: VPC, Compute & Storage on AWS (LocalStack)
 
+> **Before you start:** from lesson u4-l2 on, this course sets Terraform up to talk to real AWS, so if you run Terraform yourself in those lessons, it uses your own AWS credentials. Lessons u4-l2 and u5-l4 tell you to run `terraform apply`, which would create real VPCs and EC2 instances in your account. Those can cost money, so skip those steps.
+>
+> `learn check` is safe in every lesson, because its tests run against a mock provider (i.e. a fake AWS) and never touch AWS.
+>
+> The lessons before u4-l2 expect LocalStack, an AWS emulator, running on `localhost:4566`. Nothing in this course sets it up, so their `terraform apply` steps fail unless you run one there yourself.
+
 A 16-lesson, 5-unit curriculum for an AWS-fluent engineer who has never written Terraform. The learner builds a single growing project — a modular VPC + compute + storage stack — from scratch. All exercises run against LocalStack so zero cloud spend is incurred. Each unit closes with an unguided project that forces the learner to apply the unit's capabilities without step-by-step guidance.
 
 ## Who this is for

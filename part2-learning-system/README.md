@@ -29,8 +29,8 @@ That one install includes both builds. Which one runs depends on what you have s
   saves it to `~/.config/learning-system/env`, readable only by you, and doesn't ask again.
 - **Strands, with Claude on Amazon Bedrock.** You need AWS credentials and access to Claude
   Sonnet 4.6 and Claude Haiku 4.5 in Bedrock. It picks Strands when you have no Gemini key
-  saved, or when you pass `--engine strands`. If you sign in with `aws login`, install it this
-  way instead:
+  saved and it finds AWS credentials, or when you pass `--engine strands`. If you sign in
+  with `aws login`, install it this way instead:
 
   ```bash
   uv tool install --with "botocore[crt]" "git+https://github.com/coolchigi/strands-vs-adk#subdirectory=part2-learning-system"
@@ -100,7 +100,8 @@ the same thing. On Windows, type `py` where it says `python3`.
 
 Before a course is written out, every exercise is run three ways: the finished answer has to
 pass its tests, the untouched starter has to fail them, and each gap you're meant to fill
-has to fail them on its own, so there's nothing you can skip and still be told you passed.
+has to fail them on its own, so you can't skip a gap and still be told you passed. A gap filled in
+with the wrong thing can still pass, though.
 
 | Subject | Tests run with | You need |
 |---|---|---|
