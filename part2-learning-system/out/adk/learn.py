@@ -22,6 +22,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 import time
 from pathlib import Path
 
@@ -155,6 +156,37 @@ def readable(output: str) -> str:
     return "\n".join(line for line in output.splitlines() if not _NOISE.match(line))
 
 
+# What an exercise's tools need from the environment. The tests are written by a model and
+# once ran with every API key and cloud credential in reach, so nothing else is passed on.
+# Most TF_ settings are left out on purpose: TF_TOKEN_* holds Terraform Cloud tokens.
+KEEP_ENV = {"PATH", "LANG", "LANGUAGE", "TERM", "TZ", "TMPDIR", "TEMP", "TMP", "USER", "LOGNAME", "USERNAME",
+            "HTTP_PROXY", "HTTPS_PROXY", "NO_PROXY", "http_proxy", "https_proxy", "no_proxy",
+            "SSL_CERT_FILE", "SSL_CERT_DIR", "NODE_EXTRA_CA_CERTS", "TF_CLI_CONFIG_FILE", "TF_PLUGIN_CACHE_DIR",
+            "SYSTEMROOT", "SYSTEMDRIVE", "WINDIR", "COMSPEC", "PATHEXT"}
+SECRET_NAME = re.compile(r"KEY|TOKEN|SECRET|PASS|CRED|AUTH(?!OR)|PRIVATE|DSN|_PAT$|_PWD$", re.I)
+# wherever an AWS SDK, the AWS CLI or Terraform's AWS provider looks for credentials, there are none
+NO_AWS = {"AWS_EC2_METADATA_DISABLED": "true", "AWS_SHARED_CREDENTIALS_FILE": os.devnull,
+          "AWS_CONFIG_FILE": os.devnull}
+
+
+def exercise_env(home: str, extra: dict | None = None) -> dict:
+    """The environment an exercise runs in: the tools' needs, a throwaway home, and what the caller adds."""
+    kept = {k: v for k, v in os.environ.items() if k in KEEP_ENV or k.startswith("LC_")}
+    terraformrc = Path.home() / ".terraformrc"  # a mirror or plugin cache set up there still applies
+    if "TF_CLI_CONFIG_FILE" not in kept and terraformrc.is_file():
+        kept["TF_CLI_CONFIG_FILE"] = str(terraformrc)
+    return {**kept, "HOME": home, "USERPROFILE": home, "PYTHONDONTWRITEBYTECODE": "1", **NO_AWS, **(extra or {})}
+
+
+def hide_secrets(output: str) -> str:
+    """A secret that still reaches the output (a test can read a key file) is blanked out, so it
+    never lands in a log, a rewrite prompt or the course."""
+    secrets = [v for n, v in os.environ.items() if SECRET_NAME.search(n) and len(v) >= 8]
+    for value in sorted(secrets, key=len, reverse=True):  # a key inside a longer one mustn't leave part of it
+        output = output.replace(value, "[hidden]")
+    return output
+
+
 def run_exercise(folder: Path, runner: str | None, env: dict | None = None,
                  timeout: float | None = None) -> tuple[str, str]:
     """Run an exercise's checks. Returns (outcome, output), where outcome is one of:
@@ -165,18 +197,19 @@ def run_exercise(folder: Path, runner: str | None, env: dict | None = None,
     plan = steps(runner, folder)
     if isinstance(plan, str):
         return "missing", plan
-    full_env = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1", **(env or {})}
     output = ""
-    for kind, argv in plan:
-        try:
-            p = subprocess.run(argv, cwd=folder, capture_output=True, text=True, env=full_env, timeout=timeout)
-        except subprocess.TimeoutExpired:
-            return "failed", f"{argv[0]} took longer than {timeout:.0f}s"
-        output = (p.stdout + p.stderr).strip()
-        if p.returncode != 0:
-            if kind == "test" and runner == "node" and re.search(r"SyntaxError|ERR_INVALID_TYPESCRIPT_SYNTAX", output):
-                return "invalid", output
-            return ("failed" if kind == "test" else "invalid"), output
+    with tempfile.TemporaryDirectory(prefix="learn-home-") as home:
+        full_env = exercise_env(home, env)
+        for kind, argv in plan:
+            try:
+                p = subprocess.run(argv, cwd=folder, capture_output=True, text=True, env=full_env, timeout=timeout)
+            except subprocess.TimeoutExpired:
+                return "failed", f"{argv[0]} took longer than {timeout:.0f}s"
+            output = hide_secrets((p.stdout + p.stderr).strip())
+            if p.returncode != 0:
+                if kind == "test" and runner == "node" and re.search(r"SyntaxError|ERR_INVALID_TYPESCRIPT_SYNTAX", output):
+                    return "invalid", output
+                return ("failed" if kind == "test" else "invalid"), output
     return "passed", output
 
 

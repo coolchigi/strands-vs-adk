@@ -19,7 +19,23 @@ from learning.model import (
     LessonObjective, LessonSpec, Level, Objective, Problem, QuizItem, Source, Spec, Stage, Tier, Unit,
 )
 
-PROVIDER = 'terraform {\n  required_providers {\n    aws = { source = "hashicorp/aws", version = "~> 6.0" }\n  }\n}\nprovider "aws" { region = "us-east-1" }\n'
+PROVIDER = '''terraform {
+  required_providers {
+    aws = { source = "hashicorp/aws", version = "~> 6.0" }
+  }
+}
+provider "aws" {
+  region                      = "us-east-1"
+  access_key                  = "test"
+  secret_key                  = "test"
+  skip_credentials_validation = true
+  skip_requesting_account_id  = true
+  skip_metadata_api_check     = true
+  endpoints {
+    ec2 = "http://localhost:4566"
+  }
+}
+'''
 SOLUTION = PROVIDER + 'resource "aws_vpc" "main" {\n  cidr_block = "10.0.0.0/16"\n}\n'
 STARTER = PROVIDER + '# TODO: an aws_vpc named "main" with the CIDR block 10.0.0.0/16\n'
 TEST = '''mock_provider "aws" {}

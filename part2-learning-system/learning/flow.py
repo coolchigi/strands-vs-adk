@@ -9,6 +9,8 @@ research ─▶ review research ─▶ curriculum ─▶ review curriculum ─�
 A review decides where the run goes: forward, the same stage again with reasons, or back
 to an earlier stage when that's where the problem started. Stages don't repeat forever:
 after `max_attempts` a stage goes forward with its problems recorded, and the course says so.
+The one exception is a lesson that could still reach a real AWS account: it's held back
+(see course_dir.held_back).
 """
 
 from __future__ import annotations
@@ -17,7 +19,7 @@ import logging
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from . import checks, prompts, stages
+from . import checks, prompts, safety, stages
 from .model import Course, CourseFile, Curriculum, KnowledgeBase, LearnerProfile, Lesson, Problem, Stage
 from .stages import Brain, Checkpoint, Review, Say, quiet
 from .web import Web
@@ -190,7 +192,8 @@ class Flow:
                          f"    still has {len(result.problems)} problem{'s' if len(result.problems) > 1 else ''} "
                          f"after {result.attempts} tries. "
                          "They're listed at the top of the lesson")
-            if b.lessons[spec.id].exercise:
+            # the next lesson builds on this one's files only if they're safe to ship
+            if b.lessons[spec.id].exercise and not safety.problems(b.lessons[spec.id]):
                 previous = b.lessons[spec.id].exercise.solution
 
     def review_teaching(self) -> str:

@@ -25,9 +25,10 @@ import re
 import shutil
 from pathlib import Path
 
+from . import safety
 from .checks import CITATION, MALFORMED_CITATION, OPTION_BY_POSITION, cited
 from .learn_cli import runner_for
-from .model import Course, Lesson, LessonSpec, Problem, QuizItem, Unit
+from .model import Course, Lesson, LessonSpec, Problem, QuizItem, Stage, Unit
 
 
 
@@ -64,6 +65,38 @@ def known_problems(problems: list[Problem]) -> list[str]:
            "If something below doesn't work, it may be this:", ">"]
     out += [f"> - {_one_line(p.detail)}" for p in problems]
     return out + ["", "Found something else? `learn report \"what's wrong\"`", ""]
+
+
+def held_back(c: Course) -> tuple[Course, set[str]]:
+    """The course without the lessons that could still reach a real AWS account.
+
+    Every other problem ships with a note at the top of its lesson. This one can cost the
+    learner money, so the lesson stays out, and the course says which one and why. It's
+    checked here, as the course is written, so a lesson saved before the check existed is
+    caught too.
+    """
+    held: set[str] = set()
+    kept: list[Lesson] = []
+    problems = list(c.problems)
+    for lesson in c.lessons:
+        found = safety.problems(lesson)
+        if not found:
+            kept.append(lesson)
+            continue
+        held.add(lesson.id)
+        problems = [p for p in problems if p.lesson_id != lesson.id]
+        problems.append(Problem(stage=Stage.TEACHING, check="held_back", lesson_id=lesson.id,
+                                detail=f"{lesson.id} was held back, because it could reach a real AWS "
+                                       f"account: {found[0]}"))
+    return c.model_copy(update={"lessons": kept, "problems": problems}), held
+
+
+AWS_NOTE = ("> **About AWS.** `learn check` runs each exercise's tests against a mock AWS provider, with "
+            "your AWS credentials hidden from them, so it never reaches AWS. The exercises give Terraform "
+            "fake keys and point it at an AWS emulator on this machine, and the `aws` commands in the "
+            "lessons point there too, so running them yourself can't use your AWS account either. This "
+            "course doesn't set the emulator up yet, so those steps fail until you run one. Like any code "
+            "you run, the tests can still read files on your machine.")
 
 
 def shuffled(q: QuizItem, seed: str) -> QuizItem:
@@ -119,9 +152,12 @@ def lesson_readme(unit: Unit, spec: LessonSpec, lesson: Lesson, urls: dict[str, 
     return "\n".join(out) + "\n"
 
 
-def course_readme(c: Course, paths: dict[str, str]) -> str:
+def course_readme(c: Course, paths: dict[str, str], held: set[str] = frozenset()) -> str:
     cur, kb = c.curriculum, c.knowledge
-    out = [f"# {cur.title}", "", cur.summary.strip(), "", "## Who this is for", "", "```text",
+    out = [f"# {cur.title}", "", cur.summary.strip(), ""]
+    if any(safety.uses_aws(l) for l in c.lessons):
+        out += [AWS_NOTE, ""]
+    out += ["## Who this is for", "", "```text",
            c.profile.brief(), "```", "", "## What you'll be able to do", ""]
     out += [f"- {o}" for o in cur.outcomes]
     if kb.spec.version:
@@ -149,7 +185,8 @@ def course_readme(c: Course, paths: dict[str, str]) -> str:
     out += ["## Units", ""]
     for u in cur.units:
         out += [f"### {u.id}. {u.title}", ""]
-        out += [f"{i}. [{s.title}]({paths[s.id]}/README.md)" for i, s in enumerate(u.lessons, 1)]
+        out += [f"{i}. {s.title} (held back, see Known problems)" if s.id in held else
+                f"{i}. [{s.title}]({paths[s.id]}/README.md)" for i, s in enumerate(u.lessons, 1)]
         if u.project:
             out += ["", f"**Project:** {u.project}"]
         out += [""]
@@ -169,6 +206,7 @@ def sources_md(c: Course) -> str:
 
 
 def write(c: Course, root: Path) -> Path:
+    c, held = held_back(c)
     root = Path(root)
     if root.exists():
         shutil.rmtree(root)
@@ -185,7 +223,8 @@ def write(c: Course, root: Path) -> Path:
         for spec in unit.lessons:
             rel = lesson_dir(unit, spec)
             paths[spec.id] = rel
-            lines.append(f"- [{spec.title}]({Path(rel).name}/README.md)")
+            lines.append(f"- {spec.title} (held back, see the course README)" if spec.id in held else
+                         f"- [{spec.title}]({Path(rel).name}/README.md)")
             lesson = lessons.get(spec.id)
             if lesson is None:
                 continue
@@ -214,7 +253,7 @@ def write(c: Course, root: Path) -> Path:
             lines += ["", "## Project", "", unit.project]
         (unit_dir / "README.md").write_text("\n".join(lines) + "\n")
 
-    (root / "README.md").write_text(course_readme(c, paths))
+    (root / "README.md").write_text(course_readme(c, paths, held))
     (root / "SOURCES.md").write_text(sources_md(c))
     (root / "course.json").write_text(c.model_dump_json(indent=2))
     (root / ".learn").mkdir()

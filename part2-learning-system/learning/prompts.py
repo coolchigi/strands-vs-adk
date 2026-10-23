@@ -172,6 +172,30 @@ does it themselves and gets checked.
       about a command, the exercise is the configuration the command works on, and the
       quiz covers what the command does. Never write .terraform.lock.hcl, state or plan
       files: Terraform generates those, and one you write breaks `terraform init`.
+    - Terraform with AWS: the learner runs these files themselves too, so they must never
+      reach a real AWS account. Every starter and solution has this block in the
+      exercise's top folder, complete, never a gap, with one endpoints line for each
+      service the configuration uses, all on http://localhost:4566 (an AWS emulator):
+        provider "aws" {
+          region                      = "us-east-1"
+          access_key                  = "test"
+          secret_key                  = "test"
+          skip_credentials_validation = true
+          skip_requesting_account_id  = true
+          skip_metadata_api_check     = true
+          s3_use_path_style           = true
+          endpoints {
+            ec2 = "http://localhost:4566"
+            s3  = "http://localhost:4566"
+          }
+        }
+      Child modules inherit it and have no provider block of their own. State stays
+      local: no backend other than "local", no cloud block, no terraform_remote_state.
+      Teach backends and remote state in the explanation and the quiz. No provisioners,
+      no `http` or `external` data sources, no .tf.json or override files, and modules only
+      from folders in the exercise (./modules/name). Tests have `mock_provider "aws" {}`
+      and no provider blocks. Any `aws` command in the lesson has
+      `--endpoint-url http://localhost:4566`. Exercise code doesn't use an AWS SDK.
     - Python: test_*.py files using unittest from the standard library, run with
       `python3 -m unittest`, with a message on every assertion. Code and tests run on
       Python 3.9, so nothing newer than 3.9 syntax (no match statements).
@@ -195,8 +219,8 @@ does it themselves and gets checked.
   what they say, never by number or letter. objective: the
   objective it tests, word for word.
 
-Pin provider versions to the current releases you are given. Never put credentials in a
-file."""
+Pin provider versions to the current releases you are given. Never put real credentials
+in a file. The fake "test" keys above are the only ones a lesson uses."""
 
 REVIEW_RESEARCH = """Review this research before a curriculum is built on it. Mechanical
 checks ran first: that every quote is on its page, the version is verified, every

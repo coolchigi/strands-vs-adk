@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import re
 
-from . import exercises
+from . import exercises, safety
 from .model import (
     Course, Curriculum, Evidence, KnowledgeBase, Lesson, Level, Problem, Stage, Tier,
 )
@@ -182,6 +182,11 @@ def lesson(l: Lesson, spec_claims: list[str], all_claims: set[str],
     if not l.worked_example.strip():
         add("no_worked_example", "there's no worked example")
 
+    # before anything runs: a lesson that could reach a real AWS account isn't run here either
+    unsafe = safety.problems(l)
+    for p in unsafe:
+        add("could_reach_aws", p)
+
     if needs_exercise and l.exercise is None:
         add("no_exercise", "an objective here needs an exercise, and the lesson has none")
     if l.exercise is not None:
@@ -193,7 +198,7 @@ def lesson(l: Lesson, spec_claims: list[str], all_claims: set[str],
             add("no_hints", "the exercise has no hints for a learner who is stuck")
         for p in exercises.stale_pins(l.exercise.solution + l.exercise.starter):
             add("provider_out_of_date", p)
-        if run_exercise:
+        if run_exercise and not unsafe:
             for p in exercises.verify(l.exercise):
                 add("exercise_does_not_work", p)
 
