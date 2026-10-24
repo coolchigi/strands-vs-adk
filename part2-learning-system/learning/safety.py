@@ -43,8 +43,57 @@ REAL_KEY = re.compile(r"\b(?:AKIA|ASIA|AIDA|AROA)[A-Z0-9]{16}\b")
 # the top-level blocks whose first label names a resource type
 TYPED = ("resource", "data", "ephemeral", "action", "list")
 HASHICORP_AWS = ("hashicorp/aws", "registry.terraform.io/hashicorp/aws")
-# the endpoints key each kind of AWS resource calls. A type that isn't listed, or calls no API
-# (aws_iam_policy_document, aws_region), isn't held to an endpoint
+# every key the endpoints block takes, from `terraform providers schema` on hashicorp/aws 6.68.0
+ENDPOINT_KEYS = frozenset("""
+    accessanalyzer account accountaccess acm acmpca agentregistry amg amp amplify apigateway
+    apigatewayv2 appautoscaling appconfig appfabric appflow appintegrations
+    appintegrationsservice applicationautoscaling applicationinsights applicationsignals appmesh
+    appregistry apprunner appstream appsync arcregionswitch arczonalshift athena auditmanager
+    autoscaling autoscalingplans backup batch bcmdataexports beanstalk bedrock bedrockagent
+    bedrockagentcore bedrockruntime billing budgets ce chatbot chime chimesdkmediapipelines
+    chimesdkvoice cleanrooms cloud9 cloudcontrol cloudcontrolapi cloudformation cloudfront
+    cloudfrontkeyvaluestore cloudhsm cloudhsmv2 cloudsearch cloudtrail cloudwatch
+    cloudwatchevents cloudwatchevidently cloudwatchlog cloudwatchlogs
+    cloudwatchobservabilityaccessmanager cloudwatchomni cloudwatchrum codeartifact codebuild
+    codecatalyst codecommit codeconnections codedeploy codeguruprofiler codegurureviewer
+    codepipeline codestarconnections codestarnotifications cognitoidentity
+    cognitoidentityprovider cognitoidp comprehend computeoptimizer config configservice connect
+    connectcases controltower costandusagereportservice costexplorer costoptimizationhub cur
+    customerprofiles databasemigration databasemigrationservice databrew dataexchange
+    datapipeline datasync datazone dax deploy detective devicefarm devopsagent devopsguru
+    directconnect directoryservice directoryservicedata dlm dms docdb docdbelastic drs ds dsql
+    dynamodb ec2 ecr ecrpublic ecs efs eks elasticache elasticbeanstalk elasticloadbalancing
+    elasticloadbalancingv2 elasticsearch elasticsearchservice elastictranscoder elb elbv2 emr
+    emrcontainers emrserverless es eventbridge eventbridgev2 events evidently evs finspace
+    firehose fis fms fsx gamelift glacier globalaccelerator glue gluedatabrew grafana greengrass
+    groundstation guardduty healthlake iam identitystore imagebuilder inspector inspector2
+    inspectorv2 interconnect internetmonitor invoicing iot ivs ivschat kafka kafkaconnect kendra
+    keyspaces kinesis kinesisanalytics kinesisanalyticsv2 kinesisvideo kms lakeformation lambda
+    lambdacore lambdamicrovms lambdaweb launchwizard lex lexmodelbuilding
+    lexmodelbuildingservice lexmodels lexmodelsv2 lexv2models licensemanager lightsail location
+    locationservice logs m2 macie2 mailmanager managedgrafana mediaconnect mediaconvert
+    medialive mediapackage mediapackagev2 mediapackagevod mediastore memorydb mgn mpa mq msk
+    mwaa mwaaserverless neptune neptunegraph networkfirewall networkflowmonitor networkmanager
+    networkmonitor networksecuritymanager notifications notificationscontacts oam
+    observabilityadmin odb opensearch opensearchingestion opensearchserverless opensearchservice
+    organizations osis outposts paymentcryptography pcaconnectorad pcs pinpoint
+    pinpointsmsvoicev2 pipes polly pricing prometheus prometheusservice qbusiness qldb
+    quicksight ram rbin rds rdsdata rdsdataservice recyclebin redshift redshiftdata
+    redshiftdataapiservice redshiftserverless rekognition resiliencehub resiliencehubv2
+    resourceexplorer2 resourcegroups resourcegroupstagging resourcegroupstaggingapi
+    rolesanywhere route53 route53domains route53profiles route53recoverycontrolconfig
+    route53recoveryreadiness route53resolver rum s3 s3api s3control s3files s3outposts s3tables
+    s3vectors sagemaker savingsplans scheduler schemas secretsmanager securityhub securitylake
+    serverlessapplicationrepository serverlessapprepo serverlessrepo servicecatalog
+    servicecatalogappregistry servicediscovery servicequotas ses sesv2 sfn shield signer sns sqs
+    ssm ssmcontacts ssmincidents ssmquicksetup ssmsap sso ssoadmin stepfunctions storagegateway
+    sts swf synthetics taxsettings timestreaminfluxdb timestreamquery timestreamwrite transcribe
+    transcribeservice transfer uxc verifiedpermissions vpclattice waf wafregional wafv2
+    wellarchitected workmail workspaces workspacesweb xray
+""".split())
+# the endpoints key each kind of AWS resource calls, where its name doesn't say. Otherwise
+# aws_<key>_... calls <key>. A type that calls no API (aws_iam_policy_document, aws_region)
+# isn't held to an endpoint
 SERVICE_OF = [(re.compile(f"aws_(?:{types})"), service) for types, service in [
     (r"instances?|vpcs?|vpc_.*|subnets?|security_groups?|security_group_.*|internet_gateway|"
      r"egress_only_internet_gateway|nat_gateways?|route|route_tables?|route_table_association|"
@@ -54,7 +103,10 @@ SERVICE_OF = [(re.compile(f"aws_(?:{types})"), service) for types, service in [
     (r"s3_.*", "s3"), (r"iam_(?!policy_document$).*", "iam"), (r"caller_identity", "sts"),
     (r"lambda_.*", "lambda"), (r"dynamodb_.*", "dynamodb"), (r"sqs_.*", "sqs"), (r"sns_.*", "sns"),
     (r"kms_.*", "kms"), (r"cloudwatch_log_.*", "logs"), (r"cloudwatch_(?:metric_alarm|composite_alarm|dashboard)", "cloudwatch"),
-    (r"lb|alb|lb_.*|alb_.*", "elbv2"), (r"db_.*|rds_.*", "rds"), (r"autoscaling_.*", "autoscaling"),
+    (r"elb|elb_.*|lb_cookie_stickiness_policy|lb_ssl_negotiation_policy|app_cookie_stickiness_policy|"
+     r"load_balancer_.*|proxy_protocol_policy", "elb"),
+    (r"lb|alb|lb_.*|alb_.*", "elbv2"), (r"cloudwatch_event_.*", "events"), (r"api_gateway_.*", "apigateway"),
+    (r"(?:iam_policy_document|region|regions|partition|arn|default_tags|ip_ranges|billing_service_account)", None), (r"db_.*|rds_.*", "rds"), (r"autoscaling_.*", "autoscaling"),
     (r"ecr_.*", "ecr"), (r"ecs_.*", "ecs"), (r"route53_.*", "route53"), (r"secretsmanager_.*", "secretsmanager"),
     (r"ssm_.*", "ssm"),
 ]]
@@ -272,13 +324,19 @@ def _local_source(expr: list[Token] | None, folder: str = "") -> bool:
 
 
 def service_of(resource_type: str) -> str | None:
-    return next((svc for pattern, svc in SERVICE_OF if pattern.fullmatch(resource_type)), None)
+    for pattern, svc in SERVICE_OF:
+        if pattern.fullmatch(resource_type):
+            return svc
+    first = resource_type.removeprefix("aws_").split("_")[0]
+    return first if first in ENDPOINT_KEYS else None
 
 
 def _alias_used(b: Block) -> str:
     """The aws provider alias a resource uses: aws.west gives west, none gives ""."""
-    toks = [t for k, t in b.attrs.get("provider", []) if k == "ident"]
-    return toks[0].split(".", 1)[1] if toks and toks[0].startswith("aws.") else ""
+    toks = b.attrs.get("provider", [])  # read as aws . west
+    if len(toks) >= 3 and toks[0] == ("ident", "aws") and toks[1] == ("other", ".") and toks[2][0] == "ident":
+        return toks[2][1]
+    return ""
 
 
 def _provider_problems(where: str, p: Block, services: set[str]) -> list[str]:
@@ -368,7 +426,7 @@ def config_problems(files: list[CourseFile], checks: list[CourseFile], which: st
         if b.type == "terraform":
             for required in b.children("required_providers"):
                 source = _source_of(required.attrs.get("aws"))
-                if "aws" in required.attrs and source not in HASHICORP_AWS:
+                if "aws" in required.attrs and (source or "").casefold() not in HASHICORP_AWS:
                     out.append(f"{where} maps the aws provider to {source or 'a source worked out at run time'}, "
                                "which isn't hashicorp/aws, so its code isn't what these checks know. Use hashicorp/aws")
             for backend in b.children("backend"):
@@ -413,40 +471,49 @@ def config_problems(files: list[CourseFile], checks: list[CourseFile], which: st
 
 _FENCE = re.compile(r"```[^\n]*\n(.*?)```", re.S)
 _SPAN = re.compile(r"`([^`\n]+)`")
-# a command starts a line, or follows ; && || | ( $( or a backtick
-_SEPARATOR = re.compile(r";|&&|\|\||\||\$\(|[()`]")
+# commands are separated by ; & && || and |. Inside one, $( ( ) and backticks can start another
+_BETWEEN = re.compile(r";|&&?|\|\|?")
+_INSIDE = re.compile(r"\$\(|[()`]")
 # the AWS CLI, however it's named: aws, aws2, /usr/local/bin/aws, python -m awscli
 _COMMAND = re.compile(r"\s*(?:[$%>]\s+)?(?:sudo\s+)?((?:[A-Za-z_][A-Za-z0-9_]*=\S+\s+)*)"
                       r"(?:[\w.~/-]*/)?(?:aws[0-9]*|python[0-9.]*\s+-m\s+awscli)\s+(?!=)(?=\S)(.*)$")
-_NO_CALL = re.compile(r"(?:configure|help|--version|--help)\b")  # what never calls AWS
+_NO_CALL = {"help", "--help", "--version"}  # anywhere in a command, and `aws configure`: no API call
 _ENDPOINT = re.compile(r"--endpoint-url(?:=|\s+)[\"']?([^\s\"']+)")
 _ENV_ENDPOINT = re.compile(r"AWS_ENDPOINT_URL=[\"']?([^\s\"']+)")
 SDK_CODE = (".py", ".js", ".mjs", ".cjs", ".ts", ".mts", ".cts")
 _SDK = re.compile(r"^\s*(?:import|from)\s+(?:boto3|botocore|aiobotocore)\b|@aws-sdk/|[\"']aws-sdk[\"']", re.M)
 
 
-def _commands(code: str) -> list[str]:
-    """The aws commands in a piece of code, each with its continuation lines joined on."""
+def _commands(code: str) -> list[tuple[str, bool]]:
+    """The aws commands in a piece of code, each with whether it goes to a local endpoint."""
     joined = re.sub(r"\\\n", " ", code)
     found = []
     for line in joined.splitlines():
-        for segment in _SEPARATOR.split(line):
-            if (m := _COMMAND.match(segment)) and not _NO_CALL.match(m.group(2)):
-                found.append(m.group(1) + "aws " + m.group(2))
+        for command in _BETWEEN.split(line):
+            calls = []
+            for segment in _INSIDE.split(command):
+                m = _COMMAND.match(segment)
+                if m and not (m.group(2).startswith("configure") or _NO_CALL & set(m.group(2).split())):
+                    calls.append(m.group(1) + "aws " + m.group(2))
+            if calls:
+                # an endpoint can sit after a $(...) in the same command. Each call needs one,
+                # and every endpoint in the command has to be local
+                urls = _ENDPOINT.findall(command) + _ENV_ENDPOINT.findall(command)
+                safe = len(urls) >= len(calls) and all(local_url(u) for u in urls)
+                found += [(c, safe) for c in calls]
     return found
 
 
-def aws_commands(text: str) -> list[str]:
+def aws_commands(text: str) -> list[tuple[str, bool]]:
     code = _FENCE.findall(text)
     spans = _SPAN.findall(_FENCE.sub("", text))
     return [c for piece in code + spans for c in _commands(piece)]
 
 
-def command_problems(commands: list[str], where: str) -> list[str]:
+def command_problems(commands: list[tuple[str, bool]], where: str) -> list[str]:
     out = []
-    for c in commands:
-        endpoint = _ENDPOINT.search(c) or _ENV_ENDPOINT.search(c)
-        if not (endpoint and local_url(endpoint.group(1))):
+    for c, safe in commands:
+        if not safe:
             short = " ".join(c.split())[:80]
             out.append(f"{where} has `{short}`, which uses the learner's own AWS account. Add "
                        "--endpoint-url http://localhost:4566 so it goes to the emulator")

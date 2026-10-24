@@ -14,6 +14,9 @@ from learning.model import CourseFile, Exercise, Lesson, QuizItem
 PROVIDER = re.search(r'^( +)provider "aws" \{\n.*?^\1\}', prompts.LESSON, re.S | re.M).group(0)
 PROVIDER = "\n".join(line[8:] for line in PROVIDER.splitlines()) + "\n"
 VPC = 'resource "aws_vpc" "main" {\n  cidr_block = "10.0.0.0/16"\n}\n'
+# a second, aliased provider for another region, with only EC2 on the emulator
+WEST = PROVIDER.replace("provider \"aws\" {\n", "provider \"aws\" {\n  alias = \"west\"\n").replace(
+    '"us-east-1"', '"us-west-2"').replace('    s3  = "http://localhost:4566"\n', "")
 TEST = '''mock_provider "aws" {}
 
 run "vpc" {
@@ -73,10 +76,21 @@ def test_the_block_the_prompt_gives_is_safe():
                                      '    }\n  }\n}\n'}, "maps the aws provider to example-corp/aws"),
     (PROVIDER + 'module "x" {\n  source = "../../../other/mod"\n}\n', {}, "comes from ../../../other/mod"),
     (VPC, {"a b/providers.tf": PROVIDER}, "no provider \"aws\" block in the exercise's top folder"),
+    # and on fc41b89
+    (PROVIDER + 'resource "aws_eks_cluster" "k" {}\n', {}, "no endpoint for eks"),
+    (PROVIDER + WEST.replace('    ec2 = "http://localhost:4566"\n', '    s3 = "http://localhost:4566"\n') +
+     'resource "aws_instance" "w" {\n  provider = aws.west\n}\n', {}, "alias 'west' has no endpoint for ec2"),
 ])
 def test_each_way_into_a_real_account_is_found(main, extra, found):
     problems = safety.problems(lesson(main, extra))
     assert any(found in p for p in problems), problems
+
+
+def test_each_provider_needs_only_the_endpoints_its_own_resources_use():
+    main = (PROVIDER.replace('    ec2 = "http://localhost:4566"\n', "") + WEST + 'resource "aws_s3_bucket" "b" {}\n'
+            'resource "aws_instance" "w" {\n  provider = aws.west\n}\n')
+    required = 'terraform {\n  required_providers {\n    aws = { source = "HashiCorp/aws" }\n  }\n}\n'
+    assert safety.problems(lesson(main, {"versions.tf": required})) == []
 
 
 def test_what_calls_no_api_needs_no_endpoint():
@@ -123,6 +137,11 @@ def test_a_tests_problem_is_said_once_not_for_starter_and_solution_each():
     ("`aws2 s3 ls`", False),
     ("```bash\npython3 -m awscli s3 ls\n```\n", False),
     ("`aws configure`, then `aws --version` to check it's installed.", True),
+    # and on fc41b89
+    ("`aws --endpoint-url http://localhost:4566 s3 ls & aws s3 rm s3://real --recursive`", False),
+    ("`aws ec2 help`", True),
+    ("```bash\naws s3 cp ./f s3://bucket-$(date +%s)/ --endpoint-url http://localhost:4566\n```\n", True),
+    ("```bash\naws --endpoint-url http://localhost:4566 s3 cp ./f s3://b/$(aws s3 ls | head -1)\n```\n", False),
 ])
 def test_an_aws_command_has_to_go_to_the_emulator(text, safe):
     problems = safety.problems(lesson(worked_example=text))
