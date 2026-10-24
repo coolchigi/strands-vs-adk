@@ -93,10 +93,10 @@ def held_back(c: Course) -> tuple[Course, set[str]]:
 
 AWS_NOTE = ("> **About AWS.** `learn check` runs each exercise's tests against a mock AWS provider, with "
             "your AWS credentials hidden from them, so it never reaches AWS. The exercises give Terraform "
-            "fake keys and point it at an AWS emulator on this machine, and the `aws` commands in the "
-            "lessons point there too, so running them yourself can't use your AWS account either. This "
-            "course doesn't set the emulator up yet, so those steps fail until you run one. Like any code "
-            "you run, the tests can still read files on your machine.")
+            "fake keys and point it at an AWS emulator on this machine, so running `terraform plan` or "
+            "`apply` yourself can't use your AWS account, and the `aws` commands in the lessons go to the "
+            "emulator too. This course doesn't set the emulator up yet, so those steps fail until you run "
+            "one. Like any code you run, the tests can still read files on your machine.")
 
 
 def shuffled(q: QuizItem, seed: str) -> QuizItem:

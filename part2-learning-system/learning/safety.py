@@ -24,6 +24,7 @@ problem, so nothing it doesn't understand gets through.
 
 from __future__ import annotations
 
+import posixpath
 import re
 from dataclasses import dataclass, field
 from pathlib import PurePosixPath
@@ -41,6 +42,22 @@ OTHER_CREDENTIAL_BLOCKS = ("assume_role", "assume_role_with_web_identity")
 REAL_KEY = re.compile(r"\b(?:AKIA|ASIA|AIDA|AROA)[A-Z0-9]{16}\b")
 # the top-level blocks whose first label names a resource type
 TYPED = ("resource", "data", "ephemeral", "action", "list")
+HASHICORP_AWS = ("hashicorp/aws", "registry.terraform.io/hashicorp/aws")
+# the endpoints key each kind of AWS resource calls. A type that isn't listed, or calls no API
+# (aws_iam_policy_document, aws_region), isn't held to an endpoint
+SERVICE_OF = [(re.compile(f"aws_(?:{types})"), service) for types, service in [
+    (r"instances?|vpcs?|vpc_.*|subnets?|security_groups?|security_group_.*|internet_gateway|"
+     r"egress_only_internet_gateway|nat_gateways?|route|route_tables?|route_table_association|"
+     r"main_route_table_association|eips?|eip_association|key_pair|amis?|ami_.*|ebs_.*|network_.*|"
+     r"launch_template|placement_group|default_(?:vpc|subnet|security_group|route_table|network_acl)|"
+     r"flow_log|spot_.*|ec2_.*|volume_attachment|customer_gateway|vpn_.*|availability_zones?", "ec2"),
+    (r"s3_.*", "s3"), (r"iam_(?!policy_document$).*", "iam"), (r"caller_identity", "sts"),
+    (r"lambda_.*", "lambda"), (r"dynamodb_.*", "dynamodb"), (r"sqs_.*", "sqs"), (r"sns_.*", "sns"),
+    (r"kms_.*", "kms"), (r"cloudwatch_log_.*", "logs"), (r"cloudwatch_(?:metric_alarm|composite_alarm|dashboard)", "cloudwatch"),
+    (r"lb|alb|lb_.*|alb_.*", "elbv2"), (r"db_.*|rds_.*", "rds"), (r"autoscaling_.*", "autoscaling"),
+    (r"ecr_.*", "ecr"), (r"ecs_.*", "ecs"), (r"route53_.*", "route53"), (r"secretsmanager_.*", "secretsmanager"),
+    (r"ssm_.*", "ssm"),
+]]
 
 
 class Unreadable(ValueError):
@@ -245,12 +262,26 @@ def _is_test(path: str) -> bool:
     return path.endswith(".tftest.hcl")
 
 
-def _local_source(expr: list[Token] | None) -> bool:
+def _local_source(expr: list[Token] | None, folder: str = "") -> bool:
+    """A module source that's a folder inside the exercise, relative to the file that names it."""
     source = literal(expr)
-    return source is not None and source.startswith(("./", "../"))
+    if source is None or not source.startswith(("./", "../")):
+        return False
+    inside = posixpath.normpath(posixpath.join(folder or ".", source))
+    return inside != ".." and not inside.startswith("../")
 
 
-def _provider_problems(where: str, p: Block) -> list[str]:
+def service_of(resource_type: str) -> str | None:
+    return next((svc for pattern, svc in SERVICE_OF if pattern.fullmatch(resource_type)), None)
+
+
+def _alias_used(b: Block) -> str:
+    """The aws provider alias a resource uses: aws.west gives west, none gives ""."""
+    toks = [t for k, t in b.attrs.get("provider", []) if k == "ident"]
+    return toks[0].split(".", 1)[1] if toks and toks[0].startswith("aws.") else ""
+
+
+def _provider_problems(where: str, p: Block, services: set[str]) -> list[str]:
     name = f'{where}: the provider "aws" block' + (f' with alias {literal(p.attrs.get("alias"))!r}'
                                                      if "alias" in p.attrs else "")
     out = []
@@ -269,21 +300,37 @@ def _provider_problems(where: str, p: Block) -> list[str]:
     if other:
         out.append(f"{name} sets {', '.join(other)}, which loads credentials from somewhere other than its own "
                    "fake keys. Remove it")
+    if "endpoints" in p.attrs:
+        out.append(f"{name} sets endpoints = {{...}} as a map. Write it as an endpoints block")
+    named = set()
     for endpoints in p.children("endpoints"):
         for service, expr in endpoints.attrs.items():
+            named.add(service)
             url = literal(expr)
             if url is None or not local_url(url):
                 out.append(f"{name} sends {service} to {url or 'an address worked out at run time'}. Every "
                            "endpoint has to be on this machine, like http://localhost:4566")
+    for service in sorted(services - named):
+        out.append(f'{name} has no endpoint for {service}, which the configuration uses, so those calls would go '
+                   f'to real AWS. Add {service} = "http://localhost:4566" to its endpoints block')
     return out
+
+
+def _source_of(expr: list[Token] | None) -> str | None:
+    """The source in a required_providers entry, { source = "hashicorp/aws", ... }."""
+    toks = expr or []
+    for i in range(len(toks) - 2):
+        if toks[i] == ("ident", "source") and toks[i + 1] == ("punct", "="):
+            return literal(toks[i + 2:i + 3])
+    return HASHICORP_AWS[0]  # with no source, Terraform uses hashicorp/aws
 
 
 def config_problems(files: list[CourseFile], checks: list[CourseFile], which: str) -> list[str]:
     """What in one set of files (the starter or the solution) and the checks could reach a
     real AWS account, when the learner runs Terraform or when `learn check` does."""
     out: list[str] = []
-    tf: dict[str, list[Block]] = {}
-    tests: dict[str, list[Block]] = {}
+    tf: dict[str, tuple[str, list[Block]]] = {}    # path: (how a problem names it, its blocks)
+    tests: dict[str, tuple[str, list[Block]]] = {}
     named = {id(f): f"{f.path} ({which})" for f in files} | {id(f): f.path for f in checks}
     for f in files + checks:
         if FORBIDDEN_FILE.search(f.path):
@@ -293,28 +340,37 @@ def config_problems(files: list[CourseFile], checks: list[CourseFile], which: st
         if not (_is_tf(f.path) or _is_test(f.path)):
             continue
         try:
-            (tests if _is_test(f.path) else tf)[named[id(f)]] = read(f.content)
+            (tests if _is_test(f.path) else tf)[f.path] = (named[id(f)], read(f.content))
         except Unreadable as e:
             out.append(f"{named[id(f)]} couldn't be read to check it stays away from real AWS: {e}")
 
-    blocks = [(where, b) for where, bs in tf.items() for b in bs]
-    nested = [(where, x) for where, b in blocks for x in b.walk()]  # a check block can hold a data source
+    blocks = [(path, where, b) for path, (where, bs) in tf.items() for b in bs]
+    nested = [(path, where, x) for path, where, b in blocks for x in b.walk()]  # a check block can hold data
     uses_aws = any(b.type == "provider" and b.label() == "aws" or
-                   b.type in TYPED and b.label().startswith("aws_") for _, b in nested)
-    root = [(where, b) for where, b in blocks if "/" not in where.split(" ")[0]]
-    if uses_aws and not any(b.type == "provider" and b.label() == "aws" and "alias" not in b.attrs for _, b in root):
+                   b.type in TYPED and b.label().startswith("aws_") for _, _, b in nested)
+    root = [b for path, _, b in blocks if "/" not in path]
+    services: dict[str, set[str]] = {}  # by the provider alias the resources use
+    for _, _, b in nested:
+        if b.type in TYPED and (svc := service_of(b.label())):
+            services.setdefault(_alias_used(b), set()).add(svc)
+    if uses_aws and not any(b.type == "provider" and b.label() == "aws" and "alias" not in b.attrs for b in root):
         out.append(f"the {which}'s configuration uses AWS with no provider \"aws\" block in the exercise's top "
                    "folder, so Terraform would make a default one that finds the learner's own credentials. "
                    "Add the provider block from the instructions")
 
-    for where, b in blocks:
+    for path, where, b in blocks:
         if b.type == "provider" and b.label() == "aws":
-            out += _provider_problems(where, b)
-        if b.type == "module" and not _local_source(b.attrs.get("source")):
+            out += _provider_problems(where, b, services.get(literal(b.attrs.get("alias")) or "", set()))
+        if b.type == "module" and not _local_source(b.attrs.get("source"), posixpath.dirname(path)):
             out.append(f"{where}: module {b.label()!r} comes from {literal(b.attrs.get('source')) or 'somewhere'} "
                        "instead of a folder in the exercise, so its code isn't checked here. Use a local "
                        "path like ./modules/name")
         if b.type == "terraform":
+            for required in b.children("required_providers"):
+                source = _source_of(required.attrs.get("aws"))
+                if "aws" in required.attrs and source not in HASHICORP_AWS:
+                    out.append(f"{where} maps the aws provider to {source or 'a source worked out at run time'}, "
+                               "which isn't hashicorp/aws, so its code isn't what these checks know. Use hashicorp/aws")
             for backend in b.children("backend"):
                 if backend.label() != "local":
                     out.append(f'{where} keeps state in a backend "{backend.label()}", which talks to a real '
@@ -323,7 +379,7 @@ def config_problems(files: list[CourseFile], checks: list[CourseFile], which: st
             if b.children("cloud"):
                 out.append(f"{where} has a cloud block, which sends state to HCP Terraform. Leave state local")
 
-    for where, b in nested:
+    for _, where, b in nested:
         if b.type == "provider" and b.label() == "awscc" or b.type in TYPED and b.label().startswith("awscc_"):
             out.append(f"{where} uses the awscc provider, which these checks don't cover yet. Use hashicorp/aws")
         if b.type == "data" and b.label() == "terraform_remote_state" and literal(b.attrs.get("backend")) != "local":
@@ -335,7 +391,7 @@ def config_problems(files: list[CourseFile], checks: list[CourseFile], which: st
         if b.type == "provisioner":
             out.append(f"{where} has a provisioner, which runs commands on the learner's machine. Remove it")
 
-    for where, bs in tests.items():
+    for where, bs in tests.values():
         mocks = [b for b in bs if b.type == "mock_provider" and b.label() == "aws"]
         if uses_aws and not any("alias" not in m.attrs for m in mocks):
             out.append(f'{where} has no mock_provider "aws" {{}} without an alias, so the tests would use the '
@@ -357,8 +413,12 @@ def config_problems(files: list[CourseFile], checks: list[CourseFile], which: st
 
 _FENCE = re.compile(r"```[^\n]*\n(.*?)```", re.S)
 _SPAN = re.compile(r"`([^`\n]+)`")
-# an aws command where a command starts: a line, or after ; && || | $( or a $ prompt
-_COMMAND = re.compile(r"(?:^|[;&|(`])\s*(?:[$%>]\s+)?(?:sudo\s+)?((?:[A-Z_]+=\S+\s+)*)aws\s+(?!=)(?=\S)(.*)$")
+# a command starts a line, or follows ; && || | ( $( or a backtick
+_SEPARATOR = re.compile(r";|&&|\|\||\||\$\(|[()`]")
+# the AWS CLI, however it's named: aws, aws2, /usr/local/bin/aws, python -m awscli
+_COMMAND = re.compile(r"\s*(?:[$%>]\s+)?(?:sudo\s+)?((?:[A-Za-z_][A-Za-z0-9_]*=\S+\s+)*)"
+                      r"(?:[\w.~/-]*/)?(?:aws[0-9]*|python[0-9.]*\s+-m\s+awscli)\s+(?!=)(?=\S)(.*)$")
+_NO_CALL = re.compile(r"(?:configure|help|--version|--help)\b")  # what never calls AWS
 _ENDPOINT = re.compile(r"--endpoint-url(?:=|\s+)[\"']?([^\s\"']+)")
 _ENV_ENDPOINT = re.compile(r"AWS_ENDPOINT_URL=[\"']?([^\s\"']+)")
 SDK_CODE = (".py", ".js", ".mjs", ".cjs", ".ts", ".mts", ".cts")
@@ -370,8 +430,9 @@ def _commands(code: str) -> list[str]:
     joined = re.sub(r"\\\n", " ", code)
     found = []
     for line in joined.splitlines():
-        if m := _COMMAND.search(line):
-            found.append(m.group(1) + "aws " + m.group(2))
+        for segment in _SEPARATOR.split(line):
+            if (m := _COMMAND.match(segment)) and not _NO_CALL.match(m.group(2)):
+                found.append(m.group(1) + "aws " + m.group(2))
     return found
 
 
@@ -398,7 +459,10 @@ def uses_aws(lesson: Lesson) -> bool:
         for f in lesson.exercise.starter + lesson.exercise.solution:
             if _is_tf(f.path) and re.search(r'provider\s+"aws"|^\s*(?:resource|data)\s+"aws_', f.content, re.M):
                 return True
-    return bool(aws_commands(lesson.explanation + "\n" + lesson.worked_example))
+    texts = [lesson.explanation, lesson.worked_example]
+    if lesson.exercise:
+        texts += [lesson.exercise.task, *lesson.exercise.hints]
+    return any(aws_commands(t) for t in texts)
 
 
 def problems(lesson: Lesson) -> list[str]:

@@ -63,10 +63,29 @@ def test_the_block_the_prompt_gives_is_safe():
     (PROVIDER + VPC, {"modules/net/main.tf": 'provider "aws" {\n  region = "us-east-1"\n}\n'}, "modules/net/main.tf"),
     (PROVIDER + 'resource "awscc_s3_bucket" "b" {}\n', {}, "awscc"),
     (PROVIDER + 'resource "aws_vpc" "main" {\n  cidr_block = "10.0.0.0/16"\n', {}, "couldn't be read"),
+    # found by the falsifier on 6ac6784
+    (re.sub(r"  endpoints \{.*?\n  \}\n", "", PROVIDER, flags=re.S) + VPC, {}, "no endpoint for ec2"),
+    (PROVIDER.replace('    ec2 = "http://localhost:4566"\n', "") + 'resource "aws_instance" "web" {}\n', {},
+     "no endpoint for ec2"),
+    (re.sub(r"  endpoints \{.*?\n  \}\n", '  endpoints = { ec2 = "https://ec2.amazonaws.com" }\n', PROVIDER, flags=re.S) + VPC,
+     {}, "as a map"),
+    (PROVIDER + VPC, {"versions.tf": 'terraform {\n  required_providers {\n    aws = {\n      source = "example-corp/aws"\n'
+                                     '    }\n  }\n}\n'}, "maps the aws provider to example-corp/aws"),
+    (PROVIDER + 'module "x" {\n  source = "../../../other/mod"\n}\n', {}, "comes from ../../../other/mod"),
+    (VPC, {"a b/providers.tf": PROVIDER}, "no provider \"aws\" block in the exercise's top folder"),
 ])
 def test_each_way_into_a_real_account_is_found(main, extra, found):
     problems = safety.problems(lesson(main, extra))
     assert any(found in p for p in problems), problems
+
+
+def test_what_calls_no_api_needs_no_endpoint():
+    main = (PROVIDER.replace('    ec2 = "http://localhost:4566"\n', "") + 'data "aws_iam_policy_document" "p" {}\n'
+            'data "aws_region" "here" {}\nresource "aws_s3_bucket" "b" {}\n'
+            'module "net" {\n  source = "./modules/net"\n}\n')
+    required = 'terraform {\n  required_providers {\n    aws = { source = "hashicorp/aws", version = "~> 6.0" }\n  }\n}\n'
+    assert safety.problems(lesson(main, {"versions.tf": required,
+                                         "modules/net/main.tf": 'resource "aws_s3_bucket" "logs" {}\n'})) == []
 
 
 @pytest.mark.parametrize("test, found", [
@@ -97,6 +116,13 @@ def test_a_tests_problem_is_said_once_not_for_starter_and_solution_each():
     ("```hcl\nterraform {\n  required_providers {\n    aws = {\n      source = \"hashicorp/aws\"\n    }\n  }\n}\n"
      "# configure the aws provider\nresource \"aws_vpc\" \"main\" {}\n```\n", True),
     ("The aws provider reads `aws_vpc` blocks.", True),
+    # found by the falsifier on 6ac6784: a second command, and the CLI under other names
+    ("`aws --endpoint-url http://localhost:4566 s3 ls; aws s3 rm s3://real --recursive`", False),
+    ("```bash\naws --endpoint-url http://localhost:4566 s3 ls && aws iam create-user --user-name x\n```\n", False),
+    ("`/usr/local/bin/aws s3 ls`", False),
+    ("`aws2 s3 ls`", False),
+    ("```bash\npython3 -m awscli s3 ls\n```\n", False),
+    ("`aws configure`, then `aws --version` to check it's installed.", True),
 ])
 def test_an_aws_command_has_to_go_to_the_emulator(text, safe):
     problems = safety.problems(lesson(worked_example=text))
@@ -106,6 +132,11 @@ def test_an_aws_command_has_to_go_to_the_emulator(text, safe):
 def test_a_hint_and_a_script_are_read_for_aws_commands_too():
     assert safety.problems(lesson(hints=["Try `aws s3 ls`."]))
     assert safety.problems(lesson(extra={"check.sh": "#!/bin/sh\nset -e\naws sts get-caller-identity\n"}))
+
+
+def test_a_course_with_aws_only_in_a_hint_still_says_what_is_simulated():
+    l = lesson(main="# nothing yet\n", hints=["Run `aws --endpoint-url http://localhost:4566 s3 ls`."])
+    assert safety.uses_aws(l)
 
 
 def test_exercise_code_doesnt_use_an_aws_sdk():
