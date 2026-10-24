@@ -43,6 +43,8 @@ REAL_KEY = re.compile(r"\b(?:AKIA|ASIA|AIDA|AROA)[A-Z0-9]{16}\b")
 # the top-level blocks whose first label names a resource type
 TYPED = ("resource", "data", "ephemeral", "action", "list")
 HASHICORP_AWS = ("hashicorp/aws", "registry.terraform.io/hashicorp/aws")
+# what a configuration that uses AWS may fetch: the aws provider and the ones that stay on the machine
+OFFLINE_PROVIDERS = ("aws", "random", "null", "local", "tls", "time", "archive")
 # every key the endpoints block takes, from `terraform providers schema` on hashicorp/aws 6.68.0
 ENDPOINT_KEYS = frozenset("""
     accessanalyzer account accountaccess acm acmpca agentregistry amg amp amplify apigateway
@@ -131,6 +133,11 @@ class Unreadable(ValueError):
 Token = tuple[str, str]
 
 
+class _Tok(tuple):
+    """A (kind, text) token that also knows its line, and still compares equal to a plain pair."""
+    line = 0
+
+
 @dataclass
 class Block:
     type: str
@@ -193,13 +200,27 @@ def _template_end(text: str, j: int) -> int:
 
 def tokens(text: str) -> list[Token]:
     out: list[Token] = []
+
+    def add(kind: str, value: str, at: int) -> None:
+        t = _Tok((kind, value))
+        t.line = text.count("\n", 0, at) + 1
+        out.append(t)
+
+    try:
+        _scan(text, add)
+    except Unreadable as e:
+        raise Unreadable(f"line {e.args[1]}: {e.args[0]}" if len(e.args) > 1 else str(e)) from None
+    return out
+
+
+def _scan(text: str, add) -> None:
     i, n = 0, len(text)
     while i < n:
         c = text[i]
         if c in " \t\r":
             i += 1
         elif c == "\n":
-            out.append(("nl", c))
+            add("nl", c, i)
             i += 1
         elif c == "#" or text.startswith("//", i):
             end = text.find("\n", i)
@@ -207,37 +228,39 @@ def tokens(text: str) -> list[Token]:
         elif text.startswith("/*", i):
             end = text.find("*/", i + 2)
             if end < 0:
-                raise Unreadable("a /* comment never ends")
+                raise Unreadable("a /* comment never ends", text.count("\n", 0, i) + 1)
             if "\n" in text[i:end]:
-                out.append(("nl", "\n"))
+                add("nl", "\n", i)
             i = end + 2
         elif c == '"':
-            end = _string_end(text, i)
-            out.append(("string", text[i:end]))
+            try:
+                end = _string_end(text, i)
+            except Unreadable as e:
+                raise Unreadable(str(e), text.count("\n", 0, i) + 1) from None
+            add("string", text[i:end], i)
             i = end
         elif m := _HEREDOC.match(text, i):
             close = re.compile(rf"^[ \t]*{re.escape(m.group(1))}[ \t]*$", re.M).search(text, m.end())
             if close is None:
-                raise Unreadable(f"the <<{m.group(1)} heredoc never ends")
-            out.append(("heredoc", text[i:close.end()]))
+                raise Unreadable(f"the <<{m.group(1)} heredoc never ends", text.count("\n", 0, i) + 1)
+            add("heredoc", text[i:close.end()], i)
             i = close.end()
         elif m := _IDENT.match(text, i):
-            out.append(("ident", m.group(0)))
+            add("ident", m.group(0), i)
             i = m.end()
         elif c in "{}[]()=":
-            out.append(("punct", c))
+            add("punct", c, i)
             i += 1
         else:
-            out.append(("other", c))
+            add("other", c, i)
             i += 1
-    return out
 
 
 def _unquote(s: str) -> str:
     return s[1:-1].replace('\\"', '"').replace("\\\\", "\\")
 
 
-def _body(toks: list[Token], i: int, closed: bool) -> tuple[dict, list[Block], int]:
+def _body(toks: list[Token], i: int, closed: bool, opened: int = 0) -> tuple[dict, list[Block], int]:
     attrs: dict[str, list[Token]] = {}
     blocks: list[Block] = []
     while i < len(toks):
@@ -248,7 +271,7 @@ def _body(toks: list[Token], i: int, closed: bool) -> tuple[dict, list[Block], i
         if closed and toks[i] == ("punct", "}"):
             return attrs, blocks, i + 1
         if kind != "ident":
-            raise Unreadable(f"expected a name, found {text!r}")
+            raise Unreadable(f"line {toks[i].line}: {text!r} where a block or an attribute name should be")
         if i + 1 < len(toks) and toks[i + 1] == ("punct", "="):
             # an attribute runs to the end of its line, or past it inside brackets
             j, depth = i + 2, 0
@@ -271,11 +294,12 @@ def _body(toks: list[Token], i: int, closed: bool) -> tuple[dict, list[Block], i
             labels.append(_unquote(toks[j][1]) if toks[j][0] == "string" else toks[j][1])
             j += 1
         if j >= len(toks) or toks[j] != ("punct", "{"):
-            raise Unreadable(f"`{text}` is followed by neither = nor a block")
-        inner_attrs, inner_blocks, i = _body(toks, j + 1, closed=True)
+            raise Unreadable(f"line {toks[i].line}: `{text}` needs a {{ on the same line to open its block, "
+                             "or = and a value")
+        inner_attrs, inner_blocks, i = _body(toks, j + 1, closed=True, opened=toks[j].line)
         blocks.append(Block(text, labels, inner_attrs, inner_blocks))
     if closed:
-        raise Unreadable("a block never closes")
+        raise Unreadable(f"the block opened on line {opened} never closes")
     return attrs, blocks, i
 
 
@@ -424,7 +448,7 @@ def config_problems(files: list[CourseFile], checks: list[CourseFile], which: st
         try:
             (tests if _is_test(f.path) else tf)[f.path] = (named[id(f)], read(f.content))
         except Unreadable as e:
-            out.append(f"{named[id(f)]} couldn't be read to check it stays away from real AWS: {e}")
+            out.append(f"{named[id(f)]} isn't HCL these checks can read, so it couldn't be cleared: {e}")
 
     blocks = [(path, where, b) for path, (where, bs) in tf.items() for b in bs]
     nested = [(path, where, x) for path, where, b in blocks for x in b.walk()]  # a check block can hold data
@@ -452,6 +476,15 @@ def config_problems(files: list[CourseFile], checks: list[CourseFile], which: st
     for path, where, b in blocks:
         if b.type == "provider" and b.label() == "aws":
             out += _provider_problems(where, b, services.get(literal(b.attrs.get("alias")) or "", set()))
+        if b.type == "module":
+            toks = b.attrs.get("providers", [])
+            for i in range(len(toks) - 2):
+                if toks[i] == ("ident", "aws") and toks[i + 1] == ("punct", "=") and toks[i + 2] != ("ident", "aws"):
+                    out.append(f"{where}: module {b.label()!r} is handed a provider other than aws or aws.<alias> "
+                               "for aws. Hand it aws or one of its aliases")
+        if b.type == "provider" and uses_aws and b.label() not in OFFLINE_PROVIDERS:
+            out.append(f'{where} configures a provider "{b.label()}", which these checks don\'t know. An AWS lesson '
+                       f"uses only {', '.join(OFFLINE_PROVIDERS)}")
         if b.type == "module" and not _local_source(b.attrs.get("source"), posixpath.dirname(path)):
             out.append(f"{where}: module {b.label()!r} comes from {literal(b.attrs.get('source')) or 'somewhere'} "
                        "instead of a folder in the exercise, so its code isn't checked here. Use a local "
@@ -463,10 +496,14 @@ def config_problems(files: list[CourseFile], checks: list[CourseFile], which: st
                     out.append(f"{where} maps the aws provider to {source or 'a source worked out at run time'}, "
                                "which isn't hashicorp/aws, so its code isn't what these checks know. Use hashicorp/aws")
                 for name, expr in required.attrs.items():
-                    named_source = any(t == ("ident", "source") for t in expr)
-                    if name != "aws" and named_source and (_source_of(expr) or "").casefold() in HASHICORP_AWS:
+                    source = (_source_of(expr) if any(t == ("ident", "source") for t in expr)
+                              else f"hashicorp/{name}").casefold().removeprefix("registry.terraform.io/")
+                    if name != "aws" and source == "hashicorp/aws":
                         out.append(f"{where} names hashicorp/aws {name!r}. Call it aws, so the checks for its "
                                    "provider block apply")
+                    elif uses_aws and source not in {f"hashicorp/{n}" for n in OFFLINE_PROVIDERS}:
+                        out.append(f"{where} fetches the {source} provider, which these checks don't know. An AWS "
+                                   f"lesson uses only hashicorp {', '.join(OFFLINE_PROVIDERS)}")
             for backend in b.children("backend"):
                 if backend.label() != "local":
                     out.append(f'{where} keeps state in a backend "{backend.label()}", which talks to a real '
@@ -507,49 +544,53 @@ def config_problems(files: list[CourseFile], checks: list[CourseFile], which: st
 
 # -- the lesson's own words, and exercise code ------------------------------------------
 
-_FENCE = re.compile(r"```[^\n]*\n(.*?)```", re.S)
+_FENCE = re.compile(r"```([^\n]*)\n(.*?)```", re.S)
 _SPAN = re.compile(r"`([^`\n]+)`")
-# a command starts a line, or follows ; & && || | ( ) $( or a backtick
-_SEPARATOR = re.compile(r";|&&?|\|\|?|\$\(|[()`]")
-# the AWS CLI, however it's named: aws, aws2, /usr/local/bin/aws, python -m awscli
-_COMMAND = re.compile(r"\s*(?:[$%>]\s+)?(?:sudo\s+)?((?:[A-Za-z_][A-Za-z0-9_]*=\S+\s+)*)"
-                      r"(?:[\w.~/-]*/)?(?:aws[0-9]*|python[0-9.]*\s+-m\s+awscli)\s+(?!=)(?=\S)(.*)$")
-# the endpoint comes first, right after the CLI's name or just before it, so nothing later in
-# the line (a comment, another call) can stand in for it
-_ENDPOINT = re.compile(r"--endpoint-url(?:=|\s+)[\"']?([^\s\"']+)")
-_ENV_ENDPOINT = re.compile(r"AWS_ENDPOINT_URL=[\"']?([^\s\"']+)")
+# the AWS CLI wherever a command can start: a line, a separator, a quote (bash -c "aws ..."),
+# a space (xargs aws, env aws), Make's @ and - prefixes, as /path/to/aws, aws2 or awscli
+_CLI = re.compile(r"(?:^|(?<=[\s;&|(`'\"=@+-]))(?:(?:/|~/|\.\.?/)[\w.~/-]*/)?(?:aws[0-9]*|awscli)(?=\s+[^\s=])"
+                  r"|python[0-9.]*\s+-m\s+awscli(?=\s)")
+_END = re.compile(r";|&&|(?<![<>])&|\|\|?|\$\(|[()`]")  # where the command ends
+# its endpoint comes first, as one whole shell word, so nothing after it can stand in for it
+_LOCAL_FIRST = re.compile(r"\s+--endpoint-url(?:=|\s+)([\"']?)([^\s\"']+)\1(?=\s|$)")
+_LIST_FORM = re.compile(r"[\"']aws[0-9]*[\"']\s*,(?!\s*[\"']--endpoint-url[\"']\s*,\s*[\"']https?://(?:localhost|127\.0\.0\.1)[:/\"'])")
+# fenced code a learner would run. HCL, JSON or Python fences are read as that language
+SHELL_FENCES = {"", "bash", "sh", "shell", "console", "zsh", "terminal", "powershell", "ps1", "pwsh", "cmd",
+                "bat", "shell-session"}
 SDK_CODE = (".py", ".js", ".mjs", ".cjs", ".ts", ".mts", ".cts")
 _SDK = re.compile(r"^\s*(?:import|from)\s+(?:boto3|botocore|aiobotocore)\b|@aws-sdk/|[\"']aws-sdk[\"']", re.M)
 
 
 def _no_call(args: list[str]) -> bool:
-    """aws --version, aws configure (but not configure sso), and help at the end: no API call."""
-    if args == ["--version"] or args[:1] == ["configure"] and not (args[1:2] and args[1].startswith("sso")):
-        return True
+    """aws --version, aws configure (but not configure sso), help at the end, or a service with no
+    operation (`aws s3` in a sentence): no API call."""
+    if len(args) < 2 or args[:1] == ["configure"] and not (args[1:2] and args[1].startswith("sso")):
+        return args[:1] != ["login"]
     return args[-1:] == ["help"] and not any(a.startswith("-") for a in args)
 
 
 def _commands(code: str) -> list[tuple[str, bool]]:
-    """The aws commands in a piece of code, each with whether it starts by naming a local endpoint."""
-    joined = re.sub(r"\\\n", " ", code)
+    """The aws commands in a piece of code, each with whether it names one local endpoint first."""
     found = []
-    for line in joined.splitlines():
-        for segment in _SEPARATOR.split(line):
-            m = _COMMAND.match(segment)
-            if not m or _no_call(m.group(2).split()):
+    for line in re.sub(r"\\\n", " ", code).splitlines():
+        for m in _CLI.finditer(line):
+            rest = line[m.end():]
+            command = _END.split(rest, 1)[0]
+            args = [a.strip("\"'") for a in command.split() if not re.match(r"\d*[<>]", a)]
+            if _no_call(args):
                 continue
-            prefix = m.group(1).split()
-            env = _ENV_ENDPOINT.fullmatch(prefix[-1]) if prefix else None
-            own = _ENDPOINT.match(m.group(2))
-            local = bool(env and local_url(env.group(1)) or own and local_url(own.group(1)))
-            found.append((m.group(1) + "aws " + m.group(2), local))
+            first = _LOCAL_FIRST.match(rest)
+            local = bool(first and local_url(first.group(2)) and command.count("--endpoint-url") == 1)
+            found.append((f"aws {' '.join(command.split())}", local))
+        if _LIST_FORM.search(line):  # subprocess.run(["aws", "s3", "ls"])
+            found.append((line.strip(), False))
     return found
 
 
 def aws_commands(text: str) -> list[tuple[str, bool]]:
-    code = _FENCE.findall(text)
+    fences = [code for tag, code in _FENCE.findall(text) if tag.strip().lower() in SHELL_FENCES]
     spans = _SPAN.findall(_FENCE.sub("", text))
-    return [c for piece in code + spans for c in _commands(piece)]
+    return [c for piece in fences + spans for c in _commands(piece)]
 
 
 def command_problems(commands: list[tuple[str, bool]], where: str) -> list[str]:

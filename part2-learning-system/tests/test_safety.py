@@ -65,7 +65,7 @@ def test_the_block_the_prompt_gives_is_safe():
     (PROVIDER + VPC, {"provider_override.tf": 'provider "aws" {}\n'}, ".tf.json and override files"),
     (PROVIDER + VPC, {"modules/net/main.tf": 'provider "aws" {\n  region = "us-east-1"\n}\n'}, "modules/net/main.tf"),
     (PROVIDER + 'resource "awscc_s3_bucket" "b" {}\n', {}, "awscc"),
-    (PROVIDER + 'resource "aws_vpc" "main" {\n  cidr_block = "10.0.0.0/16"\n', {}, "couldn't be read"),
+    (PROVIDER + 'resource "aws_vpc" "main" {\n  cidr_block = "10.0.0.0/16"\n', {}, "isn't HCL these checks can read"),
     # found by the falsifier on 6ac6784
     (re.sub(r"  endpoints \{.*?\n  \}\n", "", PROVIDER, flags=re.S) + VPC, {}, "no endpoint for ec2"),
     (PROVIDER.replace('    ec2 = "http://localhost:4566"\n', "") + 'resource "aws_instance" "web" {}\n', {},
@@ -90,6 +90,13 @@ def test_the_block_the_prompt_gives_is_safe():
      'module "net" {\n  source = "./modules/net"\n  providers = {\n    aws = aws.west\n  }\n}\n',
      {"modules/net/main.tf": 'resource "aws_instance" "w" {}\n'}, "alias 'west' has no endpoint for ec2"),
     (PROVIDER + 'data "aws_ip_ranges" "r" {\n  services = ["s3"]\n}\n', {}, 'data "aws_ip_ranges"'),
+    # and on 8dabd23
+    (PROVIDER + 'module "m" {\n  source = "./modules/m"\n  providers = {\n    aws = awsx\n  }\n}\n',
+     {"modules/m/main.tf": VPC}, "handed a provider other than aws"),
+    (PROVIDER + VPC + 'provider "thing" {}\n',
+     {"versions.tf": 'terraform {\n  required_providers {\n    thing = { source = "example-corp/thing" }\n  }\n}\n'},
+     "fetches the example-corp/thing provider"),
+    (PROVIDER + VPC + 'provider "kubernetes" {}\n', {}, 'configures a provider "kubernetes"'),
 ])
 def test_each_way_into_a_real_account_is_found(main, extra, found):
     problems = safety.problems(lesson(main, extra))
@@ -119,6 +126,13 @@ def test_a_module_given_an_alias_is_held_to_that_providers_endpoints():
 ])
 def test_each_resource_type_is_held_to_the_endpoint_it_calls(resource_type, service):
     assert safety.service_of(resource_type) == service
+
+
+def test_an_aws_lesson_may_use_the_providers_that_stay_on_the_machine():
+    required = ('terraform {\n  required_providers {\n    aws    = { source = "hashicorp/aws" }\n'
+                '    random = { source = "hashicorp/random" }\n    local  = { source = "hashicorp/local" }\n  }\n}\n')
+    main = PROVIDER + VPC + 'resource "random_pet" "p" {}\nresource "local_file" "f" {\n  filename = "x"\n  content = "y"\n}\n'
+    assert safety.problems(lesson(main, {"versions.tf": required})) == []
 
 
 def test_what_calls_no_api_needs_no_endpoint():
@@ -152,7 +166,8 @@ def test_a_tests_problem_is_said_once_not_for_starter_and_solution_each():
     ("```bash\n$ aws ec2 describe-instances \\\n    --instance-ids i-123\n```\n", False),
     ("```bash\naws --endpoint-url http://localhost:4566 s3 ls\n```\n", True),
     ("```bash\naws --endpoint-url=http://localhost:4566 ec2 describe-vpcs\n```\n", True),
-    ("```bash\nAWS_ENDPOINT_URL=http://localhost:4566 aws s3 ls\n```\n", True),
+    # the flag only: AWS_ENDPOINT_URL_S3 or AWS_IGNORE_CONFIGURED_ENDPOINT_URLS can override the variable
+    ("```bash\nAWS_ENDPOINT_URL=http://localhost:4566 aws s3 ls\n```\n", False),
     ("```bash\naws --endpoint-url https://s3.amazonaws.com s3 ls\n```\n", False),
     # HCL and prose that mention aws without running it
     ("```hcl\nterraform {\n  required_providers {\n    aws = {\n      source = \"hashicorp/aws\"\n    }\n  }\n}\n"
@@ -178,6 +193,20 @@ def test_a_tests_problem_is_said_once_not_for_starter_and_solution_each():
     ("`aws iam create-user --user-name help`", False),
     ("`aws iam create-user help`", True),
     ("`aws configure sso`", False),
+    # and on 8dabd23: one endpoint, as a whole word, and the CLI however it's started
+    ("`aws --endpoint-url http://localhost:4566 --endpoint-url https://s3.amazonaws.com s3 ls`", False),
+    ("```bash\naws --endpoint-url \"http://localhost:4566\"@s3.amazonaws.com s3 ls\n```\n", False),
+    ("```bash\naws --endpoint-url \"http://localhost:4566\" s3 ls\n```\n", True),
+    ("```bash\nls | xargs aws s3 rm --recursive\n```\n", False),
+    ("```bash\neval \"aws s3 ls\"\n```\n", False),
+    ("```bash\nbash -c \"aws s3 ls\"\n```\n", False),
+    ("```bash\nenv aws s3 ls\n```\n", False),
+    ("```bash\ntimeout 30 aws s3 ls\n```\n", False),
+    ("```powershell\nPS C:\\> aws s3 ls\n```\n", False),
+    ("`aws login`", False),
+    ("The `aws s3` commands copy files.", True),
+    ("```bash\naws --version 2>&1\n```\n", True),
+    ("```text\nInitializing provider plugins...\n- Finding hashicorp/aws versions matching \"~> 6.0\"...\n```\n", True),
     ("```bash\naws --endpoint-url http://localhost:4566 s3 cp ./f s3://b/$(aws s3 ls | head -1)\n```\n", False),
 ])
 def test_an_aws_command_has_to_go_to_the_emulator(text, safe):
@@ -195,9 +224,32 @@ def test_a_course_with_aws_only_in_a_hint_still_says_what_is_simulated():
     assert safety.uses_aws(l)
 
 
+@pytest.mark.parametrize("path, content, safe", [
+    ("Makefile", "sync:\n\t@aws s3 sync . s3://real\n", False),
+    ("package.json", '{"scripts": {"deploy": "aws s3 sync . s3://real"}}', False),
+    ("run.py", 'import subprocess\nsubprocess.run(["aws", "s3", "ls"])\n', False),
+    ("run.py", 'import subprocess\nsubprocess.run(["aws", "--endpoint-url", "http://localhost:4566", "s3", "ls"])\n', True),
+    ("Makefile", "sync:\n\taws --endpoint-url http://localhost:4566 s3 sync . s3://b\n", True),
+])
+def test_commands_in_exercise_files_are_read_too(path, content, safe):
+    problems = safety.problems(lesson(extra={path: content}))
+    assert (problems == []) is safe, problems
+
+
 def test_exercise_code_doesnt_use_an_aws_sdk():
     l = lesson(extra={"app.py": "import boto3\n\nboto3.client('s3').list_buckets()\n"})
     assert any("AWS SDK" in p for p in safety.problems(l))
+
+
+@pytest.mark.parametrize("text, said", [
+    ('mock_provider "aws" {}\n\nrun "valid"\n  command = plan\n}\n', "line 3: `run` needs a { on the same line"),
+    ('locals {\n  a = 1\n', "the block opened on line 1 never closes"),
+    ('locals {\n  a = "no end\n}\n', "line 2: a string runs past the end of its line"),
+])
+def test_what_the_reader_cant_follow_says_which_line(text, said):
+    # from the 24 October ADK build: the teacher wrote a run block with no {
+    with pytest.raises(safety.Unreadable, match=re.escape(said)):
+        safety.read(text)
 
 
 def test_the_reader_follows_what_real_configurations_have():
@@ -245,7 +297,7 @@ def test_a_lesson_that_could_still_reach_aws_is_held_back(tmp_path):
     readme = (root / "README.md").read_text()
     assert not list((root / "units").glob("*/u1-l1-*"))
     assert "(held back, see Known problems)" in readme
-    assert "u1-l1 was held back, because it could reach a real AWS account: the worked example has `aws s3 ls`" in readme
+    assert "u1-l1 was held back by the check that keeps lessons away from your AWS account: the worked example has `aws s3 ls`" in readme
     assert "u1-l1" not in (root / ".learn" / "lessons.json").read_text()
 
 

@@ -86,16 +86,16 @@ def held_back(c: Course) -> tuple[Course, set[str]]:
         held.add(lesson.id)
         problems = [p for p in problems if p.lesson_id != lesson.id]
         problems.append(Problem(stage=Stage.TEACHING, check="held_back", lesson_id=lesson.id,
-                                detail=f"{lesson.id} was held back, because it could reach a real AWS "
-                                       f"account: {found[0]}"))
+                                detail=f"{lesson.id} was held back by the check that keeps lessons away "
+                                       f"from your AWS account: {found[0]}"))
     return c.model_copy(update={"lessons": kept, "problems": problems}), held
 
 
 AWS_NOTE = ("> **About AWS.** `learn check` runs each exercise's tests against a mock AWS provider, with "
             "your AWS credentials hidden from them, so it never reaches AWS. The exercises give Terraform "
             "fake keys and point it at an AWS emulator on this machine, so running `terraform plan` or "
-            "`apply` yourself can't use your AWS account, and the `aws` commands in the lessons go to the "
-            "emulator too. This course doesn't set the emulator up yet, so those steps fail until you run "
+            "`apply` yourself can't use your AWS account, and the `aws` commands in the lessons are "
+            "written to go to the emulator too. This course doesn't set the emulator up yet, so those steps fail until you run "
             "one. Like any code you run, the tests can still read files on your machine.")
 
 
