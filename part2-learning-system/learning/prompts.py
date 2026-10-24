@@ -194,8 +194,8 @@ does it themselves and gets checked.
       Teach backends and remote state in the explanation and the quiz. No provisioners,
       no `http` or `external` data sources, no .tf.json or override files, and modules only
       from folders in the exercise (./modules/name). Tests have `mock_provider "aws" {}`
-      and no provider blocks. Any `aws` command in the lesson has
-      `--endpoint-url http://localhost:4566`. Exercise code doesn't use an AWS SDK.
+      and no provider blocks. Any `aws` command in the lesson starts
+      `aws --endpoint-url http://localhost:4566`. Exercise code doesn't use an AWS SDK.
     - Python: test_*.py files using unittest from the standard library, run with
       `python3 -m unittest`, with a message on every assertion. Code and tests run on
       Python 3.9, so nothing newer than 3.9 syntax (no match statements).

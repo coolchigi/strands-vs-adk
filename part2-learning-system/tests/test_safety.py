@@ -80,6 +80,16 @@ def test_the_block_the_prompt_gives_is_safe():
     (PROVIDER + 'resource "aws_eks_cluster" "k" {}\n', {}, "no endpoint for eks"),
     (PROVIDER + WEST.replace('    ec2 = "http://localhost:4566"\n', '    s3 = "http://localhost:4566"\n') +
      'resource "aws_instance" "w" {\n  provider = aws.west\n}\n', {}, "alias 'west' has no endpoint for ec2"),
+    # and on 26f0137
+    (PROVIDER + 'provider "awsx" {}\nresource "aws_vpc" "x" {\n  provider = awsx\n}\n',
+     {"versions.tf": 'terraform {\n  required_providers {\n    awsx = { source = "example-corp/aws" }\n  }\n}\n'},
+     "uses a provider other than aws"),
+    (PROVIDER + VPC, {"versions.tf": 'terraform {\n  required_providers {\n    awsx = { source = "hashicorp/aws" }\n'
+                                     '  }\n}\n'}, "names hashicorp/aws 'awsx'"),
+    (PROVIDER + WEST.replace('    ec2 = "http://localhost:4566"\n', '    s3 = "http://localhost:4566"\n') +
+     'module "net" {\n  source = "./modules/net"\n  providers = {\n    aws = aws.west\n  }\n}\n',
+     {"modules/net/main.tf": 'resource "aws_instance" "w" {}\n'}, "alias 'west' has no endpoint for ec2"),
+    (PROVIDER + 'data "aws_ip_ranges" "r" {\n  services = ["s3"]\n}\n', {}, 'data "aws_ip_ranges"'),
 ])
 def test_each_way_into_a_real_account_is_found(main, extra, found):
     problems = safety.problems(lesson(main, extra))
@@ -91,6 +101,24 @@ def test_each_provider_needs_only_the_endpoints_its_own_resources_use():
             'resource "aws_instance" "w" {\n  provider = aws.west\n}\n')
     required = 'terraform {\n  required_providers {\n    aws = { source = "HashiCorp/aws" }\n  }\n}\n'
     assert safety.problems(lesson(main, {"versions.tf": required})) == []
+
+
+def test_a_module_given_an_alias_is_held_to_that_providers_endpoints():
+    main = (PROVIDER.replace('    ec2 = "http://localhost:4566"\n', "") + WEST +
+            'module "net" {\n  source = "./modules/net"\n  providers = {\n    aws = aws.west\n  }\n}\n')
+    assert safety.problems(lesson(main, {"modules/net/main.tf": 'resource "aws_instance" "w" {}\n'})) == []
+
+
+@pytest.mark.parametrize("resource_type, service", [
+    ("aws_kinesis_firehose_delivery_stream", "firehose"), ("aws_kinesis_video_stream", "kinesisvideo"),
+    ("aws_kinesis_stream", "kinesis"), ("aws_cloudwatch_query_definition", "logs"),
+    ("aws_route53_resolver_endpoint", "route53resolver"), ("aws_route53_record", "route53"),
+    ("aws_launch_configuration", "autoscaling"), ("aws_cognito_user_pool", "cognitoidp"),
+    ("aws_regions", "ec2"), ("aws_elb_service_account", None), ("aws_lb_hosted_zone_id", None),
+    ("aws_cloudfront_log_delivery_canonical_user_id", None), ("aws_canonical_user_id", "s3"),
+])
+def test_each_resource_type_is_held_to_the_endpoint_it_calls(resource_type, service):
+    assert safety.service_of(resource_type) == service
 
 
 def test_what_calls_no_api_needs_no_endpoint():
@@ -140,7 +168,16 @@ def test_a_tests_problem_is_said_once_not_for_starter_and_solution_each():
     # and on fc41b89
     ("`aws --endpoint-url http://localhost:4566 s3 ls & aws s3 rm s3://real --recursive`", False),
     ("`aws ec2 help`", True),
-    ("```bash\naws s3 cp ./f s3://bucket-$(date +%s)/ --endpoint-url http://localhost:4566\n```\n", True),
+    ("```bash\naws --endpoint-url http://localhost:4566 s3 cp ./f s3://bucket-$(date +%s)/\n```\n", True),
+    # and on 26f0137: the endpoint has to come first, so nothing later can stand in for it
+    ("```bash\naws s3 cp ./f s3://bucket-$(date +%s)/ --endpoint-url http://localhost:4566\n```\n", False),
+    ("```bash\naws s3 rm s3://real --recursive  # add --endpoint-url http://localhost:4566 for LocalStack\n```\n", False),
+    ("```bash\naws --endpoint-url http://localhost:4566 s3 cp f s3://b/$(aws sts get-caller-identity) "
+     "--endpoint-url http://localhost:4566\n```\n", False),
+    ("`aws --endpoint-url http://localhost:4566 iam create-user --user-name help`", True),
+    ("`aws iam create-user --user-name help`", False),
+    ("`aws iam create-user help`", True),
+    ("`aws configure sso`", False),
     ("```bash\naws --endpoint-url http://localhost:4566 s3 cp ./f s3://b/$(aws s3 ls | head -1)\n```\n", False),
 ])
 def test_an_aws_command_has_to_go_to_the_emulator(text, safe):

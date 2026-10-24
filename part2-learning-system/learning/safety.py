@@ -95,6 +95,8 @@ ENDPOINT_KEYS = frozenset("""
 # aws_<key>_... calls <key>. A type that calls no API (aws_iam_policy_document, aws_region)
 # isn't held to an endpoint
 SERVICE_OF = [(re.compile(f"aws_(?:{types})"), service) for types, service in [
+    (r"(?:elb|lb)_hosted_zone_id|(?:elb|cloudtrail|redshift|billing)_service_account|"
+     r"cloudfront_log_delivery_canonical_user_id|iam_policy_document|region|partition|arn|default_tags", None),  # these call no API
     (r"instances?|vpcs?|vpc_.*|subnets?|security_groups?|security_group_.*|internet_gateway|"
      r"egress_only_internet_gateway|nat_gateways?|route|route_tables?|route_table_association|"
      r"main_route_table_association|eips?|eip_association|key_pair|amis?|ami_.*|ebs_.*|network_.*|"
@@ -106,7 +108,12 @@ SERVICE_OF = [(re.compile(f"aws_(?:{types})"), service) for types, service in [
     (r"elb|elb_.*|lb_cookie_stickiness_policy|lb_ssl_negotiation_policy|app_cookie_stickiness_policy|"
      r"load_balancer_.*|proxy_protocol_policy", "elb"),
     (r"lb|alb|lb_.*|alb_.*", "elbv2"), (r"cloudwatch_event_.*", "events"), (r"api_gateway_.*", "apigateway"),
-    (r"(?:iam_policy_document|region|regions|partition|arn|default_tags|ip_ranges|billing_service_account)", None), (r"db_.*|rds_.*", "rds"), (r"autoscaling_.*", "autoscaling"),
+    (r"kinesis_firehose_.*", "firehose"), (r"kinesis_video_.*", "kinesisvideo"),
+    (r"kinesis_analytics_.*", "kinesisanalytics"), (r"cloudwatch_query_definition", "logs"),
+    (r"route53_resolver_.*", "route53resolver"), (r"launch_configuration", "autoscaling"),
+    (r"cognito_user_pools?|cognito_user_pool_.*|cognito_user|cognito_user_group|cognito_user_in_group|"
+     r"cognito_identity_provider|cognito_resource_server|cognito_risk_configuration", "cognitoidp"),
+    (r"cognito_identity_pool.*", "cognitoidentity"), (r"regions", "ec2"), (r"canonical_user_id", "s3"), (r"db_.*|rds_.*", "rds"), (r"autoscaling_.*", "autoscaling"),
     (r"ecr_.*", "ecr"), (r"ecs_.*", "ecs"), (r"route53_.*", "route53"), (r"secretsmanager_.*", "secretsmanager"),
     (r"ssm_.*", "ssm"),
 ]]
@@ -331,12 +338,29 @@ def service_of(resource_type: str) -> str | None:
     return first if first in ENDPOINT_KEYS else None
 
 
-def _alias_used(b: Block) -> str:
-    """The aws provider alias a resource uses: aws.west gives west, none gives ""."""
-    toks = b.attrs.get("provider", [])  # read as aws . west
-    if len(toks) >= 3 and toks[0] == ("ident", "aws") and toks[1] == ("other", ".") and toks[2][0] == "ident":
-        return toks[2][1]
-    return ""
+def _provider_ref(toks: list[Token]) -> tuple[str, str] | None:
+    """aws.west, read as the tokens aws . west, gives ("aws", "west"). aws gives ("aws", "")."""
+    if len(toks) == 1 and toks[0][0] == "ident":
+        return toks[0][1], ""
+    if len(toks) == 3 and toks[0][0] == "ident" and toks[1] == ("other", ".") and toks[2][0] == "ident":
+        return toks[0][1], toks[2][1]
+    return None
+
+
+def _module_aliases(blocks: list[tuple[str, str, Block]]) -> dict[str, str]:
+    """The folder of each module handed providers = { aws = aws.west }, and the alias it gets."""
+    out = {}
+    for path, _, b in blocks:
+        toks, source = b.attrs.get("providers", []), literal(b.attrs.get("source"))
+        if b.type != "module" or source is None:
+            continue
+        for i in range(len(toks) - 2):
+            if toks[i] == ("ident", "aws") and toks[i + 1] == ("punct", "="):
+                ref = _provider_ref(toks[i + 2:i + 5]) if toks[i + 3:i + 4] == [("other", ".")] else \
+                    _provider_ref(toks[i + 2:i + 3])
+                if ref:
+                    out[posixpath.normpath(posixpath.join(posixpath.dirname(path) or ".", source))] = ref[1]
+    return out
 
 
 def _provider_problems(where: str, p: Block, services: set[str]) -> list[str]:
@@ -408,9 +432,18 @@ def config_problems(files: list[CourseFile], checks: list[CourseFile], which: st
                    b.type in TYPED and b.label().startswith("aws_") for _, _, b in nested)
     root = [b for path, _, b in blocks if "/" not in path]
     services: dict[str, set[str]] = {}  # by the provider alias the resources use
-    for _, _, b in nested:
-        if b.type in TYPED and (svc := service_of(b.label())):
-            services.setdefault(_alias_used(b), set()).add(svc)
+    handed = _module_aliases(blocks)
+    for path, where, b in nested:
+        if b.type not in TYPED or not b.label().startswith("aws_"):
+            continue
+        ref = _provider_ref(b.attrs.get("provider", []))
+        if "provider" in b.attrs and (ref is None or ref[0] != "aws"):
+            out.append(f"{where}: {b.label()} uses a provider other than aws or aws.<alias>, which these "
+                       "checks don't follow. Use the aws provider block")
+        folder = posixpath.dirname(path) or "."
+        inherited = next((a for f, a in handed.items() if folder == f or folder.startswith(f + "/")), "")
+        if svc := service_of(b.label()):
+            services.setdefault(ref[1] if ref else inherited, set()).add(svc)
     if uses_aws and not any(b.type == "provider" and b.label() == "aws" and "alias" not in b.attrs for b in root):
         out.append(f"the {which}'s configuration uses AWS with no provider \"aws\" block in the exercise's top "
                    "folder, so Terraform would make a default one that finds the learner's own credentials. "
@@ -429,6 +462,11 @@ def config_problems(files: list[CourseFile], checks: list[CourseFile], which: st
                 if "aws" in required.attrs and (source or "").casefold() not in HASHICORP_AWS:
                     out.append(f"{where} maps the aws provider to {source or 'a source worked out at run time'}, "
                                "which isn't hashicorp/aws, so its code isn't what these checks know. Use hashicorp/aws")
+                for name, expr in required.attrs.items():
+                    named_source = any(t == ("ident", "source") for t in expr)
+                    if name != "aws" and named_source and (_source_of(expr) or "").casefold() in HASHICORP_AWS:
+                        out.append(f"{where} names hashicorp/aws {name!r}. Call it aws, so the checks for its "
+                                   "provider block apply")
             for backend in b.children("backend"):
                 if backend.label() != "local":
                     out.append(f'{where} keeps state in a backend "{backend.label()}", which talks to a real '
@@ -443,7 +481,7 @@ def config_problems(files: list[CourseFile], checks: list[CourseFile], which: st
         if b.type == "data" and b.label() == "terraform_remote_state" and literal(b.attrs.get("backend")) != "local":
             out.append(f"{where} reads remote state from another backend. Only backend = \"local\" stays on "
                        "the machine")
-        if b.type == "data" and b.label() in ("http", "external"):
+        if b.type == "data" and b.label() in ("http", "external", "aws_ip_ranges"):
             out.append(f'{where} has a data "{b.label()}" source, which reaches the network or runs a '
                        "program. Remove it")
         if b.type == "provisioner":
@@ -471,36 +509,40 @@ def config_problems(files: list[CourseFile], checks: list[CourseFile], which: st
 
 _FENCE = re.compile(r"```[^\n]*\n(.*?)```", re.S)
 _SPAN = re.compile(r"`([^`\n]+)`")
-# commands are separated by ; & && || and |. Inside one, $( ( ) and backticks can start another
-_BETWEEN = re.compile(r";|&&?|\|\|?")
-_INSIDE = re.compile(r"\$\(|[()`]")
+# a command starts a line, or follows ; & && || | ( ) $( or a backtick
+_SEPARATOR = re.compile(r";|&&?|\|\|?|\$\(|[()`]")
 # the AWS CLI, however it's named: aws, aws2, /usr/local/bin/aws, python -m awscli
 _COMMAND = re.compile(r"\s*(?:[$%>]\s+)?(?:sudo\s+)?((?:[A-Za-z_][A-Za-z0-9_]*=\S+\s+)*)"
                       r"(?:[\w.~/-]*/)?(?:aws[0-9]*|python[0-9.]*\s+-m\s+awscli)\s+(?!=)(?=\S)(.*)$")
-_NO_CALL = {"help", "--help", "--version"}  # anywhere in a command, and `aws configure`: no API call
+# the endpoint comes first, right after the CLI's name or just before it, so nothing later in
+# the line (a comment, another call) can stand in for it
 _ENDPOINT = re.compile(r"--endpoint-url(?:=|\s+)[\"']?([^\s\"']+)")
 _ENV_ENDPOINT = re.compile(r"AWS_ENDPOINT_URL=[\"']?([^\s\"']+)")
 SDK_CODE = (".py", ".js", ".mjs", ".cjs", ".ts", ".mts", ".cts")
 _SDK = re.compile(r"^\s*(?:import|from)\s+(?:boto3|botocore|aiobotocore)\b|@aws-sdk/|[\"']aws-sdk[\"']", re.M)
 
 
+def _no_call(args: list[str]) -> bool:
+    """aws --version, aws configure (but not configure sso), and help at the end: no API call."""
+    if args == ["--version"] or args[:1] == ["configure"] and not (args[1:2] and args[1].startswith("sso")):
+        return True
+    return args[-1:] == ["help"] and not any(a.startswith("-") for a in args)
+
+
 def _commands(code: str) -> list[tuple[str, bool]]:
-    """The aws commands in a piece of code, each with whether it goes to a local endpoint."""
+    """The aws commands in a piece of code, each with whether it starts by naming a local endpoint."""
     joined = re.sub(r"\\\n", " ", code)
     found = []
     for line in joined.splitlines():
-        for command in _BETWEEN.split(line):
-            calls = []
-            for segment in _INSIDE.split(command):
-                m = _COMMAND.match(segment)
-                if m and not (m.group(2).startswith("configure") or _NO_CALL & set(m.group(2).split())):
-                    calls.append(m.group(1) + "aws " + m.group(2))
-            if calls:
-                # an endpoint can sit after a $(...) in the same command. Each call needs one,
-                # and every endpoint in the command has to be local
-                urls = _ENDPOINT.findall(command) + _ENV_ENDPOINT.findall(command)
-                safe = len(urls) >= len(calls) and all(local_url(u) for u in urls)
-                found += [(c, safe) for c in calls]
+        for segment in _SEPARATOR.split(line):
+            m = _COMMAND.match(segment)
+            if not m or _no_call(m.group(2).split()):
+                continue
+            prefix = m.group(1).split()
+            env = _ENV_ENDPOINT.fullmatch(prefix[-1]) if prefix else None
+            own = _ENDPOINT.match(m.group(2))
+            local = bool(env and local_url(env.group(1)) or own and local_url(own.group(1)))
+            found.append((m.group(1) + "aws " + m.group(2), local))
     return found
 
 
@@ -515,8 +557,8 @@ def command_problems(commands: list[tuple[str, bool]], where: str) -> list[str]:
     for c, safe in commands:
         if not safe:
             short = " ".join(c.split())[:80]
-            out.append(f"{where} has `{short}`, which uses the learner's own AWS account. Add "
-                       "--endpoint-url http://localhost:4566 so it goes to the emulator")
+            out.append(f"{where} has `{short}`, which uses the learner's own AWS account. Start it "
+                       "`aws --endpoint-url http://localhost:4566` so it goes to the emulator")
     return out
 
 
