@@ -97,10 +97,78 @@ def test_the_block_the_prompt_gives_is_safe():
      {"versions.tf": 'terraform {\n  required_providers {\n    thing = { source = "example-corp/thing" }\n  }\n}\n'},
      "fetches the example-corp/thing provider"),
     (PROVIDER + VPC + 'provider "kubernetes" {}\n', {}, 'configures a provider "kubernetes"'),
+    # and after the proof builds on 7fddf12: a type the table didn't know was skipped
+    (PROVIDER + 'resource "aws_elastic_beanstalk_application" "a" {\n  name = "demo"\n}\n', {},
+     "no endpoint for elasticbeanstalk"),
+    (PROVIDER + 'resource "aws_newservice_widget" "w" {}\n', {}, "can't tell which endpoint aws_newservice_widget calls"),
+    (PROVIDER + 'check "c" {\n  data "aws_madeup_thing" "t" {}\n}\n', {}, "can't tell which endpoint aws_madeup_thing calls"),
+    # and by the falsifier on that fix
+    (PROVIDER + 'resource "aws_s3_account_public_access_block" "a" {}\n', {}, "no endpoint for s3control"),
+    (PROVIDER + 'resource "aws_s3_access_point" "a" {}\n', {}, "no endpoint for s3control"),
+    (PROVIDER + 'resource "aws_chime_voice_connector" "v" {}\n', {}, "no endpoint for chimesdkvoice"),
+    (PROVIDER + 'import {\n  to = aws_iam_role.app\n  id = "app-role"\n}\n', {}, "no endpoint for iam"),
+    (PROVIDER + 'removed {\n  from = aws_sqs_queue.q\n}\n', {}, "no endpoint for sqs"),
+    ('import {\n  to = aws_iam_role.app\n  id = "app-role"\n}\n', {}, "no provider \"aws\" block in the exercise's top folder"),
+    (PROVIDER + 'import {\n  to = awscc_s3_bucket.b\n  id = "b"\n}\n', {}, "awscc"),
+    (PROVIDER + VPC, {"roles.tfquery.hcl": 'list "aws_iam_role" "all" {\n  provider = aws\n}\n'}, "query file"),
+    # and on the second fix
+    (PROVIDER + 'import {\n  to = resource.aws_iam_role.app\n  id = "app-role"\n}\n', {}, "no endpoint for iam"),
+    ('import {\n  to = resource.aws_iam_role.app\n  id = "app-role"\n}\n', {}, "no provider \"aws\" block in the exercise's top folder"),
+    (PROVIDER + 'import {\n  to = resource.awscc_s3_bucket.b\n  id = "b"\n}\n', {}, "awscc"),
+    (PROVIDER.replace('    s3  = "http://localhost:4566"\n', '    s3  = "http://localhost:4566"\n    sqs = "http://localhost:4566"\n')
+     + WEST + 'removed {\n  from = module.acct.aws_sqs_queue.q\n}\n', {}, "alias 'west' has no endpoint for sqs"),
+    (PROVIDER + VPC + 'resource "google_storage_bucket" "b" {}\n', {}, "comes from the google provider"),
+    (PROVIDER + VPC + 'import {\n  to = google_storage_bucket.b\n  id = "b"\n}\n', {}, "comes from the google provider"),
 ])
 def test_each_way_into_a_real_account_is_found(main, extra, found):
     problems = safety.problems(lesson(main, extra))
     assert any(found in p for p in problems), problems
+
+
+WEST_IAM = WEST.replace('    ec2 = "http://localhost:4566"\n', '    ec2 = "http://localhost:4566"\n    iam = "http://localhost:4566"\n')
+
+
+@pytest.mark.parametrize("main, extra", [
+    # an import goes through the provider of the resource block it fills in
+    (PROVIDER + WEST_IAM + 'resource "aws_iam_role" "app" {\n  provider = aws.west\n}\n'
+     'import {\n  to = aws_iam_role.app\n  id = "app-role"\n}\n', {}),
+    (PROVIDER + WEST_IAM + 'module "acct" {\n  source = "./modules/acct"\n  providers = {\n    aws = aws.west\n  }\n}\n'
+     'import {\n  to = module.acct.aws_iam_role.app\n  id = "app-role"\n}\n',
+     {"modules/acct/main.tf": 'resource "aws_iam_role" "app" {}\n'}),
+    # a removed block that only forgets calls nothing
+    (PROVIDER + VPC + 'removed {\n  from = aws_sqs_queue.q\n  lifecycle {\n    destroy = false\n  }\n}\n', {}),
+    (PROVIDER + VPC + 'resource "terraform_data" "t" {}\nresource "random_pet" "p" {}\n', {}),
+])
+def test_what_terraform_sends_through_the_right_provider_is_cleared(main, extra):
+    assert safety.problems(lesson(main, extra)) == []
+
+
+NET = PROVIDER + 'module "net" {\n  source = "./modules/net"\n}\n'
+CD_NET = "Run it there:\n\n```bash\ncd modules/net\nterraform apply\n```\n"
+
+
+@pytest.mark.parametrize("built, found", [
+    # Terraform skips a file whose name starts with a dot, so the provider block in it doesn't count
+    (lesson(VPC, {".provider.tf": PROVIDER}), "Terraform skips .provider.tf"),
+    # two paths that are one file on disk: the second overwrites the provider block
+    (lesson(PROVIDER + VPC, {"./main.tf": VPC}), "isn't a plain path"),
+    (lesson(PROVIDER + VPC, {"Main.tf": VPC}), "are the same file on disk"),
+    (lesson(PROVIDER + VPC, {"../../outside.tf": VPC}), "isn't a plain path"),
+    (lesson(PROVIDER + VPC, {"/tmp/outside.tf": VPC}), "isn't a plain path"),
+    # Terraform run in a module folder has no provider block there
+    (lesson(NET, {"modules/net/main.tf": VPC}, worked_example=CD_NET), "moves into modules/net"),
+    (lesson(NET, {"modules/net/main.tf": VPC}, hints=["`terraform -chdir=modules/net plan`"]), "moves into modules/net"),
+    (lesson(NET, {"modules/net/main.tf": VPC, "run.sh": "cd ./modules/net && terraform plan\n"}), "moves into modules/net"),
+])
+def test_files_and_folders_terraform_would_see_differently_are_found(built, found):
+    problems = safety.problems(built)
+    assert any(found in p for p in problems), problems
+
+
+def test_moving_into_the_exercise_folder_or_a_folder_without_aws_is_fine():
+    text = "```bash\ncd exercise\nterraform apply\ncd modules/names\n```\n"
+    assert safety.problems(lesson(NET, {"modules/net/main.tf": VPC, "modules/names/main.tf": 'resource "random_pet" "p" {}\n'},
+                                  worked_example=text)) == []
 
 
 def test_each_provider_needs_only_the_endpoints_its_own_resources_use():
@@ -121,8 +189,16 @@ def test_a_module_given_an_alias_is_held_to_that_providers_endpoints():
     ("aws_kinesis_stream", "kinesis"), ("aws_cloudwatch_query_definition", "logs"),
     ("aws_route53_resolver_endpoint", "route53resolver"), ("aws_route53_record", "route53"),
     ("aws_launch_configuration", "autoscaling"), ("aws_cognito_user_pool", "cognitoidp"),
-    ("aws_regions", "ec2"), ("aws_elb_service_account", None), ("aws_lb_hosted_zone_id", None),
-    ("aws_cloudfront_log_delivery_canonical_user_id", None), ("aws_canonical_user_id", "s3"),
+    ("aws_regions", "ec2"), ("aws_canonical_user_id", "s3"),
+    ("aws_elastic_beanstalk_application", "elasticbeanstalk"), ("aws_dx_connection", "directconnect"),
+    ("aws_directory_service_directory", "ds"), ("aws_mskconnect_connector", "kafkaconnect"),
+    ("aws_service_discovery_service", "servicediscovery"), ("aws_media_packagev2_channel_group", "mediapackagev2"),
+    ("aws_verifiedaccess_instance", "ec2"), ("aws_internet_gateway_attachment", "ec2"), ("aws_lbs", "elbv2"),
+    ("aws_cognito_managed_user_pool_client", "cognitoidp"),
+    ("aws_cognito_identity_openid_token_for_developer_identity", "cognitoidentity"),
+    ("aws_pricingplanmanager_subscription", "pricingplanmanager"), ("aws_newservice_widget", None),
+    ("aws_s3_access_point", "s3control"), ("aws_s3_account_public_access_block", "s3control"), ("aws_s3_bucket", "s3"),
+    ("aws_chime_voice_connector_logging", "chimesdkvoice"),
 ])
 def test_each_resource_type_is_held_to_the_endpoint_it_calls(resource_type, service):
     assert safety.service_of(resource_type) == service
@@ -138,6 +214,10 @@ def test_an_aws_lesson_may_use_the_providers_that_stay_on_the_machine():
 def test_what_calls_no_api_needs_no_endpoint():
     main = (PROVIDER.replace('    ec2 = "http://localhost:4566"\n', "") + 'data "aws_iam_policy_document" "p" {}\n'
             'data "aws_region" "here" {}\nresource "aws_s3_bucket" "b" {}\n'
+            'data "aws_elb_service_account" "e" {}\ndata "aws_lb_hosted_zone_id" "z" {}\n'
+            'data "aws_cloudfront_log_delivery_canonical_user_id" "c" {}\ndata "aws_service_principal" "p" {\n'
+            '  service_name = "s3"\n}\ndata "aws_elastic_beanstalk_hosted_zone" "h" {}\n'
+            'data "aws_eks_cluster_auth" "k" {\n  name = "x"\n}\n'
             'module "net" {\n  source = "./modules/net"\n}\n')
     required = 'terraform {\n  required_providers {\n    aws = { source = "hashicorp/aws", version = "~> 6.0" }\n  }\n}\n'
     assert safety.problems(lesson(main, {"versions.tf": required,

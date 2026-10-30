@@ -16,10 +16,26 @@ before any of them runs, here or on the learner's machine. Each rule closes one 
 - the tests use `mock_provider "aws"` and configure no provider of their own
 - an `aws` command in the lesson goes to a local endpoint, and exercise code doesn't use an
   AWS SDK, for now
-- no `.tf.json` or override files, which could undo any of the above
+- no `.tf.json` or override files, which could undo any of the above, and no query files
+- `import` and `removed` blocks count as uses of the type they name
+- each exercise file has a plain path inside the exercise, no two land on the same file, and
+  no .tf file has a name Terraform skips (a leading dot)
+- the lesson's text doesn't move the learner into a folder with AWS resources and no provider
+  block, where Terraform would make a default one
 
 The files are read with a small HCL reader, not run. A file it can't follow counts as a
-problem, so nothing it doesn't understand gets through.
+problem, and so does an AWS type whose endpoint it can't name.
+
+The keys are what keep the account safe. The endpoints keep a lesson's calls on this
+machine, with these gaps, where a call goes to AWS carrying the fake keys and AWS refuses it:
+- some types also call a second service, like an EC2 lookup from an Elastic Beanstalk
+  environment or a KMS read from an encrypted DynamoDB table. The table holds each type's
+  own service
+- a resource left in state by an earlier apply, and no longer in the files, is read through
+  the provider the state names, and the files can't say which services that provider needs
+
+And s3control calls put the account ID in front of the endpoint's host
+(123456789012.localhost), which doesn't resolve on a Mac, so they fail before going anywhere.
 """
 
 from __future__ import annotations
@@ -45,7 +61,7 @@ TYPED = ("resource", "data", "ephemeral", "action", "list")
 HASHICORP_AWS = ("hashicorp/aws", "registry.terraform.io/hashicorp/aws")
 # what a configuration that uses AWS may fetch: the aws provider and the ones that stay on the machine
 OFFLINE_PROVIDERS = ("aws", "random", "null", "local", "tls", "time", "archive")
-# every key the endpoints block takes, from `terraform providers schema` on hashicorp/aws 6.68.0
+# every key the endpoints block takes, from `terraform providers schema` on hashicorp/aws 6.70.0
 ENDPOINT_KEYS = frozenset("""
     accessanalyzer account accountaccess acm acmpca agentregistry amg amp amplify apigateway
     apigatewayv2 appautoscaling appconfig appfabric appflow appintegrations
@@ -79,7 +95,7 @@ ENDPOINT_KEYS = frozenset("""
     networkmonitor networksecuritymanager notifications notificationscontacts oam
     observabilityadmin odb opensearch opensearchingestion opensearchserverless opensearchservice
     organizations osis outposts paymentcryptography pcaconnectorad pcs pinpoint
-    pinpointsmsvoicev2 pipes polly pricing prometheus prometheusservice qbusiness qldb
+    pinpointsmsvoicev2 pipes polly pricing pricingplanmanager prometheus prometheusservice qbusiness qldb
     quicksight ram rbin rds rdsdata rdsdataservice recyclebin redshift redshiftdata
     redshiftdataapiservice redshiftserverless rekognition resiliencehub resiliencehubv2
     resourceexplorer2 resourcegroups resourcegroupstagging resourcegroupstaggingapi
@@ -93,31 +109,39 @@ ENDPOINT_KEYS = frozenset("""
     transcribeservice transfer uxc verifiedpermissions vpclattice waf wafregional wafv2
     wellarchitected workmail workspaces workspacesweb xray
 """.split())
+# the types that call no endpoint the provider block sets: they're worked out on the machine,
+# or fetch a public file (aws_ip_ranges, refused on its own in config_problems)
+NO_ENDPOINT = re.compile(r"aws_(?:(?:elb|lb)_hosted_zone_id|(?:elb|cloudtrail|redshift|billing)_service_account|"
+                         r"cloudfront_log_delivery_canonical_user_id|elastic_beanstalk_hosted_zone|iam_policy_document|"
+                         r"region|partition|arn|default_tags|service|service_principal|ip_ranges|"
+                         r"eks_cluster_auth)")
 # the endpoints key each kind of AWS resource calls, where its name doesn't say. Otherwise
-# aws_<key>_... calls <key>. A type that calls no API (aws_iam_policy_document, aws_region)
-# isn't held to an endpoint
+# aws_<key>_... calls <key>, and a type that matches neither isn't cleared
 SERVICE_OF = [(re.compile(f"aws_(?:{types})"), service) for types, service in [
-    (r"(?:elb|lb)_hosted_zone_id|(?:elb|cloudtrail|redshift|billing)_service_account|"
-     r"cloudfront_log_delivery_canonical_user_id|iam_policy_document|region|partition|arn|default_tags", None),  # these call no API
-    (r"instances?|vpcs?|vpc_.*|subnets?|security_groups?|security_group_.*|internet_gateway|"
-     r"egress_only_internet_gateway|nat_gateways?|route|route_tables?|route_table_association|"
-     r"main_route_table_association|eips?|eip_association|key_pair|amis?|ami_.*|ebs_.*|network_.*|"
-     r"launch_template|placement_group|default_(?:vpc|subnet|security_group|route_table|network_acl)|"
-     r"flow_log|spot_.*|ec2_.*|volume_attachment|customer_gateway|vpn_.*|availability_zones?", "ec2"),
+    (r"instances?|vpcs?|vpc_.*|subnets?|security_groups?|security_group_.*|internet_gateway.*|"
+     r"egress_only_internet_gateway|nat_gateways?|nat_gateway_.*|route|route_tables?|route_table_association|"
+     r"main_route_table_association|eips?|eip_.*|key_pair|amis?|ami_.*|ebs_.*|network_.*|"
+     r"launch_template|placement_group|default_(?:vpc|vpc_dhcp_options|subnet|security_group|route_table|network_acl)|"
+     r"flow_log|spot_.*|ec2_.*|volume_attachment|customer_gateway|vpn_.*|availability_zones?|prefix_list|"
+     r"snapshot_create_volume_permission|verifiedaccess_.*", "ec2"),
+    (r"s3_account_.*|s3_access_.*", "s3control"),  # the provider's own names table puts these under s3control
     (r"s3_.*", "s3"), (r"iam_(?!policy_document$).*", "iam"), (r"caller_identity", "sts"),
     (r"lambda_.*", "lambda"), (r"dynamodb_.*", "dynamodb"), (r"sqs_.*", "sqs"), (r"sns_.*", "sns"),
     (r"kms_.*", "kms"), (r"cloudwatch_log_.*", "logs"), (r"cloudwatch_(?:metric_alarm|composite_alarm|dashboard)", "cloudwatch"),
     (r"elb|elb_.*|lb_cookie_stickiness_policy|lb_ssl_negotiation_policy|app_cookie_stickiness_policy|"
      r"load_balancer_.*|proxy_protocol_policy", "elb"),
-    (r"lb|alb|lb_.*|alb_.*", "elbv2"), (r"cloudwatch_event_.*", "events"), (r"api_gateway_.*", "apigateway"),
+    (r"lb|lbs|alb|lb_.*|alb_.*", "elbv2"), (r"cloudwatch_event_.*", "events"), (r"api_gateway_.*", "apigateway"),
     (r"kinesis_firehose_.*", "firehose"), (r"kinesis_video_.*", "kinesisvideo"),
     (r"kinesis_analytics_.*", "kinesisanalytics"), (r"cloudwatch_query_definition", "logs"),
     (r"route53_resolver_.*", "route53resolver"), (r"launch_configuration", "autoscaling"),
-    (r"cognito_user_pools?|cognito_user_pool_.*|cognito_user|cognito_user_group|cognito_user_in_group|"
-     r"cognito_identity_provider|cognito_resource_server|cognito_risk_configuration", "cognitoidp"),
-    (r"cognito_identity_pool.*", "cognitoidentity"), (r"regions", "ec2"), (r"canonical_user_id", "s3"), (r"db_.*|rds_.*", "rds"), (r"autoscaling_.*", "autoscaling"),
+    (r"cognito_identity_pool.*|cognito_identity_openid_token_for_developer_identity", "cognitoidentity"),
+    (r"cognito_.*", "cognitoidp"), (r"regions", "ec2"), (r"canonical_user_id", "s3"), (r"db_.*|rds_.*", "rds"), (r"autoscaling_.*", "autoscaling"),
     (r"ecr_.*", "ecr"), (r"ecs_.*", "ecs"), (r"route53_.*", "route53"), (r"secretsmanager_.*", "secretsmanager"),
-    (r"ssm_.*", "ssm"),
+    (r"ssm_.*", "ssm"), (r"directory_service_.*", "ds"), (r"dx_.*", "directconnect"),
+    (r"elastic_beanstalk_.*", "elasticbeanstalk"), (r"media_convert_.*", "mediaconvert"),
+    (r"media_package_.*", "mediapackage"), (r"media_packagev2_.*", "mediapackagev2"),
+    (r"media_store_.*", "mediastore"), (r"mskconnect_.*", "kafkaconnect"),
+    (r"service_discovery_.*", "servicediscovery"), (r"chime_voice_connector.*", "chimesdkvoice"),
 ]]
 
 
@@ -335,6 +359,8 @@ def local_url(url: str) -> bool:
 # -- Terraform ----------------------------------------------------------------------------
 
 FORBIDDEN_FILE = re.compile(r"(^|/)([^/]*\.tf\.json|[^/]*\.tftest\.json|override\.tf|[^/]*_override\.tf)$")
+# `terraform query` runs these files' list blocks against the real provider, and they aren't read here
+QUERY_FILE = re.compile(r"\.tfquery\.(hcl|json)$")
 
 
 def _is_tf(path: str) -> bool:
@@ -355,11 +381,31 @@ def _local_source(expr: list[Token] | None, folder: str = "") -> bool:
 
 
 def service_of(resource_type: str) -> str | None:
+    """The endpoints key a type calls, or None when these checks can't name it."""
     for pattern, svc in SERVICE_OF:
         if pattern.fullmatch(resource_type):
             return svc
     first = resource_type.removeprefix("aws_").split("_")[0]
     return first if first in ENDPOINT_KEYS else None
+
+
+def _address(b: Block) -> tuple[list[str], str | None, str | None]:
+    """The modules, type and name in the address an import or removed block names:
+    `to = module.net.resource.aws_vpc.main["a"]` gives (["net"], "aws_vpc", "main")."""
+    names = [v for k, v in b.attrs.get("to" if b.type == "import" else "from", []) if k == "ident"]
+    modules = []
+    while names[:1] == ["module"] and len(names) > 1:
+        modules, names = modules + [names[1]], names[2:]
+    if names[:1] == ["resource"]:  # Terraform accepts resource.aws_vpc.main for aws_vpc.main
+        names = names[1:]
+    return modules, (names[0] if names else None), (names[1] if len(names) > 1 else None)
+
+
+def _typed(b: Block) -> str | None:
+    """The resource type a block works on: its label, or the type an import or removed block names."""
+    if b.type in TYPED:
+        return b.label()
+    return _address(b)[1] if b.type in ("import", "removed") else None
 
 
 def _provider_ref(toks: list[Token]) -> tuple[str, str] | None:
@@ -443,6 +489,10 @@ def config_problems(files: list[CourseFile], checks: list[CourseFile], which: st
             out.append(f"{named[id(f)]}: .tf.json and override files can change the provider without it "
                        "showing in the .tf files. Write plain .tf files")
             continue
+        if QUERY_FILE.search(f.path):
+            out.append(f"{named[id(f)]}: `terraform query` runs a query file's list blocks, and these checks "
+                       "don't read query files. Leave it out")
+            continue
         if not (_is_tf(f.path) or _is_test(f.path)):
             continue
         try:
@@ -453,21 +503,53 @@ def config_problems(files: list[CourseFile], checks: list[CourseFile], which: st
     blocks = [(path, where, b) for path, (where, bs) in tf.items() for b in bs]
     nested = [(path, where, x) for path, where, b in blocks for x in b.walk()]  # a check block can hold data
     uses_aws = any(b.type == "provider" and b.label() == "aws" or
-                   b.type in TYPED and b.label().startswith("aws_") for _, _, b in nested)
+                   (_typed(b) or "").startswith("aws_") for _, _, b in nested)
     root = [b for path, _, b in blocks if "/" not in path]
     services: dict[str, set[str]] = {}  # by the provider alias the resources use
+    destroyed: set[str] = set()         # by removed blocks, through whichever provider the state names
     handed = _module_aliases(blocks)
+    root_resources = {(b.label(0), b.label(1)) for b in root if b.type == "resource"}
     for path, where, b in nested:
-        if b.type not in TYPED or not b.label().startswith("aws_"):
+        kind = _typed(b)
+        if not kind:
             continue
+        maker = kind.split("_")[0]
+        # terraform_data is built in. awscc, http and external have their own problems below
+        if uses_aws and maker not in OFFLINE_PROVIDERS + ("terraform", "awscc", "http", "external"):
+            out.append(f"{where}: {kind} comes from the {maker} provider, which these checks don't know. An AWS "
+                       f"lesson uses only {', '.join(OFFLINE_PROVIDERS)}")
+        if maker != "aws":
+            continue
+        if b.type == "import":
+            modules, _, name = _address(b)
+            # Terraform imports into a resource block, which is checked as its own. Only a root import
+            # with no block behind it makes one, with `terraform plan -generate-config-out`
+            if modules or (kind, name) in root_resources:
+                continue
+        if b.type == "removed":
+            lifecycle = b.children("lifecycle")
+            if lifecycle and lifecycle[0].attrs.get("destroy") == [("ident", "false")]:
+                continue  # Terraform forgets it and calls nothing
+            if svc := None if NO_ENDPOINT.fullmatch(kind) else service_of(kind):
+                destroyed.add(svc)
+                continue
         ref = _provider_ref(b.attrs.get("provider", []))
         if "provider" in b.attrs and (ref is None or ref[0] != "aws"):
-            out.append(f"{where}: {b.label()} uses a provider other than aws or aws.<alias>, which these "
+            out.append(f"{where}: {kind} uses a provider other than aws or aws.<alias>, which these "
                        "checks don't follow. Use the aws provider block")
         folder = posixpath.dirname(path) or "."
         inherited = next((a for f, a in handed.items() if folder == f or folder.startswith(f + "/")), "")
-        if svc := service_of(b.label()):
+        if NO_ENDPOINT.fullmatch(kind):
+            continue
+        if svc := service_of(kind):
             services.setdefault(ref[1] if ref else inherited, set()).add(svc)
+        else:
+            out.append(f"{where}: these checks can't tell which endpoint {kind} calls, so they can't make sure "
+                       "it goes to this machine. Use resources from services they know, like ec2, s3, iam, sqs "
+                       "or sns")
+    # the files don't say which provider a removed resource was made with, so every aws block needs it
+    for b in (b for _, _, b in blocks if b.type == "provider" and b.label() == "aws"):
+        services.setdefault(literal(b.attrs.get("alias")) or "", set()).update(destroyed)
     if uses_aws and not any(b.type == "provider" and b.label() == "aws" and "alias" not in b.attrs for b in root):
         out.append(f"the {which}'s configuration uses AWS with no provider \"aws\" block in the exercise's top "
                    "folder, so Terraform would make a default one that finds the learner's own credentials. "
@@ -513,7 +595,7 @@ def config_problems(files: list[CourseFile], checks: list[CourseFile], which: st
                 out.append(f"{where} has a cloud block, which sends state to HCP Terraform. Leave state local")
 
     for _, where, b in nested:
-        if b.type == "provider" and b.label() == "awscc" or b.type in TYPED and b.label().startswith("awscc_"):
+        if b.type == "provider" and b.label() == "awscc" or (_typed(b) or "").startswith("awscc_"):
             out.append(f"{where} uses the awscc provider, which these checks don't cover yet. Use hashicorp/aws")
         if b.type == "data" and b.label() == "terraform_remote_state" and literal(b.attrs.get("backend")) != "local":
             out.append(f"{where} reads remote state from another backend. Only backend = \"local\" stays on "
@@ -603,11 +685,66 @@ def command_problems(commands: list[tuple[str, bool]], where: str) -> list[str]:
     return out
 
 
+# where lesson text moves somewhere else to run things: cd, pushd, terraform -chdir
+_ELSEWHERE = re.compile(r"(?:(?:^|(?<=[\s;&|(]))(?:cd|pushd)\s+|-chdir[= ])([\"']?)([^\s\"';&|)]+)\1")
+
+
+def _folders(text: str, code: bool = False) -> set[str]:
+    """Every folder a piece of lesson text, or a script when code is true, moves into."""
+    pieces = [text] if code else \
+        [c for tag, c in _FENCE.findall(text) if tag.strip().lower() in SHELL_FENCES] + _SPAN.findall(_FENCE.sub("", text))
+    return {posixpath.normpath(m.group(2)) for piece in pieces for m in _ELSEWHERE.finditer(piece)}
+
+
+def _path_problems(ex) -> list[str]:
+    """Exercise files that wouldn't be where these checks read them: outside the exercise
+    folder, written over each other, or a .tf file Terraform skips."""
+    out = []
+    for f in ex.starter + ex.solution + ex.checks:
+        parts = f.path.split("/")
+        if f.path.startswith("/") or "\\" in f.path or any(p in ("", ".", "..") for p in parts):
+            out.append(f"{f.path!r} isn't a plain path inside the exercise folder, like modules/net/main.tf. "
+                       "Write it that way")
+        elif parts[-1].startswith(".") and (_is_tf(f.path) or _is_test(f.path)):
+            out.append(f"Terraform skips {f.path} because its name starts with a dot, but these checks read it. "
+                       "Rename it")
+    # the same path twice is fine: the course and these checks both keep the last one
+    for which, files in (("starter", ex.starter + ex.checks), ("solution", ex.solution + ex.checks)):
+        seen: dict[str, str] = {}
+        for f in files:
+            if (key := f.path.casefold()) in seen and seen[key] != f.path:
+                out.append(f"the {which}'s {seen[key]} and {f.path} are the same file on disk (a Mac ignores case), "
+                           "so one would overwrite the other. Give them different names")
+            seen[key] = f.path
+    return out
+
+
+def _elsewhere_problems(ex, texts: list[tuple[str, str, bool]]) -> list[str]:
+    """Lesson text that runs things in a folder with AWS resources and no provider block of its
+    own. Terraform there makes a default provider, which finds the learner's own credentials."""
+    by_folder: dict[str, str] = {}
+    for f in ex.starter + ex.solution:
+        if _is_tf(f.path):
+            folder = posixpath.dirname(f.path)
+            by_folder[folder] = by_folder.get(folder, "") + f.content
+    bare = {d for d, content in by_folder.items()
+            if d and re.search(r"\baws_", content) and not re.search(r'provider\s+"aws"', content)}
+    out = []
+    for where, text, code in texts:
+        for moved in sorted(_folders(text, code)):
+            if any(moved == d or moved.endswith("/" + d) for d in bare):
+                out.append(f"{where} moves into {moved}, which has AWS resources and no provider block of its "
+                           "own, so Terraform run there would use the learner's own credentials. Run Terraform "
+                           "from the exercise folder")
+    return out
+
+
 def uses_aws(lesson: Lesson) -> bool:
     """Does this lesson touch AWS at all: a provider, a resource, or an aws command."""
     if lesson.exercise:
         for f in lesson.exercise.starter + lesson.exercise.solution:
-            if _is_tf(f.path) and re.search(r'provider\s+"aws"|^\s*(?:resource|data)\s+"aws_', f.content, re.M):
+            if _is_tf(f.path) and re.search(r'provider\s+"aws"|^\s*(?:resource|data|ephemeral|action|list)\s+"aws_|'
+                                            r'^\s*(?:to|from)\s*=.*\baws_', f.content, re.M):
                 return True
     texts = [lesson.explanation, lesson.worked_example]
     if lesson.exercise:
@@ -624,8 +761,11 @@ def problems(lesson: Lesson) -> list[str]:
         out += command_problems(aws_commands(ex.task), "the task")
         for i, h in enumerate(ex.hints, 1):
             out += command_problems(aws_commands(h), f"hint {i}")
+        out += _path_problems(ex)
         out += config_problems(ex.starter, ex.checks, "starter")
         out += config_problems(ex.solution, ex.checks, "solution")
+        texts = [("the explanation", lesson.explanation, False), ("the worked example", lesson.worked_example, False),
+                 ("the task", ex.task, False)] + [(f"hint {i}", h, False) for i, h in enumerate(ex.hints, 1)]
         for f in ex.starter + ex.solution + ex.checks:
             name = PurePosixPath(f.path).name
             if (name.endswith(SDK_CODE) or name in ("package.json", "requirements.txt")) and _SDK.search(f.content):
@@ -633,6 +773,9 @@ def problems(lesson: Lesson) -> list[str]:
                            "don't use one yet")
             elif name.endswith(".md"):
                 out += command_problems(aws_commands(f.content), f.path)
+                texts.append((f.path, f.content, False))
             elif not (_is_tf(f.path) or _is_test(f.path)):
                 out += command_problems(_commands(f.content), f.path)  # a script is all code
+                texts.append((f.path, f.content, True))
+        out += _elsewhere_problems(ex, texts)
     return list(dict.fromkeys(out))
