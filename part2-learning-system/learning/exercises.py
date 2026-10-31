@@ -28,6 +28,7 @@ from pathlib import Path
 
 from .learn_cli import CODE, run_exercise, runner_for
 from .model import CourseFile, Exercise
+from .safety import disk_key
 
 TIMEOUT_S = 600
 PLUGIN_CACHE = Path(os.environ.get("TF_PLUGIN_CACHE_DIR",
@@ -36,12 +37,13 @@ PLUGIN_CACHE = Path(os.environ.get("TF_PLUGIN_CACHE_DIR",
 
 # Terraform writes these itself. A model that writes one invents it: a lock file's
 # checksums come from the provider package, so a made-up one stops `terraform init`.
+# Matched the way a Mac reads names, so .Terraform/terraform.TFSTATE goes too.
 GENERATED = re.compile(r"(^|/)(\.terraform\.lock\.hcl|\.terraform/.*|[^/]*\.tfstate(\.backup)?|[^/]*\.tfplan)$")
 
 
 def authored(files: list[CourseFile]) -> list[CourseFile]:
     """The files a person writes, without the ones Terraform generates."""
-    return [f for f in files if not GENERATED.search(f.path)]
+    return [f for f in files if not GENERATED.search(disk_key(f.path))]
 
 
 def without_generated(exercise: Exercise | None) -> Exercise | None:

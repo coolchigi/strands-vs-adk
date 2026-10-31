@@ -11,20 +11,24 @@ before any of them runs, here or on the learner's machine. Each rule closes one 
 - a configuration that uses AWS has that block at its root, so Terraform doesn't fill in a
   default one that finds the learner's credentials
 - state stays on the machine: no other backend, no cloud block, no remote state
-- nothing runs commands or fetches from the network: no provisioners, no `http` or
-  `external` data, and modules only from local folders
+- nothing runs commands or fetches from the network: no provisioners, no `http`, `external`
+  or `local_command` types, no provider `exec` blocks, and modules only from local folders
 - the tests use `mock_provider "aws"` and configure no provider of their own
-- an `aws` command in the lesson goes to a local endpoint, and exercise code doesn't use an
-  AWS SDK, for now
-- no `.tf.json` or override files, which could undo any of the above, and no query files
+- an `aws` command anywhere the learner reads it goes to a local endpoint, and exercise code
+  doesn't use an AWS SDK, for now
+- no `.tf.json` or override files, which could undo any of the above, no query files, and
+  none of the state files Terraform writes for itself
 - `import` and `removed` blocks count as uses of the type they name
-- each exercise file has a plain path inside the exercise, no two land on the same file, and
-  no .tf file has a name Terraform skips (a leading dot)
-- the lesson's text doesn't move the learner into a folder with AWS resources and no provider
-  block, where Terraform would make a default one
+- each exercise file has a plain path inside the exercise, no two land on the same file, a
+  folder is spelled one way, and no .tf file has a name Terraform skips (a leading dot). A
+  Mac ignores case and how an accent is typed, so names are compared the way it does
+- a folder with AWS resources and no provider block is a module the exercise uses, and
+  nothing the learner reads moves them into it, where Terraform would make a default one
 
 The files are read with a small HCL reader, not run. A file it can't follow counts as a
-problem, and so does an AWS type whose endpoint it can't name.
+problem, and so does an AWS type whose endpoint it can't name. The text is read for the ways
+a lesson says to change folder: cd and the commands like it, `terraform -chdir`, and
+sentences like "change into modules/net". Text worded to get around those still gets past.
 
 The keys are what keep the account safe. The endpoints keep a lesson's calls on this
 machine, with these gaps, where a call goes to AWS carrying the fake keys and AWS refuses it:
@@ -42,6 +46,7 @@ from __future__ import annotations
 
 import posixpath
 import re
+import unicodedata
 from dataclasses import dataclass, field
 from pathlib import PurePosixPath
 from urllib.parse import urlsplit
@@ -59,7 +64,9 @@ REAL_KEY = re.compile(r"\b(?:AKIA|ASIA|AIDA|AROA)[A-Z0-9]{16}\b")
 # the top-level blocks whose first label names a resource type
 TYPED = ("resource", "data", "ephemeral", "action", "list")
 HASHICORP_AWS = ("hashicorp/aws", "registry.terraform.io/hashicorp/aws")
-# what a configuration that uses AWS may fetch: the aws provider and the ones that stay on the machine
+# what a configuration that uses AWS may fetch: the aws provider and the ones that stay on the
+# machine. local's local_command runs a program, so it's refused with http and external
+RUNS_OR_FETCHES = ("http", "external", "local_command", "aws_ip_ranges")
 OFFLINE_PROVIDERS = ("aws", "random", "null", "local", "tls", "time", "archive")
 # every key the endpoints block takes, from `terraform providers schema` on hashicorp/aws 6.70.0
 ENDPOINT_KEYS = frozenset("""
@@ -361,6 +368,16 @@ def local_url(url: str) -> bool:
 FORBIDDEN_FILE = re.compile(r"(^|/)([^/]*\.tf\.json|[^/]*\.tftest\.json|override\.tf|[^/]*_override\.tf)$")
 # `terraform query` runs these files' list blocks against the real provider, and they aren't read here
 QUERY_FILE = re.compile(r"\.tfquery\.(hcl|json)$")
+# what Windows reads as something else: C:main.tf is main.tf on drive C, main.tf. is main.tf, CON is a device
+WINDOWS_NAME = re.compile(r'[<>:"|?*\x00-\x1f]|[. ]$|^(?:con|prn|aux|nul|com[0-9¹²³]|lpt[0-9¹²³])(?:\.|$)', re.I)
+# Terraform writes these and reads them back. A shipped one can name a backend that isn't in the files
+WORKING_FILE = re.compile(r"(^|/)(\.terraform(/|$)|terraform\.tfstate\.d/|[^/]*\.tfstate(\.backup)?$)")
+
+
+def disk_key(path: str) -> str:
+    """The same string for every spelling a Mac's disk reads as one name: it ignores case, and
+    é typed as one character or as e and an accent."""
+    return unicodedata.normalize("NFD", unicodedata.normalize("NFD", path).casefold())
 
 
 def _is_tf(path: str) -> bool:
@@ -501,6 +518,7 @@ def config_problems(files: list[CourseFile], checks: list[CourseFile], which: st
             out.append(f"{named[id(f)]} isn't HCL these checks can read, so it couldn't be cleared: {e}")
 
     blocks = [(path, where, b) for path, (where, bs) in tf.items() for b in bs]
+    folders = {posixpath.dirname(path) for path in tf}
     nested = [(path, where, x) for path, where, b in blocks for x in b.walk()]  # a check block can hold data
     uses_aws = any(b.type == "provider" and b.label() == "aws" or
                    (_typed(b) or "").startswith("aws_") for _, _, b in nested)
@@ -571,6 +589,12 @@ def config_problems(files: list[CourseFile], checks: list[CourseFile], which: st
             out.append(f"{where}: module {b.label()!r} comes from {literal(b.attrs.get('source')) or 'somewhere'} "
                        "instead of a folder in the exercise, so its code isn't checked here. Use a local "
                        "path like ./modules/name")
+        elif b.type == "module":
+            named = posixpath.normpath(posixpath.join(posixpath.dirname(path) or ".", literal(b.attrs["source"])))
+            spelled = sorted(d for d in folders if disk_key(d) == disk_key(named) and d != named)
+            if named not in folders and spelled:
+                out.append(f"{where}: module {b.label()!r} names {named}, but its files are in {spelled[0]}. A Mac "
+                           "reads them as one folder and Linux doesn't. Spell it the same way")
         if b.type == "terraform":
             for required in b.children("required_providers"):
                 source = _source_of(required.attrs.get("aws"))
@@ -600,9 +624,13 @@ def config_problems(files: list[CourseFile], checks: list[CourseFile], which: st
         if b.type == "data" and b.label() == "terraform_remote_state" and literal(b.attrs.get("backend")) != "local":
             out.append(f"{where} reads remote state from another backend. Only backend = \"local\" stays on "
                        "the machine")
-        if b.type == "data" and b.label() in ("http", "external", "aws_ip_ranges"):
-            out.append(f'{where} has a data "{b.label()}" source, which reaches the network or runs a '
-                       "program. Remove it")
+        # tls_certificate reads a certificate from content, or fetches it from a url
+        if b.type in TYPED and (b.label() in RUNS_OR_FETCHES or b.label() == "tls_certificate" and "url" in b.attrs):
+            out.append(f'{where} has {b.type} "{b.label()}", which reaches the network or runs a program. '
+                       "Remove it")
+        if b.type == "provider" and any(x.type == "exec" for x in b.walk()):
+            out.append(f'{where}: the provider "{b.label()}" block has an exec block, which runs a program on the '
+                       "learner's machine to get credentials. Remove it")
         if b.type == "provisioner":
             out.append(f"{where} has a provisioner, which runs commands on the learner's machine. Remove it")
 
@@ -685,58 +713,158 @@ def command_problems(commands: list[tuple[str, bool]], where: str) -> list[str]:
     return out
 
 
-# where lesson text moves somewhere else to run things: cd, pushd, terraform -chdir
-_ELSEWHERE = re.compile(r"(?:(?:^|(?<=[\s;&|(]))(?:cd|pushd)\s+|-chdir[= ])([\"']?)([^\s\"';&|)]+)\1")
+# how lesson text moves the learner into another folder: cd and the commands like it in bash,
+# PowerShell, cmd and Python, terraform -chdir and env -C, each followed by the folder
+_MOVE = re.compile(r"(?:(?<![\w$-])(?:cd|pushd|chdir|sl|set-location|push-location)(?:\s+(?:-{1,2}[a-z]+|--|/d)(?=\s))*"
+                   r"|(?<!\w)--?chdir|(?<![\w$-])env(?:\s+-[a-z]+)*?\s+-C)(?:\s*[=(]\s*|\s+)[\"']?([^\s\"'`;&|()]+)",
+                   re.I)
+# and the ways a sentence says it
+_MOVE_WORDS = re.compile(r"\b(?:change|move|switch|go|navigate|step|head)\s+(?:back\s+|over\s+|down\s+)?(?:in)?to\s+"
+                         r"(?:the\s+|your\s+)?(?:folder\s+|directory\s+)?[`\"']?([\w./\\~-]+)", re.I)
+_RUN_IN = re.compile(r"\b(?:from\s+(?:inside\s+|within\s+|in\s+)?|inside\s+|within\s+|in\s+)(?:the\s+|your\s+)?"
+                     r"[`\"']?([\w./\\~-]+)", re.I)
+_TERRAFORM_RUN = re.compile(r"\bterraform\s+(?:-\S+\s+)*(?:init|plan|apply|destroy|import|refresh|console|state|test|"
+                            r"output|show)\b", re.I)
 
 
-def _folders(text: str, code: bool = False) -> set[str]:
-    """Every folder a piece of lesson text, or a script when code is true, moves into."""
-    pieces = [text] if code else \
-        [c for tag, c in _FENCE.findall(text) if tag.strip().lower() in SHELL_FENCES] + _SPAN.findall(_FENCE.sub("", text))
-    return {posixpath.normpath(m.group(2)) for piece in pieces for m in _ELSEWHERE.finditer(piece)}
+def _moves(text: str) -> set[str]:
+    """Every folder a piece of lesson text moves the learner into, as the text writes it."""
+    found = {m.group(1) for pattern in (_MOVE, _MOVE_WORDS) for m in pattern.finditer(text)}
+    for sentence in re.split(r"(?<=[.!?])\s+|\n", text):
+        if _TERRAFORM_RUN.search(sentence):  # "run terraform plan from inside modules/net"
+            found |= {m.group(1) for m in _RUN_IN.finditer(sentence)}
+    return found
 
 
 def _path_problems(ex) -> list[str]:
     """Exercise files that wouldn't be where these checks read them: outside the exercise
-    folder, written over each other, or a .tf file Terraform skips."""
+    folder, written over each other, in a folder spelled two ways, a .tf file Terraform skips,
+    or a file Terraform writes for itself."""
     out = []
+    spellings: dict[str, set[str]] = {}
     for f in ex.starter + ex.solution + ex.checks:
         parts = f.path.split("/")
-        if f.path.startswith("/") or "\\" in f.path or any(p in ("", ".", "..") for p in parts):
-            out.append(f"{f.path!r} isn't a plain path inside the exercise folder, like modules/net/main.tf. "
-                       "Write it that way")
+        if f.path.startswith("/") or "\\" in f.path or any(p in ("", ".", "..") or WINDOWS_NAME.search(p) for p in parts):
+            out.append(f"{f.path!r} isn't a plain path inside the exercise folder, the same on Mac, Linux and "
+                       "Windows, like modules/net/main.tf. Write it that way")
+            continue
+        if any(len(p.encode()) > 255 for p in parts):
+            out.append(f"{f.path[:60]}... has a name longer than 255 bytes, which Linux doesn't allow. Shorten it")
+        elif WORKING_FILE.search(disk_key(f.path)):
+            out.append(f"{f.path} is a file Terraform writes for itself, and a shipped one can point it at state "
+                       "kept somewhere else. Leave it out")
         elif parts[-1].startswith(".") and (_is_tf(f.path) or _is_test(f.path)):
             out.append(f"Terraform skips {f.path} because its name starts with a dot, but these checks read it. "
                        "Rename it")
+        for i in range(1, len(parts)):
+            spellings.setdefault(disk_key("/".join(parts[:i])), set()).add("/".join(parts[:i]))
+    for names in spellings.values():
+        if len(names) > 1:
+            first, *rest = sorted(names)
+            out.append(f"the folder {first} is also written {', '.join(rest)}. A Mac reads them as one folder and "
+                       "Linux as more than one, so the lesson would work differently on each. Spell it one way")
     # the same path twice is fine: the course and these checks both keep the last one
     for which, files in (("starter", ex.starter + ex.checks), ("solution", ex.solution + ex.checks)):
         seen: dict[str, str] = {}
         for f in files:
-            if (key := f.path.casefold()) in seen and seen[key] != f.path:
-                out.append(f"the {which}'s {seen[key]} and {f.path} are the same file on disk (a Mac ignores case), "
-                           "so one would overwrite the other. Give them different names")
+            if (key := disk_key(f.path)) in seen and seen[key] != f.path:
+                out.append(f"the {which}'s {seen[key]} and {f.path} are the same file on disk (a Mac ignores case "
+                           "and how an accent is typed), so one would overwrite the other. Give them different names")
             seen[key] = f.path
     return out
 
 
+def _bare_folders(files: list[CourseFile]) -> tuple[dict[str, str], set[str]]:
+    """The folders where Terraform would make a default aws provider: they use AWS, in their
+    own files or the modules they call, and have no provider "aws" block without an alias.
+    Keyed by disk_key, with the name as written. And the keys of the folders the exercise
+    runs as modules, from the top folder or the tests."""
+    blocks: dict[str, list[Block]] = {}
+    names: dict[str, str] = {}
+    calls: dict[str, set[str]] = {}
+    for f in {f.path: f for f in files}.values():  # a path written twice: the last one is on disk
+        if not (_is_tf(f.path) or _is_test(f.path)):
+            continue
+        try:
+            found = read(f.content)
+        except Unreadable:
+            continue  # config_problems says so
+        # Terraform finds a test's run modules from the top folder, like the top folder's own modules
+        folder = "" if _is_test(f.path) else posixpath.dirname(f.path)
+        key = disk_key(folder)
+        modules = [b for b in found if b.type == "module"] + [m for b in found if b.type == "run"
+                                                               for m in b.children("module")]
+        for m in modules:
+            if _local_source(m.attrs.get("source"), folder):
+                called = posixpath.normpath(posixpath.join(folder or ".", literal(m.attrs["source"])))
+                calls.setdefault(key, set()).add(disk_key("" if called == "." else called))
+        if not _is_test(f.path):
+            blocks.setdefault(key, []).extend(found)
+            names.setdefault(key, folder)
+
+    def uses_aws(key: str, seen: frozenset = frozenset()) -> bool:
+        return key not in seen and (
+            any((_typed(x) or "").startswith("aws_") for b in blocks.get(key, []) for x in b.walk()) or
+            any(uses_aws(c, seen | {key}) for c in calls.get(key, ())))
+
+    run, todo = set(), list(calls.get("", ()))
+    while todo:
+        if (key := todo.pop()) not in run:
+            run.add(key)
+            todo += calls.get(key, ())
+    bare = {key: names[key] for key, bs in blocks.items() if key and uses_aws(key) and not any(
+        b.type == "provider" and b.label() == "aws" and "alias" not in b.attrs for b in bs)}
+    return bare, run
+
+
 def _elsewhere_problems(ex, texts: list[tuple[str, str, bool]]) -> list[str]:
-    """Lesson text that runs things in a folder with AWS resources and no provider block of its
-    own. Terraform there makes a default provider, which finds the learner's own credentials."""
-    by_folder: dict[str, str] = {}
-    for f in ex.starter + ex.solution:
-        if _is_tf(f.path):
-            folder = posixpath.dirname(f.path)
-            by_folder[folder] = by_folder.get(folder, "") + f.content
-    bare = {d for d, content in by_folder.items()
-            if d and re.search(r"\baws_", content) and not re.search(r'provider\s+"aws"', content)}
-    out = []
-    for where, text, code in texts:
-        for moved in sorted(_folders(text, code)):
-            if any(moved == d or moved.endswith("/" + d) for d in bare):
-                out.append(f"{where} moves into {moved}, which has AWS resources and no provider block of its "
+    """Folders where Terraform would find the learner's own credentials, because they use AWS
+    with no provider block: one the exercise doesn't use as a module, or one the lesson's text
+    moves the learner into."""
+    bare: dict[str, str] = {}
+    run: set[str] = set()
+    for files in (ex.starter + ex.checks, ex.solution + ex.checks):  # the learner goes from one to the other
+        b, r = _bare_folders(files)
+        bare |= b
+        run |= r
+    out = [f"{name} has AWS resources and no provider block, and the exercise doesn't use it as a module, so "
+           "Terraform run there would make a default provider that finds the learner's own credentials. Add the "
+           "provider block from the instructions, or leave the folder out" for key, name in sorted(bare.items())
+           if key not in run]
+    for where, text, _ in texts:
+        for moved in sorted(_moves(text)):
+            if re.search(r"[$%]", moved):
+                if bare:
+                    out.append(f"{where} moves into {moved}, a folder worked out as it runs, and the exercise has "
+                               f"AWS resources with no provider block in {', '.join(sorted(bare.values()))}, where "
+                               "Terraform would use the learner's own credentials. Run Terraform from the exercise "
+                               "folder")
+                continue
+            folder = posixpath.normpath(moved.replace("\\", "/").rstrip(".,:;") or ".")
+            key = disk_key(folder)
+            if any(key == k or key.endswith("/" + k) or k.endswith("/" + key) for k in bare):
+                out.append(f"{where} moves into {folder}, which has AWS resources and no provider block of its "
                            "own, so Terraform run there would use the learner's own credentials. Run Terraform "
                            "from the exercise folder")
     return out
+
+
+def _texts(lesson: Lesson) -> list[tuple[str, str, bool]]:
+    """Everything the learner reads or runs, as (where, text, is it code). A script is all
+    code. In the rest, commands are in code spans and fences."""
+    out = [("the title", lesson.title, False), ("the recall", lesson.recall, False),
+           ("the explanation", lesson.explanation, False), ("the worked example", lesson.worked_example, False)]
+    out += [(f"quiz question {i}", "\n\n".join([q.stem, *q.options, q.explanation]), False)
+            for i, q in enumerate(lesson.quiz, 1)]
+    if ex := lesson.exercise:
+        out += [("the task", ex.task, False)] + [(f"hint {i}", h, False) for i, h in enumerate(ex.hints, 1)]
+        out += [(f.path, f.content, not f.path.endswith(".md")) for f in ex.starter + ex.solution + ex.checks
+                if not (_is_tf(f.path) or _is_test(f.path))]
+    return out
+
+
+def _aws_commands(text: str, code: bool) -> list[tuple[str, bool]]:
+    return _commands(text) if code else aws_commands(text)
 
 
 def uses_aws(lesson: Lesson) -> bool:
@@ -746,36 +874,22 @@ def uses_aws(lesson: Lesson) -> bool:
             if _is_tf(f.path) and re.search(r'provider\s+"aws"|^\s*(?:resource|data|ephemeral|action|list)\s+"aws_|'
                                             r'^\s*(?:to|from)\s*=.*\baws_', f.content, re.M):
                 return True
-    texts = [lesson.explanation, lesson.worked_example]
-    if lesson.exercise:
-        texts += [lesson.exercise.task, *lesson.exercise.hints]
-    return any(aws_commands(t) for t in texts)
+    return any(_aws_commands(text, code) for _, text, code in _texts(lesson))
 
 
 def problems(lesson: Lesson) -> list[str]:
     """Every way this lesson could reach a real AWS account. Empty means none was found."""
-    out = command_problems(aws_commands(lesson.explanation), "the explanation")
-    out += command_problems(aws_commands(lesson.worked_example), "the worked example")
+    texts = _texts(lesson)
+    out = [p for where, text, code in texts for p in command_problems(_aws_commands(text, code), where)]
     ex = lesson.exercise
     if ex is not None:
-        out += command_problems(aws_commands(ex.task), "the task")
-        for i, h in enumerate(ex.hints, 1):
-            out += command_problems(aws_commands(h), f"hint {i}")
         out += _path_problems(ex)
         out += config_problems(ex.starter, ex.checks, "starter")
         out += config_problems(ex.solution, ex.checks, "solution")
-        texts = [("the explanation", lesson.explanation, False), ("the worked example", lesson.worked_example, False),
-                 ("the task", ex.task, False)] + [(f"hint {i}", h, False) for i, h in enumerate(ex.hints, 1)]
         for f in ex.starter + ex.solution + ex.checks:
             name = PurePosixPath(f.path).name
             if (name.endswith(SDK_CODE) or name in ("package.json", "requirements.txt")) and _SDK.search(f.content):
                 out.append(f"{f.path} uses an AWS SDK, which finds the learner's own credentials. Exercises "
                            "don't use one yet")
-            elif name.endswith(".md"):
-                out += command_problems(aws_commands(f.content), f.path)
-                texts.append((f.path, f.content, False))
-            elif not (_is_tf(f.path) or _is_test(f.path)):
-                out += command_problems(_commands(f.content), f.path)  # a script is all code
-                texts.append((f.path, f.content, True))
         out += _elsewhere_problems(ex, texts)
     return list(dict.fromkeys(out))
