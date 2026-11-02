@@ -10,7 +10,7 @@ than tracking latest.
 | Part | What it covers | Code |
 |---|---|---|
 | 1 | Hello World: tools, the agent loop, state, control points, multi-agent, evaluation, deployment | [`part1-hello-world/`](part1-hello-world/) |
-| 2 | The learning system: one sentence in, a Terraform course out, built twice | [`part2-learning-system/`](part2-learning-system/) |
+| 2 | The learning system: one sentence in, a course out, built twice | [`part2-learning-system/`](part2-learning-system/) |
 
 ## Start here
 
