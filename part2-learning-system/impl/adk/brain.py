@@ -28,7 +28,7 @@ import os
 import threading
 from typing import Any, Callable, TypeVar
 
-from google.adk.agents import Agent
+from google.adk.agents import Agent, RunConfig
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.adk.tools import google_search
@@ -61,6 +61,12 @@ T = TypeVar("T", bound=BaseModel)
 MODEL = os.environ.get("ADK_MODEL", "gemini-3.8-flash")
 AWS_KNOWLEDGE_MCP_URL = "https://knowledge-mcp.global.api.aws"
 SERVER_SIDE_TOOLS = types.ToolConfig(include_server_side_tool_invocations=True)
+# ADK builds its Gemini client with no retry policy, so one 503 used to end the build. These
+# retry 408, 429, 500, 502, 503, 504 and connection errors, waiting about 2, 4, 8, 16, 32, 60
+# and 60 seconds between tries.
+# Passed per run, so the model stays a plain id and the meter still prices it by name.
+RETRIES = RunConfig(http_options=types.HttpOptions(
+    retry_options=types.HttpRetryOptions(attempts=8, initial_delay=2, max_delay=60)))
 
 
 class AdkBrain:
@@ -101,7 +107,8 @@ class AdkBrain:
         session = await self.sessions.create_session(app_name="learning", user_id="learner")
         message = types.Content(role="user", parts=[types.Part(text=prompt)])
         said = ""
-        async for event in runner.run_async(user_id="learner", session_id=session.id, new_message=message):
+        async for event in runner.run_async(user_id="learner", session_id=session.id, new_message=message,
+                                            run_config=RETRIES):
             raise_for(event, agent.name)
             if event.content and event.content.parts:
                 said = "".join(p.text or "" for p in event.content.parts) or said

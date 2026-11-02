@@ -1,11 +1,12 @@
 """Grade a finished course folder, from either framework, with the same checks.
 
     python -m learning.judge out/adk
-    python -m learning.judge out/strands --no-run     # skip running the exercises
+    python -m learning.judge out/strands --no-run     # offline: no exercises, no registry
 
 Everything here is re-checked from the folder, not taken from the run's word for it: every
 quote against its stored page, the curriculum's coverage of the objectives, every
 exercise's solution passing and starter failing, every provider pin against the registry.
+--no-run skips the last two, so it runs offline.
 """
 
 from __future__ import annotations
@@ -22,7 +23,7 @@ from .model import Evidence
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("course", type=Path)
-    ap.add_argument("--no-run", action="store_true", help="don't run the exercises (fast)")
+    ap.add_argument("--no-run", action="store_true", help="don't run the exercises or ask the registry about provider pins (fast, offline)")
     args = ap.parse_args(argv)
 
     c = course_dir.load(args.course)

@@ -20,6 +20,31 @@ CITATION = re.compile(r"\[(c:[0-9a-f]{12}(?:\s*,\s*c:[0-9a-f]{12})*)\]")
 
 
 MALFORMED_CITATION = re.compile(r"\[c:[^\]]*\]")  # after the good ones are taken out
+# unit and lesson ids become folder and checkpoint names, so an id has to be its own slug:
+# U1-L1 and u1-l1 once passed as different ids and shared a folder
+SAFE_ID = re.compile(r"(?=.{1,48}$)[a-z0-9]+(?:-[a-z0-9]+)*")
+
+
+def unsafe_path(path: str) -> str | None:
+    """Why a file path the model chose can't be written where it says, or None if it can.
+
+    Paths come straight from the model and are joined onto the course folder, so an absolute
+    path or a ../ once wrote outside it.
+    """
+    if not path.strip():
+        return "it's empty"
+    if "\\" in path or any(ord(ch) < 32 for ch in path):
+        return "it has a backslash or a control character"
+    if path.startswith(("/", "~")) or re.match(r"[A-Za-z]:", path):
+        return "it's absolute"
+    parts = path.split("/")
+    if ".." in parts:
+        return "it uses .. to climb out of its folder"
+    if not [p for p in parts if p not in ("", ".")]:
+        return "it names no file"
+    if any(len(p.encode()) > 255 for p in parts):
+        return "a part of it is longer than a file name can be"
+    return None
 
 
 def cited(text: str) -> list[str]:
@@ -113,6 +138,9 @@ def curriculum(cur: Curriculum, kb: KnowledgeBase) -> list[Problem]:
     all_ids = [l.id for l in lessons]
     if len(set(all_ids)) != len(all_ids):
         add("duplicate_lesson_id", "two lessons share an id")
+    odd = sorted({i for i in [u.id for u in cur.units] + all_ids if not SAFE_ID.fullmatch(i)})
+    if odd:
+        add("unsafe_id", f"these ids become folder names and can't: {odd}. Use lowercase letters, digits and -")
 
     for unit in cur.units:
         if not unit.lessons:
@@ -191,9 +219,12 @@ def lesson(l: Lesson, spec_claims: list[str], all_claims: set[str],
             add("no_starter", "the exercise gives the learner nothing to start from")
         if not l.exercise.hints:
             add("no_hints", "the exercise has no hints for a learner who is stuck")
-        for p in exercises.stale_pins(l.exercise.solution + l.exercise.starter):
-            add("provider_out_of_date", p)
-        if run_exercise:
+        for f in l.exercise.starter + l.exercise.solution + l.exercise.checks:
+            if why := unsafe_path(f.path):
+                add("unsafe_path", f"{f.path!r} can't be written: {why}. Use a path inside the exercise folder")
+        if run_exercise:  # judge --no-run stays offline: the pin check asks the Terraform registry
+            for p in exercises.stale_pins(l.exercise.solution + l.exercise.starter):
+                add("provider_out_of_date", p)
             for p in exercises.verify(l.exercise):
                 add("exercise_does_not_work", p)
 

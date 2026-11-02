@@ -21,15 +21,16 @@ from __future__ import annotations
 
 import ast
 import difflib
+import logging
 import os
 import re
 import tempfile
 from pathlib import Path
 
-from .learn_cli import CODE, run_exercise, runner_for
+from .learn_cli import CODE, TIMEOUT_S, run_exercise, runner_for, scratch
 from .model import CourseFile, Exercise
 
-TIMEOUT_S = 600
+log = logging.getLogger("learning")
 PLUGIN_CACHE = Path(os.environ.get("TF_PLUGIN_CACHE_DIR",
                                    Path.home() / ".cache" / "learning-system" / "terraform-plugins"))
 
@@ -67,7 +68,7 @@ def run(files: list[CourseFile], runner: str | None) -> tuple[str, str]:
     """Lay the files out in a fresh folder and run the checks, the way learn.py will."""
     PLUGIN_CACHE.mkdir(parents=True, exist_ok=True)
     env = {"TF_PLUGIN_CACHE_DIR": str(PLUGIN_CACHE), "TF_IN_AUTOMATION": "1", "CHECKPOINT_DISABLE": "1"}
-    with tempfile.TemporaryDirectory() as tmp:
+    with scratch() as tmp:
         problem = lay_out(files, Path(tmp))
         if problem:
             return "invalid", problem
@@ -185,8 +186,6 @@ def untested_gaps(exercise: Exercise, runner: str) -> list[str]:
 # Validation proves the code runs, not that it teaches today's provider. A model that
 # learned Terraform a year ago pins the AWS provider to ~> 5.0, and validate is happy.
 
-import functools  # noqa: E402
-
 import httpx  # noqa: E402
 
 _BLOCK = re.compile(r"\{([^{}]*)\}")
@@ -194,39 +193,60 @@ _SOURCE = re.compile(r'source\s*=\s*"([^"]+)"')
 _VERSION = re.compile(r'version\s*=\s*"([^"]+)"')
 
 
-def _parts(v: str) -> tuple[int, ...]:
-    return tuple(int(x) for x in re.findall(r"\d+", v)[:3])
+def _parts(v: str) -> list[int]:
+    return [int(x) for x in re.findall(r"\d+", v)[:3]]
+
+
+def _padded(v: str) -> tuple[int, int, int]:
+    """Terraform reads a short version as zeros on the end: "6.2" is 6.2.0."""
+    p = _parts(v)
+    return tuple(p + [0] * (3 - len(p)))  # type: ignore[return-value]
 
 
 def allows(constraint: str, version: str) -> bool:
-    """Does a Terraform version constraint admit this version? Handles = != > >= < <= ~>."""
-    have = _parts(version)
+    """Does a Terraform version constraint admit this version? Handles = != > >= < <= ~>.
+
+    "= 6.2" once allowed 6.2.5, because versions were compared as prefixes. Terraform pads
+    them with zeros, so "= 6.2" means exactly 6.2.0, and only ~> looks at how many parts there are.
+    """
+    have = _padded(version)
     for clause in constraint.split(","):
         m = re.match(r"\s*(~>|>=|<=|!=|=|>|<)?\s*v?([\d.]+)", clause)
         if not m:
             continue
-        op, want = m.group(1) or "=", _parts(m.group(2))
+        op, raw, want = m.group(1) or "=", _parts(m.group(2)), _padded(m.group(2))
         if op == "~>":
-            upper = (want[0] + 1,) if len(want) <= 2 else (want[0], want[1] + 1)
-            if not (have >= want and have[:len(upper)] < upper):
+            upper = (raw[0] + 1, 0, 0) if len(raw) <= 2 else (raw[0], raw[1] + 1, 0)
+            if not want <= have < upper:
                 return False
             continue
-        cut = have[:len(want)]
-        if not {"=": cut == want, "!=": cut != want, ">": have > want, ">=": have >= want,
-                "<": have < want, "<=": cut <= want}[op]:
+        if not {"=": have == want, "!=": have != want, ">": have > want, ">=": have >= want,
+                "<": have < want, "<=": have <= want}[op]:
             return False
     return True
 
 
-@functools.lru_cache(maxsize=None)
+_LATEST: dict[str, str] = {}
+
+
 def latest_version(source: str) -> str | None:
+    """The provider's current release, or None if the registry can't say. Only answers are kept:
+    a failure was once cached for the whole build, and no lesson after it was checked."""
     source = source.removeprefix("registry.terraform.io/")
     if source.count("/") != 1:
         return None
-    try:
-        return httpx.get(f"https://registry.terraform.io/v1/providers/{source}", timeout=20).json().get("version")
-    except (httpx.HTTPError, ValueError):
-        return None
+    if source in _LATEST:
+        return _LATEST[source]
+    for _ in range(2):
+        try:
+            version = httpx.get(f"https://registry.terraform.io/v1/providers/{source}", timeout=20).json().get("version")
+        except (httpx.HTTPError, ValueError):
+            continue
+        if version:
+            _LATEST[source] = version
+            return version
+    log.warning("couldn't reach the Terraform registry for %s, so its pin isn't checked", source)
+    return None
 
 
 def pins(files: list[CourseFile]) -> list[tuple[str, str]]:
@@ -242,7 +262,7 @@ def pins(files: list[CourseFile]) -> list[tuple[str, str]]:
 def stale_pins(files: list[CourseFile]) -> list[str]:
     """One sentence per provider pinned behind its current release."""
     out = []
-    for source, constraint in pins(files):
+    for source, constraint in dict.fromkeys(pins(files)):  # starter and solution pin the same provider
         latest = latest_version(source)
         if latest and not allows(constraint, latest):
             out.append(f'{source} is pinned "{constraint}", which rules out the current release '

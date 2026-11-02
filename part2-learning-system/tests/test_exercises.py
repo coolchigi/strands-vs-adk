@@ -153,3 +153,66 @@ def test_an_exercise_with_its_own_tsconfig_is_type_checked_with_it():
     done = ex({"utils.ts": UNTYPED, "tsconfig.json": config}, {"utils.ts": TYPED, "tsconfig.json": config},
               {"utils.test.ts": TYPED_TEST})
     assert exercises.verify(done) == []
+
+
+def test_version_constraints_read_short_versions_the_way_terraform_does():
+    # "= 6.2" once allowed 6.2.5. Terraform reads 6.2 as 6.2.0
+    from learning.exercises import allows
+
+    assert not allows("= 6.2", "6.2.5") and allows("= 6.2", "6.2.0")
+    assert not allows("<= 6.2", "6.2.5") and allows("!= 6.2", "6.2.5")
+    assert not allows("> 1.11", "1.11.0") and allows("> 1.11", "1.11.1")
+    assert allows("~> 6.2", "6.9.0") and not allows("~> 6.2", "7.0.0")
+    assert allows("~> 6.2.1", "6.2.9") and not allows("~> 6.2.1", "6.3.0")
+    assert not allows("~> 5.0", "6.0.0") and allows(">= 5.0, < 7.0", "6.4.0")
+
+
+def test_a_registry_that_fails_once_is_asked_again_next_time(monkeypatch):
+    # a failure was cached for the whole build, and no lesson after it was checked
+    import httpx
+
+    from learning import exercises
+
+    exercises._LATEST.clear()
+    calls = []
+
+    class Answer:
+        def json(self):
+            return {"version": "6.20.0"}
+
+    def get(url, timeout):
+        calls.append(url)
+        if len(calls) <= 2:
+            raise httpx.ConnectError("down")
+        return Answer()
+
+    monkeypatch.setattr(exercises.httpx, "get", get)
+    assert exercises.latest_version("hashicorp/aws") is None      # both tries failed
+    assert exercises.latest_version("hashicorp/aws") == "6.20.0"  # asked again, not remembered as None
+    assert exercises.latest_version("hashicorp/aws") == "6.20.0" and len(calls) == 3  # an answer is kept
+    exercises._LATEST.clear()
+
+
+def test_judging_without_running_stays_offline(monkeypatch):
+    from learning import checks, exercises
+    from learning.model import CourseFile, Exercise, Lesson, QuizItem
+
+    monkeypatch.setattr(exercises, "latest_version", lambda source: pytest.fail("asked the registry"))
+    pinned = 'terraform {\n  required_providers {\n    aws = {\n      source = "hashicorp/aws"\n      version = "~> 5.0"\n    }\n  }\n}\n'
+    ex = Exercise(task="t", starter=[CourseFile(path="main.tf", content=pinned)],
+                  solution=[CourseFile(path="main.tf", content=pinned)],
+                  checks=[CourseFile(path="tests/main.tftest.hcl", content="run \"x\" {}")], hints=["h"])
+    lesson = Lesson(id="u1-l1", title="t", explanation=f"x [c:{'c' * 12}]", worked_example="w", exercise=ex,
+                    quiz=[QuizItem(stem="s", options=["a", "b", "c"], answer=0, explanation="e", objective="o")])
+    checks.lesson(lesson, ["c" * 12], {"c" * 12}, False, run_exercise=False)
+
+
+def test_a_provider_pinned_in_starter_and_solution_is_looked_up_once(monkeypatch):
+    from learning import exercises
+    from learning.model import CourseFile
+
+    asked = []
+    monkeypatch.setattr(exercises, "latest_version", lambda source: asked.append(source) or "6.20.0")
+    pinned = 'aws = {\n  source = "hashicorp/aws"\n  version = "~> 6.0"\n}\n'
+    exercises.stale_pins([CourseFile(path="main.tf", content=pinned), CourseFile(path="main.tf", content=pinned)])
+    assert asked == ["hashicorp/aws"]

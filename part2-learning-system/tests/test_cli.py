@@ -68,3 +68,19 @@ def test_spend_is_on_disk_as_soon_as_it_is_counted(tmp_path):
     after(llm_response=SimpleNamespace(usage_metadata=SimpleNamespace(
         prompt_token_count=700, candidates_token_count=10, thoughts_token_count=5)))
     assert calls == [700]
+
+
+def test_the_install_constraints_match_the_lock():
+    # uv tool install ignores uv.lock, so constraints.txt carries its versions to installs
+    import re
+    import tomllib
+    from pathlib import Path
+
+    here = Path(__file__).resolve().parent.parent
+    lock = tomllib.loads((here / "uv.lock").read_text())
+    locked = {p["name"]: p["version"] for p in lock["package"] if "registry" in p.get("source", {})}
+    pinned = dict(re.findall(r"^([A-Za-z0-9_.-]+)==([^\s;]+)", (here / "constraints.txt").read_text(), re.M))
+    norm = lambda n: re.sub(r"[-_.]+", "-", n).lower()
+    pinned = {norm(k): v for k, v in pinned.items()}
+    # equal both ways: a pin that's deleted, or a package the lock gains, fails too
+    assert pinned and pinned == {norm(name): version for name, version in locked.items()}

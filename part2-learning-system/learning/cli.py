@@ -40,17 +40,25 @@ def load_spend(meter, path: Path) -> None:
     saved have 3 numbers, and their tokens are priced at the run's main model.
     """
     if path.exists():
+        from datetime import date
+
         from .budget import Usage, price_for
-        p = price_for(meter.model)
-        for role, row in json.loads(path.read_text()).items():
+        p = price_for(meter.model, date.fromtimestamp(path.stat().st_mtime))  # priced as of when it was saved
+        try:
+            rows = json.loads(path.read_text())
+        except ValueError:
+            # starting the count from $0 would let this build spend past its cap, so stop and say why
+            raise ValueError(f"I can't read {path}, so I can't tell how much this build has already spent. "
+                             "Delete that file to count from $0 again, then run the same command.") from None
+        for role, row in rows.items():
             calls, tokens_in, tokens_out = row[:3]
             usd = row[3] if len(row) > 3 else (tokens_in * p[0] + tokens_out * p[1]) / 1_000_000
             meter.by_role[role] = Usage(calls, tokens_in, tokens_out, usd)
 
 
 def save_spend(meter, path: Path) -> None:
-    path.write_text(json.dumps({r: [u.calls, u.input_tokens, u.output_tokens, round(u.usd, 6)]
-                                for r, u in meter.by_role.items()}, indent=1))
+    stages.write_atomic(path, json.dumps({r: [u.calls, u.input_tokens, u.output_tokens, round(u.usd, 6)]
+                                          for r, u in meter.by_role.items()}, indent=1))
 
 
 def main(framework: str, model: str, make_brain: Callable, meter, run_pipeline: Callable[[Flow], object],
@@ -64,8 +72,9 @@ def main(framework: str, model: str, make_brain: Callable, meter, run_pipeline: 
     args = ap.parse_args(argv)
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s", datefmt="%H:%M:%S")
-    for noisy in ("strands", "botocore", "httpx", "mcp", "google_adk", "google_genai"):
+    for noisy in ("strands", "botocore", "httpx", "httpx2", "mcp", "google_adk", "google_genai"):
         logging.getLogger(noisy).setLevel(logging.WARNING)
+    logging.getLogger("google_genai._api_client").setLevel(logging.INFO)  # "Retrying ... in 4.2 seconds"
     log = logging.getLogger("learning")
     args.runs.mkdir(parents=True, exist_ok=True)
     spend = args.runs / "spend.json"
@@ -94,7 +103,7 @@ def main(framework: str, model: str, make_brain: Callable, meter, run_pipeline: 
             if not profile.subject_is_clear:
                 print("The subject still isn't clear enough to research:", profile.questions)
                 return 1
-            saved.write_text(profile.model_dump_json(indent=1))
+            stages.write_atomic(saved, profile.model_dump_json(indent=1))
         print(profile.brief(), "\n")
 
         flow = start(brain, HttpWeb(), profile, args.runs, reviewer=not args.no_review)
@@ -113,7 +122,7 @@ def main(framework: str, model: str, make_brain: Callable, meter, run_pipeline: 
         for role, u in sorted(meter.by_role.items()):
             print(f"  {role:18} {u.calls:4} calls {u.input_tokens:9} in {u.output_tokens:8} out")
 
-    root = course_dir.write(course, args.out)
+    root = course_dir.write(course, args.out, replace=True)
     problems = open_problems(flow.board)
     kb = course.knowledge
     print(f"\n{course.curriculum.title}: {len(course.curriculum.units)} units, {len(course.lessons)} lessons, "

@@ -167,3 +167,31 @@ def test_a_mistyped_citation_is_caught():
     # one lesson cited [c:bfaa726bb50], 11 characters, which linked nowhere
     typo = lesson(explanation=f"State maps resources [c:{'c' * 12}]. Like this [c:bfaa726bb50]:")
     assert "malformed_citation" in names(checks.lesson(typo, ["c" * 12], {"c" * 12}, False))
+
+
+def test_exercise_paths_that_would_land_outside_the_folder_are_caught():
+    # paths come from the model and are joined onto the course folder, and one wrote outside it
+    from learning.model import CourseFile, Exercise
+
+    files = [CourseFile(path=p, content="x") for p in ("/etc/hosts", "../../.zshrc", "C:/x.py", "ok/../../x")]
+    ex = Exercise(task="t", starter=files, solution=[CourseFile(path="main.py", content="x")],
+                  checks=[CourseFile(path="test_main.py", content="x")], hints=["h"])
+    found = [p for p in checks.lesson(lesson(exercise=ex), ["c" * 12], {"c" * 12}, False, run_exercise=False)
+             if p.check == "unsafe_path"]
+    assert len(found) == 4
+    assert checks.unsafe_path("src/app.py") is None and checks.unsafe_path("./main.tf") is None
+
+
+def test_ids_that_cant_be_folder_names_are_caught():
+    assert "unsafe_id" in names(checks.curriculum(cur(lesson_spec(id="../../evil")), kb()))
+    assert "unsafe_id" not in names(checks.curriculum(cur(lesson_spec(id="u1-l1")), kb()))
+
+
+def test_ids_must_be_their_own_folder_name():
+    # U1-L1 and u1-l1 passed as different ids and then shared one folder
+    for odd in ("U1-L1", "u1_l1", "u1-l1-", "u1--l1", "u" * 49):
+        assert "unsafe_id" in names(checks.curriculum(cur(lesson_spec(id=odd)), kb()))
+
+
+def test_paths_that_name_no_file_or_are_too_long_are_caught():
+    assert checks.unsafe_path(".") and checks.unsafe_path("./") and checks.unsafe_path("a" * 256 + ".py")

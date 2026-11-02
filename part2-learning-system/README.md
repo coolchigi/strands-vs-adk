@@ -28,7 +28,9 @@ That one install includes both builds. Which one runs depends on what you have s
   which you can get at [aistudio.google.com/apikey](https://aistudio.google.com/apikey). It
   saves it to `~/.config/learning-system/env`, readable only by you, and doesn't ask again.
 - **Strands, with Claude on Amazon Bedrock.** You need AWS credentials and access to Claude
-  Sonnet 4.6 and Claude Haiku 4.5 in Bedrock. It picks Strands when you have no Gemini key
+  Sonnet 4.6 and Claude Haiku 4.5 in Bedrock, and the
+  [Strands Python quickstart](https://strandsagents.com/docs/user-guide/sdk/quickstart/python/)
+  walks through setting both up. It picks Strands when you have no Gemini key
   saved, or when you pass `--engine strands`. If you sign in with `aws login`, install it this
   way instead:
 

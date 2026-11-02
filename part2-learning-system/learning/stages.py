@@ -8,8 +8,12 @@ running exercises, is the same on both sides and lives here.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
+import os
+import threading
+import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Protocol, TypeVar
@@ -51,6 +55,9 @@ class SpecDraft(BaseModel):
     official_domains: list[str] = Field(description="Domains the maker owns, e.g. hashicorp.com")
     urls: list[str] = Field(description="The pages that define the scope, which you read")
     version: str | None = None
+    version_of: str | None = Field(default=None, description=(
+        "What the version number belongs to, e.g. 'Terraform', 'Python' or the exam's name. A course "
+        "about something else can be taught on a tool's version"))
     version_url: str | None = None
     version_quote: str | None = None
 
@@ -99,6 +106,22 @@ class Finding(BaseModel):
 
 class Review(BaseModel):
     findings: list[Finding] = Field(default_factory=list)
+
+
+def fenced(label: str, text: str) -> str:
+    """Text from the web, marked off as material to use, not instructions to follow. The fence's
+    id is a hash of the label and the text, so neither can close it early: it would have to
+    contain its own hash."""
+    fence = hashlib.sha256(f"{label}\n{text}".encode()).hexdigest()[:32]
+    return f"<<<{fence} {label}>>>\n{text}\n<<<end {fence}>>>"
+
+
+def version_line(spec: Spec) -> str:
+    """The version as the agents are told it: what it's a version of, and whether a page says so."""
+    if not (spec.version or "").strip():
+        return "current"
+    named = f"{spec.version_of} {spec.version}" if spec.version_of else spec.version
+    return named if spec.version_checked else f"{named} (not confirmed on an official page, so don't state it as fact)"
 
 
 def _feedback(reasons: list[str] | None) -> str:
@@ -150,8 +173,62 @@ def _fetch(web: Web, url: str, official: list[str], dropped: list[Dropped]) -> S
     return Source.build(url=page.url, title="", content=page.text, tier=tier)
 
 
+class ResearchProgress(BaseModel):
+    """A research pass partway through. Kept after the objectives and after each area, so a stop
+    loses one area at most: before, a stop anywhere in research paid for all of it again."""
+    attempt: int = 0
+    knowledge: KnowledgeBase
+    version_problem: str | None = None
+    official: list[str] = Field(default_factory=list)
+    done: list[str] = Field(default_factory=list)  # the top objectives already read up on
+
+
+class ResearchDraft(BaseModel):
+    """A finished research pass that its review hasn't decided on yet."""
+    attempt: int
+    knowledge: KnowledgeBase
+    version_problem: str | None = None
+
+
+class CurriculumDraft(BaseModel):
+    """A course plan as it was written, kept until its review is done with it."""
+    attempt: int
+    curriculum: Curriculum
+
+
 def research(brain: Brain, web: Web, profile: LearnerProfile, reasons: list[str] | None = None,
-             say: Say = quiet) -> ResearchResult:
+             say: Say = quiet, progress: ResearchProgress | None = None,
+             keep: Callable[[ResearchProgress], None] = lambda p: None) -> ResearchResult:
+    if progress is None:
+        progress = _objectives(brain, web, profile, reasons, say)
+        keep(progress)
+    else:
+        say(f"✓ Picking up the research where it stopped: {len(progress.done)} "
+            f"area{'s' if len(progress.done) != 1 else ''} read, {len(progress.knowledge.claims)} facts checked")
+    kb = progress.knowledge
+    spec, objectives, dropped = kb.spec, kb.spec.objectives, list(kb.dropped)
+    sources = {s.id: s for s in kb.sources}
+    claims = {c.id: c.model_copy() for c in kb.claims}
+    for top in [o for o in objectives if not o.parent_id]:
+        if top.id in progress.done:
+            continue
+        group = [top] + [o for o in objectives if o.parent_id == top.id or (o.parent_id or "").startswith(top.id + ".")]
+        say(f"Reading up on: {top.statement}")
+        gather(brain, web, profile, spec, progress.official, group, sources, claims, dropped)
+        so_far = kb.model_copy(update={"sources": list(sources.values()), "claims": list(claims.values()),
+                                       "dropped": list(dropped)})
+        progress = progress.model_copy(update={"knowledge": so_far, "done": progress.done + [top.id]})
+        keep(progress)
+
+    say(f"✓ Checked {len(claims)} facts, word for word, against {len(sources)} official pages")
+    kb = KnowledgeBase(profile=profile, spec=spec, sources=list(sources.values()),
+                       claims=list(claims.values()), dropped=dropped)
+    return ResearchResult(knowledge=kb, version_problem=progress.version_problem)
+
+
+def _objectives(brain: Brain, web: Web, profile: LearnerProfile, reasons: list[str] | None,
+                say: Say) -> ResearchProgress:
+    """The spec, its pages, and the objective tree they define: research before any area is read."""
     say(f"Looking for the official {profile.subject} documentation")
     draft, version_problem = find_spec(brain, web, profile, reasons)
     say(f"✓ Found it: {draft.title}" + (f", version {draft.version}" if draft.version and not version_problem else ""))
@@ -161,7 +238,7 @@ def research(brain: Brain, web: Web, profile: LearnerProfile, reasons: list[str]
     spec_pages = [s for s in (_fetch(web, u, draft.official_domains, dropped) for u in draft.urls[:SPEC_PAGES]) if s]
     for s in spec_pages:
         sources[s.id] = s
-    reading = "\n\n".join(f"=== {s.url}\n{s.content[:PAGE_CHARS]}" for s in spec_pages)
+    reading = "\n\n".join(fenced(f"page {s.url}", s.content[:PAGE_CHARS]) for s in spec_pages)
     tree = brain.ask("objectives", prompts.OBJECTIVES,
                      f"{profile.brief()}\nScope: {draft.kind}\n\n{reading}" + _feedback(reasons), ObjectiveTree)
 
@@ -179,21 +256,14 @@ def research(brain: Brain, web: Web, profile: LearnerProfile, reasons: list[str]
         else:
             objectives.append(o.model_copy(update={"quote": "", "source_url": ""}))
     spec = Spec(kind=draft.kind, title=draft.title, urls=[s.url for s in spec_pages],
-                version=draft.version, version_url=draft.version_url, version_quote=draft.version_quote,
+                version=draft.version, version_of=draft.version_of, version_url=draft.version_url,
+                version_quote=draft.version_quote, version_problem=version_problem,
+                version_checked=bool((draft.version or "").strip()) and version_problem is None,
                 objectives=objectives, practice=covered([Practice(task=t) for t in tree.practice], tree.coverage))
     log.info("objectives: %d (%d leaves)", len(objectives), len(spec.leaves()))
     say(f"✓ Worked out {len(spec.leaves())} things you'll need to be able to do")
-
-    claims: dict[str, Claim] = {}
-    for top in [o for o in objectives if not o.parent_id]:
-        group = [top] + [o for o in objectives if o.parent_id == top.id or (o.parent_id or "").startswith(top.id + ".")]
-        say(f"Reading up on: {top.statement}")
-        gather(brain, web, profile, spec, draft.official_domains, group, sources, claims, dropped)
-
-    say(f"✓ Checked {len(claims)} facts, word for word, against {len(sources)} official pages")
-    kb = KnowledgeBase(profile=profile, spec=spec, sources=list(sources.values()),
-                       claims=list(claims.values()), dropped=dropped)
-    return ResearchResult(knowledge=kb, version_problem=version_problem)
+    kb = KnowledgeBase(profile=profile, spec=spec, sources=list(sources.values()), claims=[], dropped=dropped)
+    return ResearchProgress(knowledge=kb, version_problem=version_problem, official=draft.official_domains)
 
 
 def gather(brain: Brain, web: Web, profile: LearnerProfile, spec: Spec, official: list[str],
@@ -201,7 +271,7 @@ def gather(brain: Brain, web: Web, profile: LearnerProfile, spec: Spec, official
            dropped: list[Dropped], gaps: list[str] | None = None, pages: int = PAGES_PER_AREA) -> None:
     """Pick pages for some objectives, read them, and keep the claims whose quotes are on them."""
     listing = "\n".join(f"{o.id}  {o.statement}" for o in group)
-    ask = f"{profile.brief()}\nVersion: {spec.version or 'current'}\n\nObjectives:\n{listing}"
+    ask = f"{profile.brief()}\nVersion: {version_line(spec)}\n\nObjectives:\n{listing}"
     if gaps:
         ask += "\n\nA reviewer found these gaps. Find pages that fill them:\n" + "\n".join(f"- {g}" for g in gaps)
     picks = brain.ask("evidence", prompts.FIND_EVIDENCE.format(max_pages=pages), ask, Picks, research=True)
@@ -212,7 +282,7 @@ def gather(brain: Brain, web: Web, profile: LearnerProfile, spec: Spec, official
             continue
         sources[source.id] = source
         found = brain.ask("extract", prompts.EXTRACT,
-                          f"Objectives:\n{listing}\n\nPage: {source.url}\n\n{source.content[:PAGE_CHARS]}",
+                          f"Objectives:\n{listing}\n\n{fenced(f'page {source.url}', source.content[:PAGE_CHARS])}",
                           ClaimDrafts)
         kept = 0
         for c in found.claims:
@@ -263,15 +333,17 @@ def revise_research(brain: Brain, web: Web, kb: KnowledgeBase, gaps: list[str], 
     say(f"✓ Added {len(claims) - before} facts to fill the gaps, {len(claims)} in all")
     revised = kb.model_copy(update={"spec": spec, "sources": list(sources.values()),
                                     "claims": list(claims.values()), "dropped": dropped})
-    return ResearchResult(knowledge=revised)
+    # a revision doesn't look at the version again, so whatever was wrong with it still is
+    return ResearchResult(knowledge=revised, version_problem=spec.version_problem)
 
 
 # -- curriculum ------------------------------------------------------------------------------
 
 def claim_listing(kb: KnowledgeBase) -> str:
+    """Every claim, fenced, since its text was drawn from web pages."""
     tiers = {s.id: s.tier.value for s in kb.sources}
-    return "\n".join(f"{c.id} [{tiers.get(c.source_id, '?')}] ({','.join(c.objective_ids)}) {c.text}"
-                     for c in kb.claims)
+    return fenced("claims drawn from the pages", "\n".join(
+        f"{c.id} [{tiers.get(c.source_id, '?')}] ({','.join(c.objective_ids)}) {c.text}" for c in kb.claims))
 
 
 def tree_listing(kb: KnowledgeBase) -> str:
@@ -284,7 +356,7 @@ def tree_listing(kb: KnowledgeBase) -> str:
 
 
 def curriculum(brain: Brain, kb: KnowledgeBase, reasons: list[str] | None = None) -> Curriculum:
-    prompt = (f"Learner:\n{kb.profile.brief()}\n\nVersion: {kb.spec.version or 'current'}\n\n"
+    prompt = (f"Learner:\n{kb.profile.brief()}\n\nVersion: {version_line(kb.spec)}\n\n"
               f"Objective tree ({kb.spec.kind}):\n{tree_listing(kb)}\n\nClaims:\n{claim_listing(kb)}")
     return brain.ask("curriculum", prompts.CURRICULUM, prompt + _feedback(reasons), Curriculum)
 
@@ -301,11 +373,11 @@ def write_lesson(brain: Brain, kb: KnowledgeBase, spec: LessonSpec, previous: li
     claims = "\n".join(f"{cid}: {by_id[cid].text}\n    quote: \"{by_id[cid].quote}\""
                        for cid in spec.claim_ids if cid in by_id)
     objectives = "\n".join(f"- {o.statement} ({o.level.value}, proved by {o.evidence.value})" for o in spec.objectives)
-    prompt = (f"Learner:\n{kb.profile.brief()}\n\nVersion: {kb.spec.version or 'current'}\n\n"
+    prompt = (f"Learner:\n{kb.profile.brief()}\n\nVersion: {version_line(kb.spec)}\n\n"
               f"Lesson {spec.id}: {spec.title}\nObjectives:\n{objectives}\n"
               f"Exercise idea: {spec.exercise_idea or '(none)'}\n\n"
               f"The previous lesson's finished files:\n{files_text(previous)}\n\n"
-              f"Claims you may teach from:\n{claims}")
+              f"Claims you may teach from:\n{fenced('claims, with quotes from the pages', claims)}")
     if facts:
         prompt += "\n\nAlready checked against the real world:\n" + "\n".join(f"- {f}" for f in facts)
     lesson = brain.ask("lesson", prompts.LESSON, prompt + _feedback(reasons), Lesson)
@@ -320,8 +392,17 @@ class LessonResult:
     attempts: int = 0
 
 
+class LessonDraft(BaseModel):
+    """A lesson as it was written, kept before its checks and review: a stop during them paid for
+    the writing again."""
+    attempt: int
+    lesson: Lesson
+    reasons: list[str] | None = None
+
+
 def teach_lesson(brain: Brain, kb: KnowledgeBase, spec: LessonSpec, previous: list[CourseFile],
-                 facts: list[str], reviewer: bool = True, say: Say = quiet) -> LessonResult:
+                 facts: list[str], reviewer: bool = True, say: Say = quiet, draft: LessonDraft | None = None,
+                 keep: Callable[[LessonDraft], None] = lambda d: None) -> LessonResult:
     """Write, check, and rewrite with the reasons until it passes or attempts run out.
 
     Mechanical checks first, including running the exercise. Only a lesson that passes
@@ -329,10 +410,14 @@ def teach_lesson(brain: Brain, kb: KnowledgeBase, spec: LessonSpec, previous: li
     """
     needs = any(o.evidence is Evidence.EXERCISE for o in spec.objectives)
     all_claims = {c.id for c in kb.claims}
-    reasons: list[str] | None = None
+    reasons: list[str] | None = draft.reasons if draft else None
     result = None
-    for attempt in range(1, LESSON_ATTEMPTS + 1):
-        lesson = write_lesson(brain, kb, spec, previous, facts, reasons)
+    for attempt in range(draft.attempt if draft else 1, LESSON_ATTEMPTS + 1):
+        if draft is not None and attempt == draft.attempt:
+            lesson = draft.lesson  # written before the build stopped: checked now, not paid for again
+        else:
+            lesson = write_lesson(brain, kb, spec, previous, facts, reasons)
+            keep(LessonDraft(attempt=attempt, lesson=lesson, reasons=reasons))
         problems = checks.lesson(lesson, spec.claim_ids, all_claims, needs)
         for p in problems:
             if p.check == "provider_out_of_date" and p.detail not in facts:
@@ -359,26 +444,76 @@ def teach_lesson(brain: Brain, kb: KnowledgeBase, spec: LessonSpec, previous: li
 _PROBLEMS = TypeAdapter(dict[str, list[Problem]])
 
 
+def write_atomic(path: Path, data: str | bytes) -> None:
+    """The whole file or none of it. A kill in the middle of a plain write left a half-written
+    checkpoint that failed every resume after it, so this writes beside the file and renames.
+    Text is written the way write_text writes it, so the readers' read_text still matches."""
+    path = Path(path)
+    tmp = path.with_name(f".{path.name}.{os.getpid()}-{threading.get_ident()}.tmp")
+    try:
+        with open(tmp, "w") if isinstance(data, str) else open(tmp, "wb") as f:
+            f.write(data)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp, path)
+    finally:
+        tmp.unlink(missing_ok=True)
+
+
+def clear_stale_temps(folder: Path) -> None:
+    """A kill between writing and renaming leaves the temp file behind, about 1 MB for research.
+    Anything a minute old is from a run that's gone."""
+    for t in Path(folder).glob(".*.tmp"):
+        try:
+            if time.time() - t.stat().st_mtime > 60:
+                t.unlink()
+        except OSError:
+            pass
+
+
 class Checkpoint:
     """The run survives a crash. Each stage's output is saved as soon as it passes."""
 
     def __init__(self, root: Path) -> None:
         self.root = Path(root)
-        (self.root / "lessons").mkdir(parents=True, exist_ok=True)
+        for folder in ("lessons", "lesson_drafts"):
+            (self.root / folder).mkdir(parents=True, exist_ok=True)
+            clear_stale_temps(self.root / folder)
+        clear_stale_temps(self.root)
+
+    def _file(self, name: str) -> Path:
+        """Lesson checkpoints are named by the lesson's id, which the model chose."""
+        p = (self.root / f"{name}.json").resolve()
+        if self.root.resolve() not in p.parents:
+            raise ValueError(f"the checkpoint name {name!r} would be saved outside {self.root}")
+        return p
 
     def load(self, name: str, schema: type[T]) -> T | None:
-        p = self.root / f"{name}.json"
-        return schema.model_validate_json(p.read_text()) if p.exists() else None
+        """A checkpoint that can't be read counts as not done, so the stage runs again."""
+        p = self._file(name)
+        if not p.exists():
+            return None
+        try:
+            return schema.model_validate_json(p.read_text())
+        except ValueError as e:
+            log.warning("checkpoint %s can't be read, so it runs again: %s", p.name, str(e).splitlines()[0])
+            return None
 
     def save(self, name: str, value: BaseModel) -> None:
-        (self.root / f"{name}.json").write_text(value.model_dump_json(indent=1))
+        write_atomic(self._file(name), value.model_dump_json(indent=1))
 
     def load_problems(self) -> dict[str, list[Problem]]:
         p = self.root / "problems.json"
-        return _PROBLEMS.validate_json(p.read_text()) if p.exists() else {}
+        if not p.exists():
+            return {}
+        try:
+            return _PROBLEMS.validate_json(p.read_text())
+        except ValueError as e:
+            log.warning("problems.json can't be read, so earlier problems are dropped: %s", str(e).splitlines()[0])
+            return {}
 
     def save_problems(self, problems: dict[str, list[Problem]]) -> None:
-        (self.root / "problems.json").write_bytes(_PROBLEMS.dump_json(problems, indent=1))
+        write_atomic(self.root / "problems.json", _PROBLEMS.dump_json(problems, indent=1))
 
     def log(self, event: dict) -> None:
         with (self.root / "events.jsonl").open("a") as f:

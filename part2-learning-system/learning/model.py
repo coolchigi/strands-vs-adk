@@ -119,8 +119,11 @@ class Spec(BaseModel):
     title: str
     urls: list[str] = Field(default_factory=list)
     version: str | None = None
+    version_of: str | None = None       # what the number belongs to: Python's, under a ledger course's name
     version_url: str | None = None
     version_quote: str | None = None
+    version_checked: bool = False       # an official page states it. Research from before this says no
+    version_problem: str | None = None  # why not, kept through revisions and resumes
     objectives: list[Objective] = Field(default_factory=list)
     practice: list[Practice] = Field(default_factory=list, description="What practitioners do routinely")
 
