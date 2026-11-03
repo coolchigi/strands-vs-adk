@@ -1,15 +1,15 @@
-# Terraform Deep Dive: VPC, Compute & Storage on AWS (LocalStack)
+# Terraform Deep Dive: VPC, Compute & Storage on AWS
 
 > **Before you start:** from lesson u3-l5 on, some steps in this course use your own AWS credentials and reach real AWS.
 >
 > - u3-l5, u3-l6 and u4-l1 keep Terraform's state in an S3 bucket called `my-company-tf-state`. It isn't yours, so `terraform init` fails there and creates nothing. `learn check` can then try the same bucket and fail too. If it does, delete the exercise's `.terraform` folder and run it again.
-> - From u4-l2 on, Terraform uses real AWS. Lessons u4-l2 and u5-l4 tell you to run `terraform apply`, which creates a real VPC in your account and tries to launch EC2 instances. Instances cost money, so skip those steps.
+> - From u4-l2 on, Terraform uses real AWS. Lessons u4-l2 and u5-l4 and the unit 4 and 5 projects tell you to run `terraform apply`, which creates a real VPC in your account and tries to launch EC2 instances. u5-l4 also tries to create 2 S3 buckets. Instances cost money, so skip those steps unless you want these in your account.
 >
 > `learn check` runs its tests against a mock provider (i.e. a fake AWS), so it never creates anything in AWS.
 >
 > The lessons before u4-l2 expect LocalStack, an AWS emulator, running on `localhost:4566`. Nothing in this course sets it up. Those lessons' `terraform plan` and `apply` steps fail even with LocalStack running, because Terraform asks real AWS for an account ID using the course's fake keys, and AWS rejects them.
 
-A 16-lesson, 5-unit curriculum for an AWS-fluent engineer who has never written Terraform. The learner builds a single growing project — a modular VPC + compute + storage stack — from scratch. All exercises run against LocalStack so zero cloud spend is incurred. Each unit closes with an unguided project that forces the learner to apply the unit's capabilities without step-by-step guidance.
+A 16-lesson, 5-unit curriculum for an AWS-fluent engineer who has never written Terraform. The learner builds a single growing project — a modular VPC + compute + storage stack — from scratch. Lessons before u3-l5 are written for LocalStack. From u3-l5 on, some steps reach your real AWS account, as the note above says. Each unit closes with an unguided project that forces the learner to apply the unit's capabilities without step-by-step guidance.
 
 ## Who this is for
 
@@ -23,12 +23,12 @@ Constraints: No spending money on a cloud account while learning
 
 ## What you'll be able to do
 
-- Install and configure Terraform with LocalStack so all exercises run without cloud spend
+- Install and configure Terraform with LocalStack
 - Read and write idiomatic HCL including variables, locals, outputs, expressions, and meta-arguments
 - Execute the full terraform init → plan → apply → destroy lifecycle and explain what each step does to state
 - Inspect and reason about the state file using terraform state subcommands without editing it directly
 - Compose a multi-module Terraform project where child modules communicate through inputs and outputs
-- Build and apply a complete, module-organised VPC + EC2 + S3 stack on LocalStack, verify it with the AWS CLI, and destroy it cleanly
+- Build and apply a complete, module-organised VPC + EC2 + S3 stack, verify it with the AWS CLI, and destroy it cleanly
 
 Written against Terraform 1.16.4 ([source](https://developer.hashicorp.com/terraform/install)).
 
@@ -148,7 +148,7 @@ What our own checks and reviewers still found after every retry. Lessons with a 
 2. [Write child module inputs and outputs](units/u4-reusable-modules/u4-l2-write-child-module-inputs-and-outputs/README.md)
 3. [Call a module multiple times with different inputs](units/u4-reusable-modules/u4-l3-call-a-module-multiple-times-with-different-inpu/README.md)
 
-**Project:** Refactor the Unit 2/3 configuration into three child modules under a modules/ directory: modules/storage (S3 bucket), modules/compute (EC2 instance), and modules/network (subnets). Each module must have variables.tf, main.tf, and outputs.tf. The root module's main.tf calls all three, threading the subnet IDs from the network module into the compute module. Run terraform init, plan, and apply against LocalStack and verify all resources are created. Then call the storage module a second time with a different bucket name.
+**Project:** Refactor the Unit 2/3 configuration into three child modules under a modules/ directory: modules/storage (S3 bucket), modules/compute (EC2 instance), and modules/network (subnets). Each module must have variables.tf, main.tf, and outputs.tf. The root module's main.tf calls all three, threading the subnet IDs from the network module into the compute module. Run terraform init, plan, and apply and verify all resources are created. As written, these steps don't work against LocalStack (see u1-l3's known problems), and with u4-l2's region-only provider block, apply creates real resources in your AWS account. Then call the storage module a second time with a different bucket name.
 
 ### u5. Full VPC, Compute & Storage Stack
 
@@ -157,4 +157,4 @@ What our own checks and reviewers still found after every retry. Lessons with a 
 3. [Write the storage module](units/u5-full-vpc-compute-storage-stack/u5-l3-write-the-storage-module/README.md)
 4. [Compose all three modules and verify the full stack](units/u5-full-vpc-compute-storage-stack/u5-l4-compose-all-three-modules-and-verify-the-full-st/README.md)
 
-**Project:** This unit's project IS the capstone: apply the complete root module (networking + compute + storage) to LocalStack, then verify every created resource using AWS CLI commands (describe-vpcs, describe-instances, s3 ls), inspect two resources with terraform state show, and finally run terraform destroy and confirm an empty state file. The project is complete when: all three modules apply without error, CLI verification shows the correct VPC CIDR and instance placement, and the state file is empty after destroy.
+**Project:** This unit's project IS the capstone: apply the complete root module (networking + compute + storage). With this unit's provider block, that creates real resources in your AWS account, and EC2 instances cost money. Then verify every created resource using AWS CLI commands (describe-vpcs, describe-instances, s3 ls), inspect two resources with terraform state show, and finally run terraform destroy and confirm an empty state file. The project is complete when: all three modules apply without error, CLI verification shows the correct VPC CIDR and instance placement, and the state file is empty after destroy.

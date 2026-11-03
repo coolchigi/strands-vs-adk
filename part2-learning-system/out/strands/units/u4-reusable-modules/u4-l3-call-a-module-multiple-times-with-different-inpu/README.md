@@ -2,6 +2,8 @@
 
 *Reusable Modules*
 
+> **Real AWS.** This lesson's provider block has only a region, so `terraform plan` here uses your own AWS credentials. Plan only reads from your account and creates nothing. `learn check` is safe: its tests run against a mock provider.
+
 > **Known problems.** This lesson didn't pass all of our own checks. If something below doesn't work, it may be this:
 >
 > - the solution does not pass its own checks: tests/for_each_module.tftest.hcl... in progress run "two_storage_instances_exist"... pass run "storage_instances_have_distinct_bucket_names"... pass run "outputs_reference_correct_instances"... fail tests/for_each_module.tftest.hcl... tearing down...
