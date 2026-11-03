@@ -6,7 +6,7 @@
 - Write a compute module that places EC2 instances inside subnets received from the networking module
 - Write a storage module that provisions S3 buckets and optionally EBS volumes
 - Compose all three modules in a root module, threading outputs across modules to express dependencies
-- Apply the full stack to LocalStack, verify every resource with the AWS CLI, and destroy it cleanly
+- Apply the full stack, verify every resource with the AWS CLI, and destroy it cleanly
 
 ## Lessons
 
@@ -17,4 +17,4 @@
 
 ## Project
 
-This unit's project IS the capstone: apply the complete root module (networking + compute + storage) to LocalStack, then verify every created resource using AWS CLI commands (describe-vpcs, describe-instances, s3 ls), inspect two resources with terraform state show, and finally run terraform destroy and confirm an empty state file. The project is complete when: all three modules apply without error, CLI verification shows the correct VPC CIDR and instance placement, and the state file is empty after destroy.
+This unit's project IS the capstone: apply the complete root module (networking + compute + storage). With this unit's provider block, that creates real resources in your AWS account, and EC2 instances cost money. Then verify every created resource using AWS CLI commands (describe-vpcs, describe-instances, s3 ls), inspect two resources with terraform state show, and finally run terraform destroy and confirm an empty state file. The project is complete when: all three modules apply without error, CLI verification shows the correct VPC CIDR and instance placement, and the state file is empty after destroy.

@@ -2,6 +2,8 @@
 
 *Full VPC, Compute & Storage Stack*
 
+> **Real AWS.** This lesson's provider block has only a region, so `terraform apply -auto-approve` here uses your own AWS credentials. It creates a real VPC, 2 subnets, an internet gateway and a route table with 2 associations, and tries to launch 2 EC2 instances (`ami-0c55b159cbfafe1f0`) and create S3 buckets named `my-project-assets` and `my-project-logs`. Instances cost money, so skip that step unless you want these in your account. Item 4 under "Your turn" points the AWS CLI at LocalStack, so it won't show what apply created. `learn check` is safe: its tests run against a mock provider.
+
 > **Known problems.** This lesson didn't pass all of our own checks. If something below doesn't work, it may be this:
 >
 > - Quiz Q1 option C (adding depends_on inside an output block) is not valid Terraform syntax. No learner who has worked through the lesson would hold this misconception, so it does not function as a plausible distractor. Replace it with a wrong answer a learner might genuinely reach for, such as...
@@ -12,7 +14,7 @@ Found something else? `learn report "what's wrong"`
 ## By the end of this lesson you can
 
 - Wire all three modules in the root module, threading networking outputs into compute and storage inputs, and expose final outputs for subnet IDs and instance IPs in root outputs.tf
-- Apply the full stack to LocalStack, verify each resource tier using AWS CLI commands, and destroy the stack cleanly, confirming an empty state file
+- Apply the full stack, verify each resource tier using AWS CLI commands, and destroy the stack cleanly, confirming an empty state file
 
 ## Where we are
 

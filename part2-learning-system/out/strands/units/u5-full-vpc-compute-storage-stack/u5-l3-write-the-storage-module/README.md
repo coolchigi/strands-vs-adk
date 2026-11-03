@@ -2,6 +2,8 @@
 
 *Full VPC, Compute & Storage Stack*
 
+> **Real AWS.** This lesson's provider block has only a region, so `terraform plan` here uses your own AWS credentials. Plan only reads from your account and creates nothing. `learn check` is safe: its tests run against a mock provider.
+
 > **Known problems.** This lesson didn't pass all of our own checks. If something below doesn't work, it may be this:
 >
 > - the starter is not valid Terraform, so the learner would see a syntax error instead of a failing test: Error: Unsupported argument on main.tf line 19, in module "storage": 19: bucket_name = each.key An argument named "bucket_name" is not expected here.
