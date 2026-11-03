@@ -2,6 +2,8 @@
 
 *Reusable Modules*
 
+> **Real AWS.** This lesson's provider block has only a region, so `terraform apply` here uses your own AWS credentials. It creates a real VPC and subnet in your account and tries to launch an EC2 instance, so skip that step unless you want these in your account. `learn check` is safe: its tests run against a mock provider.
+
 > **Known problems.** This lesson didn't pass all of our own checks. If something below doesn't work, it may be this:
 >
 > - the checks don't test the gap at modules/compute/main.tf line 4: with just that left as the starter has it, the checks still pass. Test it, or fill it in for the learner.

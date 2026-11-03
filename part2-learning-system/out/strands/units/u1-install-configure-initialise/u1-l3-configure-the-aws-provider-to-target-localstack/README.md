@@ -7,12 +7,13 @@
 > - the checks don't test the gap at provider.tf line 2: with just that left as the starter has it, the checks still pass. Test it, or fill it in for the learner.
 > - the checks don't test the gap at provider.tf line 7: with just that left as the starter has it, the checks still pass. Test it, or fill it in for the learner.
 > - the checks don't test the gap at provider.tf line 10: with just that left as the starter has it, the checks still pass. Test it, or fill it in for the learner.
+> - the provider block here doesn't set `skip_requesting_account_id = true`. Once a later lesson adds resources, `terraform plan` and `apply` ask real AWS for an account ID using the fake keys, so they fail even with LocalStack running.
 
 Found something else? `learn report "what's wrong"`
 
 ## By the end of this lesson you can
 
-- Write an AWS provider block that uses mock credentials, sets skip flags, and points service endpoints at LocalStack so no real AWS API calls are made
+- Write an AWS provider block that uses mock credentials, sets skip flags, and points service endpoints at LocalStack
 - Explain the purpose of each LocalStack-specific provider argument (skip_credentials_validation, skip_metadata_api_check, endpoints block)
 
 ## Where we are

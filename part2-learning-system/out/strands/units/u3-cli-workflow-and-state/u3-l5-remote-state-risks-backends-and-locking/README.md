@@ -2,6 +2,8 @@
 
 *CLI Workflow and State*
 
+> **Real AWS.** This lesson's backend block keeps Terraform's state in an S3 bucket called `my-company-tf-state`, with no endpoint, so `terraform init` here uses your own AWS credentials. The bucket isn't yours, so init fails and creates nothing. It can still save the backend, and then `learn check` tries the same bucket and fails too. If it does, delete the exercise's `.terraform` folder and run it again. `learn check` runs this exercise's tests in `exercise/tests/`, so the lines below that say nothing can check it are wrong.
+
 > **Known problems.** This lesson didn't pass all of our own checks. If something below doesn't work, it may be this:
 >
 > - the exercise has no .tftest.hcl checks

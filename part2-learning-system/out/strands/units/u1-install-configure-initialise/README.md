@@ -4,7 +4,7 @@
 
 - Install the Terraform CLI and verify it runs
 - Write a terraform block that pins the AWS provider version
-- Configure the AWS provider to target LocalStack so no real AWS calls are made
+- Configure the AWS provider to target LocalStack
 - Run terraform init successfully and understand what it produces
 
 ## Lessons
